@@ -1,5 +1,3 @@
-#!@PERL@
-
 # Copyright (C) 2016 Karl Wette
 #
 # This file is part of fmdtools.
@@ -17,43 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with fmdtools. If not, see <http://www.gnu.org/licenses/>.
 
-use v@PERLVERSION@;
+package fmdtools::pdf;
+
 use strict;
 use warnings;
 no warnings 'experimental::smartmatch';
 use feature qw/switch/;
 
 use Carp;
-use Getopt::Long qw(:config pass_through);
 
-@perl_use_lib@;
-use fmdtools::pdf;
+use fmdtools;
 
-# handle help options
-my $help = 0;
-GetOptions(
-    "help|h" => \$help,
-    ) or croak "$0: could not parse options";
-if ($help) {
-    my $prefix = "@prefix@";
-    my $datarootdir = "@datarootdir@";
-    system("@MAN@ @mandir@/man1/fmdt.1") == 0 or croak "$0: @MAN@ failed";
-    exit 1;
-}
+1;
 
-# handle toolsets and actions
-my $toolset = shift @ARGV // croak "$0: no toolset given";
-my $action = shift @ARGV // croak "$0: no action given";
-given ($toolset) {
+sub act {
+    my ($action, @args) = @_;
 
-    # PDF toolset
-    when ("pdf") {
-        exit fmdtools::pdf::act($action, @ARGV);
+    # handle action
+    given ($action) {
+
+        # unknown action
+        default {
+            croak "$0: unknown action '$action'";
+        }
+
     }
 
-    # unknown toolset
-    default {
-        croak "$0: unknown toolset '$toolset'";
-    }
-
+    return 0;
 }

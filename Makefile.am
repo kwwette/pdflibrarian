@@ -7,6 +7,7 @@ perllib_DATA = \
 	$(END_OF_LINE)
 
 pkgperllib_DATA = \
+	src/pdf.pm \
 	$(END_OF_LINE)
 
 EXTRA_DIST = $(DATA)
