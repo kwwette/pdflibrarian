@@ -1,0 +1,10 @@
+.TH FMDT 1 "@DATE@" "Release @VERSION@" "@PACKAGE@"
+
+.SH NAME
+fmdt \- file metadata tools.
+
+.SH SYNOPSIS
+
+.TP
+\fBfmdt\fP \fB\-h\fP|\fB\-\-help\fP
+Display this help message.
