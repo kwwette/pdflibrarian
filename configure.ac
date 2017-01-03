@@ -53,6 +53,13 @@ AC_CONFIG_COMMANDS_PRE([
 
 # check for Perl modules
 modules=m4_normalize("
+  Capture::Tiny
+  PDF::API2
+  Parallel::Iterator
+  Sys::CPU
+  Text::BibTeX
+  XML::LibXML
+  XML::LibXSLT
 ")
 module_check_fail=
 for module in ${modules}; do
@@ -66,6 +73,14 @@ for module in ${modules}; do
 done
 AS_IF([test "x${module_check_fail}" != x],[
   AC_MSG_ERROR([could not find all required Perl modules (see above)])
+])
+
+# check for fallback editor
+AC_SUBST([fallback_editor],[''])
+AM_SUBST_NOTMAKE([fallback_editor])
+AC_CHECK_PROGS([fallback_editor],[emacs nano vim ed])
+AS_IF([test "x${fallback_editor}" = x],[
+  AC_MSG_ERROR([could not find an editing program])
 ])
 
 # output files

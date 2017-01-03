@@ -14,3 +14,14 @@ Display this help message.
 PDF file metadata tools.
 
 .SH PDF ACTIONS
+
+.TP
+\fIedit\fP {\fIfiles\fP|\fIdirectories\fP}...
+Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
+This file is then opened in an editing program, given either by the \fI$VISUAL\fP or \fI$EDITOR\fP environment variables, or else the program `@fallback_editor@'.
+Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry.
+
+.TP
+\fIexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
+Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
+Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.

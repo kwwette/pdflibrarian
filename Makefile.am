@@ -12,4 +12,6 @@ pkgperllib_DATA = \
 
 EXTRA_DIST = $(DATA)
 pkgdata_DATA = \
+	src/dublincore.xsl \
+	src/bibtex.xsl \
 	$(END_OF_LINE)
