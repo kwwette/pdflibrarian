@@ -54,10 +54,12 @@ AC_CONFIG_COMMANDS_PRE([
 # check for Perl modules
 modules=m4_normalize("
   Capture::Tiny
+  File::chmod
   PDF::API2
   Parallel::Iterator
   Sys::CPU
   Text::BibTeX
+  Text::Unidecode
   XML::LibXML
   XML::LibXSLT
 ")

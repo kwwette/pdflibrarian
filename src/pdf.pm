@@ -24,7 +24,9 @@ use feature qw/switch/;
 
 use Carp;
 use Getopt::Long;
+use Scalar::Util qw(blessed);
 use Encode;
+use File::Spec;
 use File::Temp;
 use Capture::Tiny;
 use Digest::SHA;
@@ -33,8 +35,12 @@ use XML::LibXML;
 use XML::LibXSLT;
 use Text::BibTeX;
 use Text::BibTeX::Bib;
+use Text::BibTeX::NameFormat;
 
 use fmdtools;
+
+# PDF library location
+my $pdflibdir = fmdtools::get_library_dir('PDF');
 
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
@@ -58,7 +64,13 @@ sub act {
             croak "$0: no PDF files to edit" unless @pdffiles > 0;
 
             # edit BibTeX entries in PDF files
-            edit_bib_in_PDFs(@pdffiles);
+            my @modbibentries = edit_bib_in_PDFs(@pdffiles);
+
+            # filter BibTeX entries of PDF files in library
+            @modbibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @modbibentries;
+
+            # reorganise any PDF files already in library
+            organise_library_PDFs(@modbibentries) if @modbibentries > 0;
 
         }
 
@@ -88,6 +100,38 @@ sub act {
 
             # print BibTeX entries
             write_bib_to_fh(\*STDOUT, @bibentries);
+
+        }
+
+        when ("add") {
+            croak "$0: action '$action' requires arguments" unless @args > 0;
+
+            # add PDF files to library
+            organise_library_PDFs(@args);
+
+        }
+
+        when ("remove") {
+            croak "$0: action '$action' requires arguments" unless @args > 0;
+
+            # handle options
+            my $removedir = File::Spec->tmpdir();
+            my $parser = Getopt::Long::Parser->new;
+            $parser->getoptionsfromarray(\@args,
+                                         "remove-to|r=s" => \$removedir,
+                ) or croak "$0: could not parse options for action '$action'";
+            croak "$0: '$removedir' is not a directory" unless -d $removedir;
+
+            # remove PDF files from library
+            remove_library_PDFs($removedir, @args);
+
+        }
+
+        when ("reorganise") {
+            croak "$0: action '$action' takes no arguments" unless @args == 0;
+
+            # reorganise PDF files in library
+            organise_library_PDFs($pdflibdir);
 
         }
 
@@ -455,4 +499,201 @@ EOF
     write_bib_to_PDF(@modbibentries);
 
     return @modbibentries;
+}
+
+sub organise_library_PDFs {
+    my (@args) = @_;
+    my $useentries = defined(blessed($args[0]));
+
+    # author formatting for PDF filenames
+    my $authorformat = new Text::BibTeX::NameFormat("vl");
+    my $bibname_format = sub {
+        my $author = $authorformat->apply($_[0]);
+        $author =~ s/[{}]//g;
+        if ($author =~ /\sCollaboration$/i) {
+            $author =~ s/\s.*$//;
+        }
+        $author;
+    };
+
+    # find PDF files to organise
+    my (@files_dirs, %file2inode, %inode2files);
+    if ($useentries) {
+        @files_dirs = map { $_->get('file') } @args;
+    } else {
+        @files_dirs = @args;
+    }
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', @files_dirs);
+
+    # get list of unique PDF files
+    my @pdffiles = map { @{$_}[0] } values(%inode2files);
+    croak "$0: no PDF files to organise" unless @pdffiles > 0;
+
+    # add existing PDF files in library to file/inode hashes
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+
+    # read BibTeX entries from PDF metadata
+    my @bibentries;
+    if ($useentries) {
+        @bibentries = @args;
+    } else {
+        @bibentries = read_bib_from_PDF(@pdffiles);
+    }
+
+    # organise PDFs in library
+    foreach my $bibentry (@bibentries) {
+        my $pdffile = $bibentry->get('file');
+
+        # format authors and collaborations
+        my @authors;
+        foreach ($bibentry->names("author")) {
+            my $author = &$bibname_format($_);
+            if (@authors > 2 || $author eq "others") {
+                push @authors, "et al";
+                last;
+            }
+            push @authors, $author;
+        }
+        my @collaborations;
+        foreach ($bibentry->names("collaboration")) {
+            my $collaboration = &$bibname_format($_);
+            push @collaborations, $collaboration;
+        }
+
+        # abbreviate title
+        my $title = ucfirst(fmdtools::abbreviate_words($bibentry->get("title")));
+
+        # make new name for PDF; should be unique within library
+        my $newpdffile;
+        if (@collaborations > 0) {
+            $newpdffile = "@collaborations";
+        } else {
+            $newpdffile = "@authors";
+        }
+        $newpdffile .= " $title";
+        given ($bibentry->type) {
+
+            # append report number (if any) for technical reports
+            when ("techreport") {
+                my $number = $bibentry->get("number");
+                if (defined($number)) {
+                    $newpdffile .= " no$number";
+                }
+            }
+
+            # append volume number (if any) for books
+            when (/book$/) {
+                my $volume = $bibentry->get("volume");
+                if (defined($volume)) {
+                    $newpdffile .= " v$volume";
+                }
+            }
+
+        }
+        $newpdffile .= ".pdf";
+
+        # list of shelves to organise this file under
+        my @shelves;
+
+        # organise by first author and collaboration
+        push @shelves, ["Authors", $authors[0], ""];
+        if (@collaborations > 0) {
+            push @shelves, ["Authors", $collaborations[0], ""];
+        }
+
+        # organise by first word of title
+        my $firstword = $title;
+        $firstword =~ s/\s.*$//;
+        $firstword =~ s/^(.)/\U$1\E/;
+        push @shelves, ["Titles", $firstword, ""];
+
+        # organise by year
+        my $year = $bibentry->get("year");
+        push @shelves, ["Years", $year, ""];
+
+        # organise by keyword(s)
+        my %keywords;
+        foreach (split ';', $bibentry->get("keyword")) {
+            next if /^\s*$/;
+            $keywords{$_} = 1;
+        }
+        if (keys %keywords == 0) {
+            $keywords{"NO KEYWORDS"} = 1;
+        }
+        foreach my $keyword (keys %keywords) {
+            my @subkeywords = split ',', $keyword;
+            s/\b(\w)/\U$1\E/g for @subkeywords;
+            push @shelves, ["Keywords", @subkeywords, ""];
+        }
+
+        given ($bibentry->type) {
+
+            # organise articles by journal
+            when ("article") {
+                my $journal = $bibentry->get("journal") // "NO JOURNAL";
+                if ($journal =~ /arxiv/i) {
+                    my $eprint = $bibentry->get("eprint") // "NO EPRINT";
+                    push @shelves, ["Articles", "arXiv", "$eprint"];
+                } else {
+                    my $volume = $bibentry->get("volume") // "NO VOLUME";
+                    my $pages = $bibentry->get("pages") // "NO PAGES";
+                    push @shelves, ["Articles", $journal, "v$volume", "p$pages"];
+                }
+            }
+
+            # organise technical reports by institution
+            when ("techreport") {
+                my $institution = $bibentry->get("institution") // "NO INSTITUTION";
+                push @shelves, ["Tech Reports", $institution, ""];
+            }
+
+            # organise books
+            when (/book$/) {
+                push @shelves, ["Books", ""];
+            }
+
+            # organise theses
+            when (/thesis$/) {
+                push @shelves, ["Theses", ""];
+            }
+
+        }
+
+        # make shelves into library filenames
+        my @newpdffiles = fmdtools::make_library_filenames($pdflibdir, $newpdffile, @shelves);
+
+        # create library links
+        fmdtools::make_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, @newpdffiles);
+
+    }
+    fmdtools::progress("organised %i PDFs in $pdflibdir\n", scalar(@bibentries));
+
+    # finalise library organisation
+    fmdtools::finalise_library($pdflibdir);
+
+}
+
+sub remove_library_PDFs {
+    my ($removedir, @files_dirs) = @_;
+
+    # find PDF files to organise
+    my (%file2inode, %inode2files);
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', @files_dirs);
+
+    # get list of unique PDF files
+    my @pdffiles = map { @{$_}[0] } values(%inode2files);
+    croak "$0: no PDF files to organise" unless @pdffiles > 0;
+
+    # add existing PDF files in library to file/inode hashes
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+
+    # remove PDFs from library
+    foreach my $pdffile (@pdffiles) {
+        fmdtools::remove_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, $removedir);
+    }
+    progress("removed %i PDFs to $removedir\n", scalar(@pdffiles));
+
+    # finalise library organisation
+    fmdtools::finalise_library($pdflibdir);
+
 }
