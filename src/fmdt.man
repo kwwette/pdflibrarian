@@ -34,3 +34,7 @@ Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library, 
 \fIremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
 Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
 Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-remove\-to\fP, which default to the system temporary directory, e.g. `/tmp'.
+
+.TP
+\fIreorganise\fP
+Reorganise all files in the PDF library.
