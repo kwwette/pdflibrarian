@@ -233,7 +233,7 @@ sub read_bib_from_file {
     my ($filename) = @_;
 
     # parse BibTeX entries
-    my @errmsgs;
+    my $errmsgs;
     my @bibentries;
     {
 
@@ -266,7 +266,7 @@ sub read_bib_from_file {
             if (length($errout) > 0) {
 
                 # save error messages
-                push @errmsgs, split(/\n/, $errout);
+                $errmsgs .= $errout;
 
                 # we MUST get to end-of-file in order for the btparse
                 # library to reset itself; so seek to end-of-file then
@@ -309,7 +309,7 @@ sub read_bib_from_file {
         if (length($errout) > 0) {
 
             # save error messages
-            push @errmsgs, split(/\n/, $errout);
+            $errmsgs .= $errout;
 
             last;
 
@@ -318,8 +318,26 @@ sub read_bib_from_file {
     }
 
     # if errors were encountered, return unsuccessfully
-    if (@errmsgs > 0) {
-        return (0, @errmsgs);
+    if (defined($errmsgs)) {
+
+        # parse error messages
+        my @errors;
+        foreach my $msg (split(/\n/, $errmsgs)) {
+            given ($msg) {
+                when (/(?:^|.*, )line (\d+)[,:]?\s*(.*)$/) {
+                    push @errors, { from => $1, msg => $2 };
+                }
+                when (/(?:^|.*, )lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
+                    push @errors, { from => $1, to => $2, msg => $3 };
+                }
+                default {
+                    push @errors, { msg => $msg };
+                }
+            }
+        }
+
+        return (0, @errors);
+
     }
 
     return (1, @bibentries);
@@ -440,7 +458,7 @@ sub edit_bib_in_PDFs {
     $oldfh->flush();
 
     # edit and re-read BibTeX entries, allowing for errors
-    my @errmsg;
+    my @errors;
     while (1) {
 
         # write new temporary file for editing, including any error messages
@@ -457,8 +475,16 @@ sub edit_bib_in_PDFs {
 %% are reported below, and must be corrected:
 %%
 EOF
-        foreach (@errmsg) {
-            print $fh "%% ERROR: $_\n";
+        foreach (@errors) {
+            if (defined($_->{from})) {
+                if (defined($_->{to})) {
+                    print $fh "%% ERROR at lines $_->{from}-$_->{to}: $_->{msg}\n";
+                } else {
+                    print $fh "%% ERROR at line $_->{from}: $_->{msg}\n";
+                }
+            } else {
+                print $fh "%% ERROR: $_->{msg}\n";
+            }
         }
         $oldfh->sysseek(0, SEEK_SET);
         while (<$oldfh>) {
@@ -483,10 +509,11 @@ EOF
         }
 
         # save error messages with adjusted line numbers
-        my $linediff = @retn - @errmsg;
-        @errmsg = @retn;
-        foreach (@errmsg) {
-            s{^.*, line (\d+)}{ 'line ' . ($1 + $linediff) }e;
+        my $linediff = @retn - @errors;
+        @errors = @retn;
+        foreach (@errors) {
+            $_->{from} += $linediff if defined($_->{from});
+            $_->{to} += $linediff if defined($_->{to});
         }
 
     }
