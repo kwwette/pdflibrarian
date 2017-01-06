@@ -181,19 +181,18 @@ sub abbreviate_words {
     my ($words) = @_;
 
     # remove most non-alphanumeric characters
-    $words =~ s/[^\w\d\s.-]//g;
+    $words =~ s/[^\w\d\s-]//g;
 
     # remove words from abreviation
     my @abbrev;
     foreach my $word (split /\s+/, $words) {
         next if grep { $word =~ /^$_$/i } qw(
             a
-            an   as   at   by   if   in   of   on   or   so   to   up
-            and  but  for  nor  now  off  per  the  via
-            amid down from into like near once onto over past than than
-            that upon when with
+            an   as   at   by   if   in   is   of   on   or   so   to   up
+            and  are  but  for  its  nor  now  off  per  the  via
+            amid down from into like near once onto over past than than that upon when with
         );
-        push @abbrev, $word;
+        push @abbrev, ucfirst($word);
     }
     $words = join(' ', @abbrev);
 
@@ -213,6 +212,7 @@ sub make_library_filenames {
             $_ = unidecode($_);
             s/[\s~@&_=+,]/-/g;
             s/[^\w\d.-]//g;
+            s/-+\././g;
             s/--+/-/;
             s/^-+//;
             s/-+$//;

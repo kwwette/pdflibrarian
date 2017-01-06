@@ -597,7 +597,7 @@ sub organise_library_PDFs {
         format_bib_authors($bibentry, \@authors, \@collaborations);
 
         # abbreviate title
-        my $title = ucfirst(fmdtools::abbreviate_words($bibentry->get("title")));
+        my $title = fmdtools::abbreviate_words($bibentry->get("title"));
 
         # make new name for PDF; should be unique within library
         my $newpdffile;
