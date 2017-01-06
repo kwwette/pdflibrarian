@@ -528,9 +528,10 @@ EOF
     return @modbibentries;
 }
 
-sub organise_library_PDFs {
-    my (@args) = @_;
-    my $useentries = defined(blessed($args[0]));
+sub format_bib_authors {
+    my ($bibentry, $authors, $collaborations) = @_;
+    die unless ref($authors) eq 'ARRAY';
+    die unless ref($collaborations) eq 'ARRAY';
 
     # author formatting for PDF filenames
     my $authorformat = new Text::BibTeX::NameFormat("vl");
@@ -542,6 +543,26 @@ sub organise_library_PDFs {
         }
         $author;
     };
+
+    # format authors and collaborations
+    foreach ($bibentry->names("author")) {
+        my $author = &$bibname_format($_);
+        if (@$authors > 2 || $author eq "others") {
+            push @$authors, "et al";
+            last;
+        }
+        push @$authors, $author;
+    }
+    foreach ($bibentry->names("collaboration")) {
+        my $collaboration = &$bibname_format($_);
+        push @$collaborations, $collaboration;
+    }
+
+}
+
+sub organise_library_PDFs {
+    my (@args) = @_;
+    my $useentries = defined(blessed($args[0]));
 
     # find PDF files to organise
     my (@files_dirs, %file2inode, %inode2files);
@@ -572,20 +593,8 @@ sub organise_library_PDFs {
         my $pdffile = $bibentry->get('file');
 
         # format authors and collaborations
-        my @authors;
-        foreach ($bibentry->names("author")) {
-            my $author = &$bibname_format($_);
-            if (@authors > 2 || $author eq "others") {
-                push @authors, "et al";
-                last;
-            }
-            push @authors, $author;
-        }
-        my @collaborations;
-        foreach ($bibentry->names("collaboration")) {
-            my $collaboration = &$bibname_format($_);
-            push @collaborations, $collaboration;
-        }
+        my (@authors, @collaborations);
+        format_bib_authors($bibentry, \@authors, \@collaborations);
 
         # abbreviate title
         my $title = ucfirst(fmdtools::abbreviate_words($bibentry->get("title")));
