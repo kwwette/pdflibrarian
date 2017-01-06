@@ -52,30 +52,24 @@ AC_CONFIG_COMMANDS_PRE([
 ])
 
 # check for Perl modules
-modules=m4_normalize("
-  Capture::Tiny
-  File::chmod
-  PDF::API2
-  Parallel::Iterator
-  Sys::CPU
-  Text::BibTeX
-  Text::Unidecode
-  XML::LibXML
-  XML::LibXSLT
-")
-module_check_fail=
-for module in ${modules}; do
-  AC_MSG_CHECKING([for Perl module '${module}'])
-  AS_IF([${PERL} -M${module} -e '0' >/dev/null 2>&1],[
+AC_DEFUN([FMDT_CHECK_PERL_MODULE],[
+  AC_MSG_CHECKING([for Perl module $1])
+  AS_IF([${PERL} -M'$1' -e '0' >/dev/null 2>&1],[
     AC_MSG_RESULT([yes])
   ],[
     AC_MSG_RESULT([no])
-    module_check_fail=yes
+    AC_MSG_ERROR([could not find Perl module $1])
   ])
-done
-AS_IF([test "x${module_check_fail}" != x],[
-  AC_MSG_ERROR([could not find all required Perl modules (see above)])
 ])
+FMDT_CHECK_PERL_MODULE([Capture::Tiny])
+FMDT_CHECK_PERL_MODULE([File::chmod])
+FMDT_CHECK_PERL_MODULE([PDF::API2])
+FMDT_CHECK_PERL_MODULE([Parallel::Iterator])
+FMDT_CHECK_PERL_MODULE([Sys::CPU])
+FMDT_CHECK_PERL_MODULE([Text::BibTeX])
+FMDT_CHECK_PERL_MODULE([Text::Unidecode])
+FMDT_CHECK_PERL_MODULE([XML::LibXML])
+FMDT_CHECK_PERL_MODULE([XML::LibXSLT])
 
 # check for fallback editor
 AC_SUBST([fallback_editor],[''])
