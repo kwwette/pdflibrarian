@@ -108,6 +108,8 @@ sub edit_file {
 
 sub find_files {
     my ($file2inode, $inode2files, $extn, @files_dirs) = @_;
+    die unless ref($file2inode) eq 'HASH';
+    die unless ref($inode2files) eq 'HASH';
 
     # return hashes to/from files and their inodes
     my $wanted = sub {
