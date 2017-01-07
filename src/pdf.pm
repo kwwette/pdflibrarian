@@ -45,7 +45,7 @@ my $pdflibdir = fmdtools::get_library_dir('PDF');
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
 foreach my $type ($structure->types()) {
-    $structure->add_fields($type, [qw(keyword file)], [qw(collaboration)]);
+    $structure->add_fields($type, [qw(keyword file title year)], [qw(collaboration)]);
 }
 
 1;
