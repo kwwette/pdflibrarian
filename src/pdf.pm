@@ -36,6 +36,7 @@ use XML::LibXSLT;
 use Text::BibTeX;
 use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
+use Text::Unidecode;
 
 use fmdtools;
 
@@ -66,6 +67,9 @@ sub act {
             # read BibTeX entries from PDF metadata
             my @bibentries = read_bib_from_PDF(@pdffiles);
 
+            # generate initial keys for BibTeX entries
+            generate_bib_keys(@bibentries);
+
             # write BibTeX entries to a temporary file for editing
             my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
             binmode($fh, ":encoding(iso-8859-1)");
@@ -73,6 +77,12 @@ sub act {
 
             # edit BibTeX entries in PDF files
             @bibentries = edit_bib_in_fh($fh, @bibentries);
+
+            # regenerate keys for modified BibTeX entries
+            generate_bib_keys(@bibentries);
+
+            # write BibTeX entries to PDF metadata
+            @bibentries = write_bib_to_PDF(@bibentries);
 
             # filter BibTeX entries of PDF files in library
             @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
@@ -114,8 +124,15 @@ sub act {
         when ("add") {
             croak "$0: action '$action' requires arguments" unless @args > 0;
 
+            # get list of unique PDF files
+            my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+            croak "$0: no PDF files to read from" unless @pdffiles > 0;
+
+            # read BibTeX entries from PDF metadata
+            my @bibentries = read_bib_from_PDF(@pdffiles);
+
             # add PDF files to library
-            organise_library_PDFs(@args);
+            organise_library_PDFs(@bibentries);
 
         }
 
@@ -138,8 +155,21 @@ sub act {
         when ("reorganise") {
             croak "$0: action '$action' takes no arguments" unless @args == 0;
 
+            # get list of unique PDF files in library
+            my @pdffiles = fmdtools::find_unique_files('pdf', $pdflibdir);
+            croak "$0: no PDF files in library $pdflibdir" unless @pdffiles > 0;
+
+            # read BibTeX entries from PDF metadata
+            my @bibentries = read_bib_from_PDF(@pdffiles);
+
+            # regenerate keys for all BibTeX entries
+            generate_bib_keys(@bibentries);
+
+            # write BibTeX entries to PDF metadata
+            write_bib_to_PDF(@bibentries);
+
             # reorganise PDF files in library
-            organise_library_PDFs($pdflibdir);
+            organise_library_PDFs(@bibentries);
 
         }
 
@@ -496,9 +526,6 @@ EOF
         $bibentry->set('checksum', $checksums{$bibentry->get('file')});
     }
 
-    # write BibTeX entries to PDF metadata
-    @bibentries = write_bib_to_PDF(@bibentries);
-
     return @bibentries;
 }
 
@@ -534,18 +561,76 @@ sub format_bib_authors {
 
 }
 
+sub generate_bib_keys {
+    my (@bibentries) = @_;
+
+    # generate keys for BibTeX entries
+    my $keys = 0;
+    foreach my $bibentry (@bibentries) {
+        my $key = "";
+
+        # add formatted authors or collaborations
+        my (@authors, @collaborations);
+        format_bib_authors(\@authors, \@collaborations, $bibentry, "l", 2, "EtAl");
+        if (@collaborations > 0) {
+            $key .= join('', map { substr($_, 0, 4) } @collaborations);
+        } else {
+            $key .= join('', map { substr($_, 0, 4) } @authors);
+        }
+
+        # add year
+        $key .= $bibentry->get("year");
+
+        # add abbreviated title
+        my $title = $bibentry->get("title");
+        $title =~ tr/@/A/;
+        $title =~ s/[^\w\d\s-]//g;
+        my @words;
+        foreach my $word (fmdtools::remove_short_words(split(/\s+/, $title))) {
+            $word = ucfirst($word);
+            if (scalar(() = $word =~ /[A-Z]/g) > 1) {
+                $word =~ s/[^A-Z]//g;
+            } else {
+                $word =~ s/[aeiou]//g;
+            }
+            $word = substr($word, 0, 3);
+            push @words, $word if @words < 4 || grep { $word eq $_ } qw(I II III IV V VI VII VIII IX);
+        }
+        $key .= ':' . join('', @words);
+        given ($bibentry->type) {
+
+            # append volume number (if any) for books
+            when (/book$/) {
+                my $volume = $bibentry->get("volume");
+                if (defined($volume)) {
+                    $key .= ".$volume";
+                }
+            }
+
+        }
+
+        # sanitise key
+        $key = unidecode($key);
+        $key =~ s/[^\w\d:]//g;
+
+        # set key to generated key, unless start of key matches generated key
+        # - this is so user can further customise key by appending characters
+        unless ($bibentry->key =~ /^$key/) {
+            $bibentry->set_key($key);
+            ++$keys;
+        }
+
+    }
+    fmdtools::progress("generated keys for %i BibTeX entries\n", $keys) if $keys > 0;
+
+}
+
 sub organise_library_PDFs {
-    my (@args) = @_;
-    my $useentries = defined(blessed($args[0]));
+    my (@bibentries) = @_;
 
     # find PDF files to organise
     my (@files_dirs, %file2inode, %inode2files);
-    if ($useentries) {
-        @files_dirs = map { $_->get('file') } @args;
-    } else {
-        @files_dirs = @args;
-    }
-    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', @files_dirs);
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', map { $_->get('file') } @bibentries);
 
     # get list of unique PDF files
     my @pdffiles = map { @{$_}[0] } values(%inode2files);
@@ -553,14 +638,6 @@ sub organise_library_PDFs {
 
     # add existing PDF files in library to file/inode hashes
     fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
-
-    # read BibTeX entries from PDF metadata
-    my @bibentries;
-    if ($useentries) {
-        @bibentries = @args;
-    } else {
-        @bibentries = read_bib_from_PDF(@pdffiles);
-    }
 
     # organise PDFs in library
     foreach my $bibentry (@bibentries) {

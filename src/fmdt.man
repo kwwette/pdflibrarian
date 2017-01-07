@@ -21,6 +21,8 @@ Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdire
 This file is then opened in an editing program, given either by the \fI$VISUAL\fP or \fI$EDITOR\fP environment variables, or else the program `@fallback_editor@'.
 Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry.
 
+\fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
+
 .TP
 \fIexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
@@ -37,4 +39,4 @@ Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\
 
 .TP
 \fIreorganise\fP
-Reorganise all files in the PDF library.
+Reorganise all files in the PDF library, and regenerate BibTeX keys.
