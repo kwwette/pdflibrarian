@@ -175,12 +175,14 @@ sub read_bib_from_PDF {
         }
         my $bibentry = new Text::BibTeX::BibEntry $bibstr;
         croak "$0: failed to parse BibTeX entry" unless $bibentry->parse_ok;
+        $bibentry->{structure} = $structure;
 
         # save name of PDF file
         $bibentry->set('file', $pdffile);
 
         return $bibentry;
     });
+
 
     return @bibentries;
 }
@@ -190,9 +192,6 @@ sub write_bib_to_fh {
 
     # print BibTeX entries
     for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
-
-        # set BibTeX database structure
-        $bibentry->{structure} = $structure;
 
         # coerse entry into BibTeX database structure
         $bibentry->silently_coerce();
@@ -232,102 +231,46 @@ sub write_bib_to_fh {
 sub read_bib_from_file {
     my ($filename) = @_;
 
-    # parse BibTeX entries
-    my $errmsgs;
-    my @bibentries;
+    # check that the file contains non-comment, non-enpty lines
     {
-
-        # open file
-        open(my $fh, $filename) or croak "$0: could not open '$filename': $!";
-
-        # check that the file contains non-comment, non-enpty lines
-        my $doparse = 0;
+        my $nonempty = 1;
+        open(my $fh, $filename) or croak "$0: could not open file '$filename': $!";
         while (<$fh>) {
             next if /^%/;
             next if /^\s*$/;
-            $doparse = 1;
+            $nonempty = 0;
             last;
         }
-        $fh->seek(0, SEEK_SET);
-
-        # the btparse library used by Text::BibTeX uses static memory
-        # to store its parsing state, which means that a file MUST be
-        # parsed IN ITS ENTIRETY (i.e. to end-of-file) before the library
-        # can parse another file; this needs careful handling to get right!
-        while ($doparse) {
-
-            # try to parse a BibTeX entry, capturing any error messages
-            my $bibentry;
-            my $errout = Capture::Tiny::capture_merged {
-                $bibentry = new Text::BibTeX::BibEntry $filename, $fh;
-            };
-
-            # if error messages were printed, parsing failed
-            if (length($errout) > 0) {
-
-                # save error messages
-                $errmsgs .= $errout;
-
-                # we MUST get to end-of-file in order for the btparse
-                # library to reset itself; so seek to end-of-file then
-                # try to parse a final BibTeX entry
-                $fh->sysseek(0, SEEK_END);
-                $errout = Capture::Tiny::capture_merged {
-                    $bibentry = new Text::BibTeX::BibEntry $filename, $fh;
-                };
-
-                last;
-
-            }
-
-            # if $bibentry is false, there are no more BibTeX
-            # entries and parsing has successfully completed
-            last if !$bibentry;
-
-            # save BibTeX entry
-            push @bibentries, $bibentry;
-
-        }
-
-        # close file
         $fh->close();
-
+        return (1, ()) if $nonempty;
     }
 
-    # check entries are conformant with BibTeX database structure
-    foreach my $bibentry (@bibentries) {
-
-        # set BibTeX database structure
-        $bibentry->{structure} = $structure;
-
-        # check entry
-        my $errout = Capture::Tiny::capture_merged {
-            $bibentry->check();
+    # parse the BibTeX file, capturing any error messages
+    my $errmsgs;
+    my @bibentries;
+    {
+        my $bib = new Text::BibTeX::File $filename or croak "$0: could not open file '$filename'";
+        $bib->{structure} = $structure;
+        $errmsgs = Capture::Tiny::capture_merged {
+            while (my $bibentry = new Text::BibTeX::BibEntry $bib) {
+                next unless $bibentry->parse_ok;
+                next unless $bibentry->check();
+                push @bibentries, $bibentry;
+            }
         };
-
-        # if error messages were printed, check failed
-        if (length($errout) > 0) {
-
-            # save error messages
-            $errmsgs .= $errout;
-
-            last;
-
-        }
-
+        $bib->close();
     }
 
-    # if errors were encountered, return unsuccessfully
-    if (defined($errmsgs)) {
-
-        # parse error messages
+    # if parsing was unsuccessful, return error messages
+    if (length($errmsgs) > 0) {
         my @errors;
         foreach my $msg (split(/\n/, $errmsgs)) {
+            $msg =~ s/^$filename,\s*//;
             given ($msg) {
-                when (/(?:^|.*, )line (\d+)[,:]?\s*(.*)$/) {
+                when (/^line (\d+)[,:]?\s*(.*)$/) {
                     push @errors, { from => $1, msg => $2 };
                 }
-                when (/(?:^|.*, )lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
+                when (/^lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
                     push @errors, { from => $1, to => $2, msg => $3 };
                 }
                 default {
@@ -335,9 +278,13 @@ sub read_bib_from_file {
                 }
             }
         }
-
         return (0, @errors);
+    }
 
+    # remove 'file' field from Text::BibTeX::BibEntry, since it
+    # contains a GLOB item that cannot be serialised by Storable
+    foreach my $bibentry (@bibentries) {
+        delete($bibentry->{file}) if defined($bibentry->{file});
     }
 
     return (1, @bibentries);

@@ -60,13 +60,22 @@ AC_DEFUN([FMDT_CHECK_PERL_MODULE],[
     AC_MSG_RESULT([no])
     AC_MSG_ERROR([could not find Perl module $1])
   ])
+  m4_ifval([$2],[
+    AC_MSG_CHECKING([if Perl module $1 supports '$2'])
+    AS_IF([${PERL} -M'$1' -e '$2' >/dev/null 2>&1],[
+      AC_MSG_RESULT([yes])
+    ],[
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([Perl module $1 does not support '$2'])
+    ])
+  ])
 ])
 FMDT_CHECK_PERL_MODULE([Capture::Tiny])
 FMDT_CHECK_PERL_MODULE([File::chmod])
 FMDT_CHECK_PERL_MODULE([PDF::API2])
 FMDT_CHECK_PERL_MODULE([Parallel::Iterator])
 FMDT_CHECK_PERL_MODULE([Sys::CPU])
-FMDT_CHECK_PERL_MODULE([Text::BibTeX])
+FMDT_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])
 FMDT_CHECK_PERL_MODULE([Text::Unidecode])
 FMDT_CHECK_PERL_MODULE([XML::LibXML])
 FMDT_CHECK_PERL_MODULE([XML::LibXSLT])
