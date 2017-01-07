@@ -72,13 +72,13 @@ sub act {
             write_bib_to_fh($fh, @bibentries);
 
             # edit BibTeX entries in PDF files
-            my @modbibentries = edit_bib_in_fh($fh, @bibentries);
+            @bibentries = edit_bib_in_fh($fh, @bibentries);
 
             # filter BibTeX entries of PDF files in library
-            @modbibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @modbibentries;
+            @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
 
             # reorganise any PDF files already in library
-            organise_library_PDFs(@modbibentries) if @modbibentries > 0;
+            organise_library_PDFs(@bibentries) if @bibentries > 0;
 
         }
 
@@ -153,6 +153,20 @@ sub act {
     return 0;
 }
 
+sub bibentry_checksum {
+    my ($bibentry) = @_;
+
+    # generate a checksum for a BibTeX entry
+    my $digest = Digest::SHA->new();
+    $digest->add($bibentry->type, $bibentry->key);
+    foreach my $bibfield (sort { $a cmp $b } $bibentry->fieldlist()) {
+        next if $bibfield eq 'checksum';
+        $digest->add($bibfield, $bibentry->get($bibfield));
+    }
+
+    return $digest->hexdigest;
+}
+
 sub read_bib_from_PDF {
     my (@pdffiles) = @_;
 
@@ -191,6 +205,11 @@ sub read_bib_from_PDF {
         return $bibentry;
     });
 
+    # add checksums to BibTeX entries
+    foreach my $bibentry (@bibentries) {
+        my $checksum = bibentry_checksum($bibentry);
+        $bibentry->set('checksum', $checksum);
+    }
 
     return @bibentries;
 }
@@ -200,6 +219,12 @@ sub write_bib_to_fh {
 
     # print BibTeX entries
     for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+
+        # create a copy of BibTeX entry
+        $bibentry = $bibentry->clone();
+
+        # remove checksum before printing
+        $bibentry->delete('checksum');
 
         # coerse entry into BibTeX database structure
         $bibentry->silently_coerce();
@@ -301,8 +326,18 @@ sub read_bib_from_file {
 sub write_bib_to_PDF {
     my (@bibentries) = @_;
 
-    # write BibTeX entries to PDF files
-    fmdtools::parallel_loop("writing %i/%i BibTeX entries to PDF", \@bibentries, sub {
+    # filter out unmodified BibTeX entries
+    my @modbibentries;
+    foreach my $bibentry (@bibentries) {
+        my $checksum = bibentry_checksum($bibentry);
+        next if ($bibentry->get('checksum') // "") eq $checksum;
+        push @modbibentries, $bibentry;
+        $bibentry->set('checksum', $checksum);
+    }
+    fmdtools::progress("not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries) if @modbibentries < @bibentries;
+
+    # write modified BibTeX entries to PDF files
+    fmdtools::parallel_loop("writing %i/%i BibTeX entries to PDF", \@modbibentries, sub {
         my ($bibentry) = @_;
 
         # get name of PDF file
@@ -326,7 +361,7 @@ sub write_bib_to_PDF {
         $xmlbibtype->setNamespace("http://bibtexml.sf.net/", "bibtex", 1);
         $xmlbibentry->appendChild($xmlbibtype);
         foreach my $bibfield ($bibentry->fieldlist()) {
-            next if $bibfield eq 'file';
+            next if grep { $bibfield eq $_ } qw(checksum file);
             next unless length($bibentry->get($bibfield)) > 0;
             my $xmlbibfield = $xml->createElementNS("http://bibtexml.sf.net/", lc($bibfield));
             $xmlbibfield->setNamespace("http://bibtexml.sf.net/", "bibtex", 1);
@@ -381,27 +416,17 @@ sub write_bib_to_PDF {
 
     });
 
+    return @modbibentries;
 }
 
 sub edit_bib_in_fh {
     my ($oldfh, @bibentries) = @_;
     die unless blessed($oldfh) eq 'File::Temp';
 
-    # generate a checksum for a BibTeX entry
-    my $bibentry_checksum = sub {
-        my ($bibentry) = @_;
-        my $digest = Digest::SHA->new();
-        $digest->add($bibentry->type, $bibentry->key);
-        foreach my $bibfield (sort { $a cmp $b } $bibentry->fieldlist()) {
-            $digest->add($bibfield, $bibentry->get($bibfield));
-        }
-        return $digest->hexdigest;
-    };
-
-    # create checksums of BibTeX entries
+    # save checksums of BibTeX entries
     my %checksums;
     foreach my $bibentry (@bibentries) {
-        $checksums{$bibentry->get('file')} = &$bibentry_checksum($bibentry);
+        $checksums{$bibentry->get('file')} = $bibentry->get('checksum');
     }
 
     # edit and re-read BibTeX entries, allowing for errors
@@ -466,14 +491,15 @@ EOF
 
     }
 
-    # filter out BibTeX entries that have not been modified
-    my @modbibentries = grep { &$bibentry_checksum($_) ne $checksums{$_->get('file')} } @bibentries;
-    fmdtools::progress("not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries) if @modbibentries < @bibentries;
+    # restore checksums of BibTeX entries
+    foreach my $bibentry (@bibentries) {
+        $bibentry->set('checksum', $checksums{$bibentry->get('file')});
+    }
 
     # write BibTeX entries to PDF metadata
-    write_bib_to_PDF(@modbibentries);
+    @bibentries = write_bib_to_PDF(@bibentries);
 
-    return @modbibentries;
+    return @bibentries;
 }
 
 sub format_bib_authors {
