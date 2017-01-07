@@ -70,6 +70,11 @@ sub act {
             # generate initial keys for BibTeX entries
             generate_bib_keys(@bibentries);
 
+            # coerse entries into BibTeX database structure
+            foreach my $bibentry (@bibentries) {
+              $bibentry->silently_coerce();
+            }
+
             # write BibTeX entries to a temporary file for editing
             my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
             binmode($fh, ":encoding(iso-8859-1)");
@@ -255,9 +260,6 @@ sub write_bib_to_fh {
 
         # remove checksum before printing
         $bibentry->delete('checksum');
-
-        # coerse entry into BibTeX database structure
-        $bibentry->silently_coerce();
 
         # arrange BibTeX fields in the following order
         my %order;
