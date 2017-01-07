@@ -476,33 +476,33 @@ EOF
 }
 
 sub format_bib_authors {
-    my ($bibentry, $authors, $collaborations) = @_;
+    my ($authors, $collaborations, $bibentry, $nameformat, $maxauthors, $etal) = @_;
     die unless ref($authors) eq 'ARRAY';
     die unless ref($collaborations) eq 'ARRAY';
 
     # author formatting for PDF filenames
-    my $authorformat = new Text::BibTeX::NameFormat("vl");
+    my $authorformat = new Text::BibTeX::NameFormat($nameformat);
     my $bibname_format = sub {
         my $author = $authorformat->apply($_[0]);
         $author =~ s/[{}]//g;
+        $author =~ s/\\.//g;
         if ($author =~ /\sCollaboration$/i) {
             $author =~ s/\s.*$//;
         }
         $author;
     };
 
-    # format authors and collaborations
-    foreach ($bibentry->names("author")) {
-        my $author = &$bibname_format($_);
-        if (@$authors > 2 || $author eq "others") {
-            push @$authors, "et al";
-            last;
-        }
-        push @$authors, $author;
+    # format authors
+    @$authors = map { &$bibname_format($_) } $bibentry->names("author");
+    if (@$authors > 0) {
+        @$authors = ($authors->[0], $etal) if defined($maxauthors) && @$authors > $maxauthors;
+        $authors->[-1] = $etal if $authors->[-1] eq "others";
     }
-    foreach ($bibentry->names("collaboration")) {
-        my $collaboration = &$bibname_format($_);
-        push @$collaborations, $collaboration;
+
+    # format collaborations
+    @$collaborations = map { &$bibname_format($_) } $bibentry->names("collaboration");
+    if (@$collaborations > 0) {
+        $collaborations->[-1] = $etal if $collaborations->[-1] eq "others";
     }
 
 }
@@ -541,7 +541,7 @@ sub organise_library_PDFs {
 
         # format authors and collaborations
         my (@authors, @collaborations);
-        format_bib_authors($bibentry, \@authors, \@collaborations);
+        format_bib_authors(\@authors, \@collaborations, $bibentry, "vl", 2, "et al");
 
         # abbreviate title
         my $title = fmdtools::abbreviate_words($bibentry->get("title"));
