@@ -556,6 +556,7 @@ sub format_bib_authors {
     # format collaborations
     @$collaborations = map { &$bibname_format($_) } $bibentry->names("collaboration");
     if (@$collaborations > 0) {
+        @$collaborations = ($collaborations->[0], $etal) if defined($maxauthors) && @$collaborations > $maxauthors;
         $collaborations->[-1] = $etal if $collaborations->[-1] eq "others";
     }
 
