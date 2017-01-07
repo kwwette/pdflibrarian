@@ -543,8 +543,10 @@ sub organise_library_PDFs {
         my (@authors, @collaborations);
         format_bib_authors(\@authors, \@collaborations, $bibentry, "vl", 2, "et al");
 
-        # abbreviate title
-        my $title = fmdtools::abbreviate_words($bibentry->get("title"));
+        # format and abbreviate title
+        my $title = $bibentry->get("title");
+        $title =~ s/[^\w\d\s-]//g;
+        $title = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $title)));
 
         # make new name for PDF; should be unique within library
         my $newpdffile;

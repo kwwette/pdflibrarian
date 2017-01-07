@@ -177,26 +177,20 @@ sub parallel_loop {
     return @outarray;
 }
 
-sub abbreviate_words {
-    my ($words) = @_;
+sub remove_short_words {
+    my (@words) = @_;
 
-    # remove most non-alphanumeric characters
-    $words =~ s/[^\w\d\s-]//g;
-
-    # remove words from abreviation
-    my @abbrev;
-    foreach my $word (split /\s+/, $words) {
-        next if grep { $word =~ /^$_$/i } qw(
+    # remove short words
+    my @short_words =
+      qw(
             a
             an   as   at   by   if   in   is   of   on   or   so   to   up
             and  are  but  for  its  nor  now  off  per  the  via
             amid down from into like near once onto over past than than that upon when with
-        );
-        push @abbrev, ucfirst($word);
-    }
-    $words = join(' ', @abbrev);
+       );
+    @words = grep { my $word = $_; ! scalar grep { $word =~ /^$_$/i } @short_words } @words;
 
-    return $words;
+    return @words;
 }
 
 sub make_library_filenames {
