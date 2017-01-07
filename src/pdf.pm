@@ -63,8 +63,16 @@ sub act {
             my @pdffiles = fmdtools::find_unique_files('pdf', @args);
             croak "$0: no PDF files to edit" unless @pdffiles > 0;
 
+            # read BibTeX entries from PDF metadata
+            my @bibentries = read_bib_from_PDF(@pdffiles);
+
+            # write BibTeX entries to a temporary file for editing
+            my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+            binmode($fh, ":encoding(iso-8859-1)");
+            write_bib_to_fh($fh, @bibentries);
+
             # edit BibTeX entries in PDF files
-            my @modbibentries = edit_bib_in_PDFs(@pdffiles);
+            my @modbibentries = edit_bib_in_fh($fh, @bibentries);
 
             # filter BibTeX entries of PDF files in library
             @modbibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @modbibentries;
@@ -375,8 +383,9 @@ sub write_bib_to_PDF {
 
 }
 
-sub edit_bib_in_PDFs {
-    my (@pdffiles) = @_;
+sub edit_bib_in_fh {
+    my ($oldfh, @bibentries) = @_;
+    die unless blessed($oldfh) eq 'File::Temp';
 
     # generate a checksum for a BibTeX entry
     my $bibentry_checksum = sub {
@@ -389,20 +398,11 @@ sub edit_bib_in_PDFs {
         return $digest->hexdigest;
     };
 
-    # read BibTeX entries from PDF metadata
-    my @bibentries = read_bib_from_PDF(@pdffiles);
-
     # create checksums of BibTeX entries
     my %checksums;
     foreach my $bibentry (@bibentries) {
         $checksums{$bibentry->get('file')} = &$bibentry_checksum($bibentry);
     }
-
-    # write BibTeX entries to a temporary file for editing
-    my $oldfh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
-    binmode($oldfh, ":encoding(iso-8859-1)");
-    write_bib_to_fh($oldfh, @bibentries);
-    $oldfh->flush();
 
     # edit and re-read BibTeX entries, allowing for errors
     my @errors;
@@ -433,7 +433,8 @@ EOF
                 print $fh "%% ERROR: $_->{msg}\n";
             }
         }
-        $oldfh->sysseek(0, SEEK_SET);
+        $oldfh->flush();
+        $oldfh->seek(0, SEEK_SET);
         while (<$oldfh>) {
             next if /^%/;
             print $fh $_;
