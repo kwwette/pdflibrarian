@@ -540,6 +540,7 @@ sub format_bib_authors {
     my $authorformat = new Text::BibTeX::NameFormat($nameformat);
     my $bibname_format = sub {
         my $author = $authorformat->apply($_[0]);
+        $author =~ s/~/ /g;
         $author =~ s/[{}]//g;
         $author =~ s/\\.//g;
         if ($author =~ /\sCollaboration$/i) {
@@ -576,10 +577,10 @@ sub generate_bib_keys {
         my (@authors, @collaborations);
         format_bib_authors(\@authors, \@collaborations, $bibentry, "l", 2, "EtAl");
         if (@collaborations > 0) {
-            $key .= join('', map { substr($_, 0, 4) } @collaborations);
-        } else {
-            $key .= join('', map { substr($_, 0, 4) } @authors);
+            @authors = @collaborations;
         }
+        map { $_ =~ s/\s//g; } @authors;
+        $key .= join('', map { substr($_, 0, 4) } @authors);
 
         # add year
         $key .= $bibentry->get("year");
