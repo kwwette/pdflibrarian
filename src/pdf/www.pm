@@ -47,6 +47,7 @@ sub query_ads {
   # send query to ADS
   my $querycontent;
   {
+    fmdtools::progress("sending query to ADS ...\n");
     my $adsuri = URI->new('https://api.adsabs.harvard.edu/v1/search/query');
     $adsuri->query_form(rows => 1, fl => 'bibcode', 'q' => $query);
     my $request = HTTP::Request->new('GET', $adsuri);
@@ -82,6 +83,7 @@ sub query_ads {
 
   # export BibTeX from ADS
   {
+    fmdtools::progress("exporting BibTeX data from ADS ...\n");
     my $adsuri = URI->new('https://api.adsabs.harvard.edu/v1/export/bibtex');
     my $request = HTTP::Request->new('POST', $adsuri);
     $request->header('Authorization' => "Bearer $apitoken");
