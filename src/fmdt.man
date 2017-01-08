@@ -17,23 +17,23 @@ PDF file metadata tools.
 
 .SH CONFIGURATION
 
-User-specific configuration options can be set in the file `~/.fmdtconfig'.
+User-specific configuration options can be set in the file \fB~/.fmdtconfig\fP.
 
 .SH PDF FILE METADATA TOOLS
 
 .SS Actions
 
 .RE
-\fIedit\fP {\fIfiles\fP|\fIdirectories\fP}...
+\fBedit\fP {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
-This file is then opened in an editing program, given either by the \fI$VISUAL\fP or \fI$EDITOR\fP environment variables, or else the program `@fallback_editor@'.
+This file is then opened in an editing program, given either by the \fB$VISUAL\fP or \fB$EDITOR\fP environment variables, or else the program \fB@fallback_editor@\fP.
 Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry.
 
 \fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
 
 .RE
-\fIretrieve\fP [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP \fIquery\fP
+\fBretrieve\fP [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP \fIquery\fP
 .RS 4
 Interrogate the online \fIsource\fP using the given \fIquery\fP, and write any matched BibTeX bibliographic data to a temporary file.
 This file is then opened in an editing program, as for \fIedit\fP.
@@ -41,36 +41,36 @@ Any modifications are then written to the given PDF \fIfile\fP.
 
 The following \fsource\fPs are supported:
 .RS 3
-\fIads\fP: query the NASA ADS database.
+\fBads\fP: query the NASA ADS database.
 .RE
 
 .RE
-\fIexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
+\fBexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
 Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
 
 .RE
-\fIadd\fP {\fIfiles\fP|\fIdirectories\fP}...
+\fBadd\fP {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
 
 .RE
-\fIremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
+\fBremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
 .RS 4
 Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
-Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-remove\-to\fP, which default to the system temporary directory, e.g. `/tmp'.
+Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-remove\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
 
 .RE
-\fIreorganise\fP
+\fBreorganise\fP
 .RS 4
 Reorganise all files in the PDF library, and regenerate BibTeX keys.
 
 .SS Configuration Options
 
-The following configuration options can be set under the section \fI[pdf]\fP:
+The following configuration options can be set under the section \fB[pdf]\fP:
 
 .RE
-\fIlibdir\fP
+\fBlibdir\fP
 .RS 4
-Location of the PDF library; defaults to `~/PDFLibrary'.
+Location of the PDF library; defaults to \fB~/PDFLibrary\fP.
