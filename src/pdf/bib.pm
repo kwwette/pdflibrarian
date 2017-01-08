@@ -24,6 +24,7 @@ use feature qw/switch/;
 
 use Carp;
 use Scalar::Util qw(blessed);
+use List::Util qw(max);
 use Digest::SHA;
 use Encode;
 use File::Temp;
@@ -303,7 +304,7 @@ sub write_bib_to_PDF {
     my $xmplen = length($xmphead) + length($xmpdata) + length($xmptail);
     my $xmppadlen = length($xmp) - $xmplen;
     if ($xmppadlen <= 0) {
-      $xmppadlen = List::Util->max(4096, 2*length($xmp), 2*length($xmpdata))  - $xmplen;
+      $xmppadlen = max(4096, 2*length($xmp), 2*length($xmpdata)) - $xmplen;
     }
     my $xmppad = ((" " x 99) . "\n") x int(1 + $xmppadlen / 100);
     my $newxmp = $xmphead . $xmpdata . substr($xmppad, 0, $xmppadlen) . $xmptail;
