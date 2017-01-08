@@ -10,8 +10,14 @@ pkgperllib_DATA = \
 	src/pdf.pm \
 	$(END_OF_LINE)
 
+pdflibdir = $(pkgperllibdir)/pdf
+pdflib_DATA = \
+	src/pdf/bib.pm \
+	src/pdf/org.pm \
+	$(END_OF_LINE)
+
 EXTRA_DIST = $(DATA)
 pkgdata_DATA = \
-	src/dublincore.xsl \
-	src/bibtex.xsl \
+	src/pdf/dublincore.xsl \
+	src/pdf/bibtex.xsl \
 	$(END_OF_LINE)
