@@ -83,8 +83,8 @@ sub generate_bib_keys {
     # add formatted authors, editors, or collaborations
     {
       my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
-      @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
       @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
+      @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
       $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
     }
 
@@ -202,8 +202,8 @@ sub organise_library_PDFs {
 
     # make new name for PDF; should be unique within library
     my $newpdffile = "@collaborations";
-    $newpdffile = "@editors" unless length($newpdffile) > 0;
     $newpdffile = "@authors" unless length($newpdffile) > 0;
+    $newpdffile = "@editors" unless length($newpdffile) > 0;
     $newpdffile .= " $title";
     given ($bibentry->type) {
 
