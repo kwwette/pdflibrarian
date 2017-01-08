@@ -32,13 +32,13 @@ use fmdtools::pdf;
 # handle help options
 my $help = 0;
 GetOptions(
-    "help|h" => \$help,
-    ) or croak "$0: could not parse options";
+           "help|h" => \$help,
+          ) or croak "$0: could not parse options";
 if ($help) {
-    my $prefix = "@prefix@";
-    my $datarootdir = "@datarootdir@";
-    system("@MAN@ @mandir@/man1/fmdt.1") == 0 or croak "$0: @MAN@ failed";
-    exit 1;
+  my $prefix = "@prefix@";
+  my $datarootdir = "@datarootdir@";
+  system("@MAN@ @mandir@/man1/fmdt.1") == 0 or croak "$0: @MAN@ failed";
+  exit 1;
 }
 
 # handle toolsets and actions
@@ -46,14 +46,14 @@ my $toolset = shift @ARGV // croak "$0: no toolset given";
 my $action = shift @ARGV // croak "$0: no action given";
 given ($toolset) {
 
-    # PDF toolset
-    when ("pdf") {
-        exit fmdtools::pdf::act($action, @ARGV);
-    }
+  # PDF toolset
+  when ("pdf") {
+    exit fmdtools::pdf::act($action, @ARGV);
+  }
 
-    # unknown toolset
-    default {
-        croak "$0: unknown toolset '$toolset'";
-    }
+  # unknown toolset
+  default {
+    croak "$0: unknown toolset '$toolset'";
+  }
 
 }
