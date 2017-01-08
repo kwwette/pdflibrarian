@@ -192,7 +192,7 @@ sub act {
   return 0;
 }
 
-sub bibentry_checksum {
+sub bib_checksum {
   my ($bibentry) = @_;
 
   # generate a checksum for a BibTeX entry
@@ -247,7 +247,7 @@ sub read_bib_from_PDF {
 
   # add checksums to BibTeX entries
   foreach my $bibentry (@bibentries) {
-    my $checksum = bibentry_checksum($bibentry);
+    my $checksum = bib_checksum($bibentry);
     $bibentry->set('checksum', $checksum);
   }
 
@@ -366,7 +366,7 @@ sub write_bib_to_PDF {
   # filter out unmodified BibTeX entries
   my @modbibentries;
   foreach my $bibentry (@bibentries) {
-    my $checksum = bibentry_checksum($bibentry);
+    my $checksum = bib_checksum($bibentry);
     next if ($bibentry->get('checksum') // "") eq $checksum;
     push @modbibentries, $bibentry;
     $bibentry->set('checksum', $checksum);
