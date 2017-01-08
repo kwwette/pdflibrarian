@@ -85,7 +85,7 @@ sub act {
 
     }
 
-    when ("retrieve") {
+    when (["retrieve", "import"]) {
       croak "$0: action '$action' requires arguments" unless @args > 0;
 
       # handle options
@@ -154,18 +154,23 @@ sub act {
       my @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, ());
       break if @bibentries == 0;
 
-      # regenerate key for modified BibTeX entry
+      # regenerate key for modified BibTeX entries
       fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
       # write BibTeX entries to PDF metadata
       @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
       break if @bibentries == 0;
 
-      # filter BibTeX entries of PDF files in library
-      @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
-      break if @bibentries == 0;
+      if ($action ne "import") {
 
-      # reorganise any PDF files already in library
+        # filter BibTeX entries of PDF files in library
+        @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+        break if @bibentries == 0;
+
+      }
+
+      # retrieve: reorganise any PDF files already in library
+      # import: add PDF files to library
       fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
     }
