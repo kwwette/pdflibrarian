@@ -36,6 +36,7 @@ use Text::BibTeX::NameFormat;
 use XML::LibXML;
 use XML::LibXSLT;
 
+use fmdtools;
 use fmdtools::pdf;
 
 # BibTeX database structure

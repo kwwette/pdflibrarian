@@ -28,6 +28,7 @@ use JSON;
 use LWP::UserAgent;
 use URI;
 
+use fmdtools;
 use fmdtools::pdf;
 
 # user agent for web queries

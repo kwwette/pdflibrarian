@@ -26,6 +26,7 @@ use Carp;
 use File::Spec;
 use Text::Unidecode;
 
+use fmdtools;
 use fmdtools::pdf;
 
 1;
