@@ -190,7 +190,7 @@ sub remove_short_words {
        );
     @words = grep { my $word = $_; ! scalar grep { $word =~ /^$_$/i } @short_words } @words;
 
-    return @words;
+    return wantarray ? @words : "@words";
 }
 
 sub make_library_filenames {
