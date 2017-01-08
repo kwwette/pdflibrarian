@@ -194,7 +194,7 @@ sub remove_short_words {
 }
 
 sub make_library_filenames {
-    my ($libdir, $newfile, @shelves) = @_;
+    my ($libdir, $newfile, $extn, @shelves) = @_;
     die unless @shelves > 0;
 
     # make shelves into library filenames to be linked
@@ -204,13 +204,12 @@ sub make_library_filenames {
         $path[-1] .= " $newfile";
         foreach (@path) {
             $_ = unidecode($_);
-            s/[\s~@&_=+,]/-/g;
-            s/[^\w\d.-]//g;
-            s/-+\././g;
+            s/[^\w\d]/-/g;
             s/--+/-/;
             s/^-+//;
             s/-+$//;
         }
+        $path[-1] .= ".$extn";
         push @newfiles, File::Spec->catfile($libdir, @path);
     }
 

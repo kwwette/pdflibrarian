@@ -742,7 +742,7 @@ sub organise_library_PDFs {
         }
 
         # make shelves into library filenames
-        my @newpdffiles = fmdtools::make_library_filenames($pdflibdir, $newpdffile, @shelves);
+        my @newpdffiles = fmdtools::make_library_filenames($pdflibdir, $newpdffile, 'pdf', @shelves);
 
         # create library links
         fmdtools::make_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, @newpdffiles);
