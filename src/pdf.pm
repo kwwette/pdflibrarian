@@ -669,18 +669,12 @@ sub organise_library_PDFs {
 
             # append report number (if any) for technical reports
             when ("techreport") {
-                my $number = $bibentry->get("number");
-                if (defined($number)) {
-                    $newpdffile .= " no$number";
-                }
+                $newpdffile .= " no" . $bibentry->get("number") if $bibentry->exists("number");
             }
 
             # append volume number (if any) for books
             when (/book$/) {
-                my $volume = $bibentry->get("volume");
-                if (defined($volume)) {
-                    $newpdffile .= " v$volume";
-                }
+                $newpdffile .= " v" . $bibentry->get("volume") if $bibentry->exists("volume");
             }
 
         }
