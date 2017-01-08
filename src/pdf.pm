@@ -532,37 +532,31 @@ EOF
 }
 
 sub format_bib_authors {
-    my ($authors, $collaborations, $bibentry, $nameformat, $maxauthors, $etal) = @_;
-    die unless ref($authors) eq 'ARRAY';
-    die unless ref($collaborations) eq 'ARRAY';
+    my ($nameformat, $maxauthors, $etal, @authors) = @_;
 
-    # author formatting for PDF filenames
+    # format authors
     my $authorformat = new Text::BibTeX::NameFormat($nameformat);
-    my $bibname_format = sub {
-        my $author = $authorformat->apply($_[0]);
+    foreach my $author (@authors) {
+        $author = $authorformat->apply($author);
         $author =~ s/~/ /g;
         $author =~ s/[{}]//g;
         $author =~ s/\\.//g;
         if ($author =~ /\sCollaboration$/i) {
             $author =~ s/\s.*$//;
         }
-        $author;
-    };
-
-    # format authors
-    @$authors = map { &$bibname_format($_) } $bibentry->names("author");
-    if (@$authors > 0) {
-        @$authors = ($authors->[0], $etal) if defined($maxauthors) && @$authors > $maxauthors;
-        $authors->[-1] = $etal if $authors->[-1] eq "others";
     }
 
-    # format collaborations
-    @$collaborations = map { &$bibname_format($_) } $bibentry->names("collaboration");
-    if (@$collaborations > 0) {
-        @$collaborations = ($collaborations->[0], $etal) if defined($maxauthors) && @$collaborations > $maxauthors;
-        $collaborations->[-1] = $etal if $collaborations->[-1] eq "others";
+    if (@authors > 0) {
+
+        # limit number of authors to '$maxathors'
+        @authors = ($authors[0], $etal) if defined($maxauthors) && @authors > $maxauthors;
+
+        # replace 'others' with preferred form of 'et al.'
+        $authors[-1] = $etal if $authors[-1] eq "others";
+
     }
 
+    return @authors;
 }
 
 sub generate_bib_keys {
@@ -573,14 +567,11 @@ sub generate_bib_keys {
     foreach my $bibentry (@bibentries) {
         my $key = "";
 
-        # add formatted authors or collaborations
-        my (@authors, @collaborations);
-        format_bib_authors(\@authors, \@collaborations, $bibentry, "l", 2, "EtAl");
-        if (@collaborations > 0) {
-            @authors = @collaborations;
-        }
-        map { $_ =~ s/\s//g; } @authors;
-        $key .= join('', map { substr($_, 0, 4) } @authors);
+        # add formatted authors, editors, or collaborations
+        my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
+        @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
+        @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
+        $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
 
         # add year
         $key .= $bibentry->get("year");
@@ -647,9 +638,10 @@ sub organise_library_PDFs {
     foreach my $bibentry (@bibentries) {
         my $pdffile = $bibentry->get('file');
 
-        # format authors and collaborations
-        my (@authors, @collaborations);
-        format_bib_authors(\@authors, \@collaborations, $bibentry, "vl", 2, "et al");
+        # format authors, editors, and collaborations
+        my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
+        my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
+        my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
         # format and abbreviate title
         my $title = $bibentry->get("title");
@@ -657,12 +649,9 @@ sub organise_library_PDFs {
         $title = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $title)));
 
         # make new name for PDF; should be unique within library
-        my $newpdffile;
-        if (@collaborations > 0) {
-            $newpdffile = "@collaborations";
-        } else {
-            $newpdffile = "@authors";
-        }
+        my $newpdffile = "@collaborations";
+        $newpdffile = "@editors" unless length($newpdffile) > 0;
+        $newpdffile = "@authors" unless length($newpdffile) > 0;
         $newpdffile .= " $title";
         given ($bibentry->type) {
 
