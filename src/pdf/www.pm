@@ -35,6 +35,67 @@ use fmdtools::pdf;
 my $useragent = LWP::UserAgent->new;
 $useragent->agent("$fmdtools::PACKAGE/$fmdtools::VERSION");
 
+# journal abbreviations in exported ADS BibTeX
+use constant AAS_MACROS =>
+  {
+   aj         => 'Astronomical Journal',
+   actaa      => 'Acta Astronomica',
+   araa       => 'Annual Review of Astronomy and Astrophys',
+   apj        => 'Astrophysical Journal',
+   apjl       => 'Astrophysical Journal Letters',
+   apjs       => 'Astrophysical Journal Supplement',
+   ao         => 'Applied Optics',
+   apss       => 'Astrophysics and Space Science',
+   aap        => 'Astronomy and Astrophysics',
+   aapr       => 'Astronomy and Astrophysics Reviews',
+   aaps       => 'Astronomy and Astrophysics Supplement',
+   azh        => 'Astronomicheskii Zhurnal',
+   baas       => 'Bulletin of the AAS',
+   bac        => 'Bulletin of the Astronomical Institutes of Czechoslovakia',
+   caa        => 'Chinese Astronomy and Astrophysics',
+   cjaa       => 'Chinese Journal of Astronomy and Astrophysics',
+   icarus     => 'Icarus',
+   jcap       => 'Journal of Cosmology and Astroparticle Physics',
+   jrasc      => 'Journal of the Royal Astronomical Society of Canada',
+   memras     => 'Memoirs of the Royal Astronomical Society',
+   mnras      => 'Monthly Notices of the Royal Astronomical Society',
+   na         => 'New Astronomy',
+   nar        => 'New Astronomy Review',
+   pra        => 'Physical Review A',
+   prb        => 'Physical Review B',
+   prc        => 'Physical Review C',
+   prd        => 'Physical Review D',
+   pre        => 'Physical Review E',
+   prl        => 'Physical Review Letters',
+   pasa       => 'Publications of the Astronomical Society of Australia',
+   pasp       => 'Publications of the Astronomical Society of the Pacific',
+   pasj       => 'Publications of the Astronomical Society of Japan',
+   rmxaa      => 'Revista Mexicana de Astronomia y Astrofisica',
+   qjras      => 'Quarterly Journal of the Royal Astronomical Society',
+   skytel     => 'Sky and Telescope',
+   solphys    => 'Solar Physics',
+   sovast     => 'Soviet Astronomy',
+   ssr        => 'Space Science Reviews',
+   zap        => 'Zeitschrift fuer Astrophysik',
+   nat        => 'Nature',
+   iaucirc    => 'IAU Cirulars',
+   aplett     => 'Astrophysics Letters',
+   apspr      => 'Astrophysics Space Physics Research',
+   bain       => 'Bulletin Astronomical Institute of the Netherlands',
+   fcp        => 'Fundamental Cosmic Physics',
+   gca        => 'Geochimica Cosmochimica Acta',
+   grl        => 'Geophysics Research Letters',
+   jcp        => 'Journal of Chemical Physics',
+   jgr        => 'Journal of Geophysics Research',
+   jqsrt      => 'Journal of Quantitiative Spectroscopy and Radiative Transfer',
+   memsai     => 'Memorie della Societ\`a Astronomica Italiana',
+   nphysa     => 'Nuclear Physics A',
+   physrep    => 'Physics Reports',
+   physscr    => 'Physica Scripta',
+   planss     => 'Planetary Space Science',
+   procspie   => 'Proceedings of the SPIE',
+  };
+
 1;
 
 sub query_ads {
@@ -110,6 +171,11 @@ sub query_ads {
   # extract BibTeX data
   my $bibstr = $exportjson->{export};
   croak "$0: BibTeX missing from ADS export response" unless length($bibstr) > 0;
+
+  # replace journal abbreviations in exported ADS BibTeX
+  while (my ($key, $value) = each %{AAS_MACROS()}) {
+    $bibstr =~ s/{\\$key}/{$value}/;
+  }
 
   return $bibstr;
 }
