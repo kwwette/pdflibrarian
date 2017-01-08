@@ -736,7 +736,6 @@ sub organise_library_PDFs {
       }
 
     }
-    $newpdffile .= ".pdf";
 
     # list of shelves to organise this file under
     my @shelves;
