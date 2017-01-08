@@ -121,6 +121,10 @@ sub act {
                 }
             }
 
+            # error if duplicate BibTeX keys are found
+            my @dupkeys = find_duplicate_keys(@bibentries);
+            croak "$0: exported BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
+
             # print BibTeX entries
             write_bib_to_fh(\*STDOUT, @bibentries);
 
@@ -294,7 +298,13 @@ sub write_bib_to_fh {
 }
 
 sub read_bib_from_file {
-    my ($filename) = @_;
+    my ($errors, $bibentries, $filename) = @_;
+    die unless ref($errors) eq 'ARRAY';
+    die unless ref($bibentries) eq 'ARRAY';
+
+    # initialise output arrays
+    @$errors = ();
+    @$bibentries = ();
 
     # check that the file contains non-comment, non-enpty lines
     {
@@ -307,12 +317,11 @@ sub read_bib_from_file {
             last;
         }
         $fh->close();
-        return (1, ()) if $nonempty;
+        return if $nonempty;
     }
 
     # parse the BibTeX file, capturing any error messages
     my $errmsgs;
-    my @bibentries;
     {
         my $bib = new Text::BibTeX::File $filename or croak "$0: could not open file '$filename'";
         $bib->{structure} = $structure;
@@ -320,39 +329,36 @@ sub read_bib_from_file {
             while (my $bibentry = new Text::BibTeX::BibEntry $bib) {
                 next unless $bibentry->parse_ok;
                 next unless $bibentry->check();
-                push @bibentries, $bibentry;
+                push @$bibentries, $bibentry;
             }
         };
         $bib->close();
     }
 
-    # if parsing was unsuccessful, return error messages
+    # remove 'file' field from Text::BibTeX::BibEntry, since it
+    # contains a GLOB item that cannot be serialised by Storable
+    foreach my $bibentry (@$bibentries) {
+        delete($bibentry->{file}) if defined($bibentry->{file});
+    }
+
+    # format error messages, if any
     if (length($errmsgs) > 0) {
-        my @errors;
         foreach my $msg (split(/\n/, $errmsgs)) {
             $msg =~ s/^$filename,\s*//;
             given ($msg) {
                 when (/^line (\d+)[,:]?\s*(.*)$/) {
-                    push @errors, { from => $1, msg => $2 };
+                    push @$errors, { from => $1, msg => $2 };
                 }
                 when (/^lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
-                    push @errors, { from => $1, to => $2, msg => $3 };
+                    push @$errors, { from => $1, to => $2, msg => $3 };
                 }
                 default {
-                    push @errors, { msg => $msg };
+                    push @$errors, { msg => $msg };
                 }
             }
         }
-        return (0, @errors);
     }
 
-    # remove 'file' field from Text::BibTeX::BibEntry, since it
-    # contains a GLOB item that cannot be serialised by Storable
-    foreach my $bibentry (@bibentries) {
-        delete($bibentry->{file}) if defined($bibentry->{file});
-    }
-
-    return (1, @bibentries);
 }
 
 sub write_bib_to_PDF {
@@ -465,6 +471,9 @@ sub edit_bib_in_fh {
     my @errors;
     while (1) {
 
+        # save number of errors in previous edit
+        my $nerrors = @errors;
+
         # write new temporary file for editing, including any error messages
         my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
         binmode($fh, ":encoding(iso-8859-1)");
@@ -505,18 +514,19 @@ EOF
         fmdtools::edit_file($fh->filename);
 
         # try to re-read BibTeX entries
-        my ($success, @retn) = read_bib_from_file($fh->filename);
+        read_bib_from_file(\@errors, \@bibentries, $fh->filename);
 
-        # BibTeX entries have been successfully read
-        if ($success) {
-            @bibentries = @retn;
-            last;
+        # error if duplicate BibTeX keys are found
+        foreach my $dupkey (find_duplicate_keys(@bibentries)) {
+            push @errors, { msg => "duplicated key '$dupkey'" };
         }
 
+        # BibTeX entries have been successfully read
+        last if @errors == 0;
+
         # save error messages with adjusted line numbers
-        my $linediff = @retn - @errors;
-        @errors = @retn;
         foreach (@errors) {
+            my $linediff = @errors - $nerrors;
             $_->{from} += $linediff if defined($_->{from});
             $_->{to} += $linediff if defined($_->{to});
         }
@@ -667,6 +677,18 @@ sub generate_bib_keys {
     }
     fmdtools::progress("generated keys for %i BibTeX entries\n", $keys) if $keys > 0;
 
+}
+
+sub find_duplicate_keys {
+    my (@bibentries) = @_;
+
+    # find duplicate keys in BibTeX entries
+    my %keycount;
+    foreach my $bibentry (@bibentries) {
+        ++$keycount{$bibentry->key};
+    }
+
+    return grep { $keycount{$_} > 1 } keys(%keycount);
 }
 
 sub organise_library_PDFs {
