@@ -5,38 +5,45 @@ fmdt \- file metadata tools.
 
 .SH SYNOPSIS
 
-.TP
+.RE
 \fBfmdt\fP \fB\-h\fP|\fB\-\-help\fP
+.RS 4
 Display this help message.
 
-.TP
+.RE
 \fBfmdt\fP pdf \fIaction\fP [\fIoptions\fP]...
+.RS 4
 PDF file metadata tools.
 
 .SH PDF ACTIONS
 
-.TP
+.RE
 \fIedit\fP {\fIfiles\fP|\fIdirectories\fP}...
+.RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
 This file is then opened in an editing program, given either by the \fI$VISUAL\fP or \fI$EDITOR\fP environment variables, or else the program `@fallback_editor@'.
 Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry.
 
 \fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
 
-.TP
+.RE
 \fIexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
+.RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
 Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
 
-.TP
+.RE
 \fIadd\fP {\fIfiles\fP|\fIdirectories\fP}...
+.RS 4
 Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library, usually organised under `~/PDFLibrary'.
 
-.TP
+.RE
 \fIremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
+.RS 4
 Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
 Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-remove\-to\fP, which default to the system temporary directory, e.g. `/tmp'.
 
-.TP
+.RE
 \fIreorganise\fP
+.RS 4
 Reorganise all files in the PDF library, and regenerate BibTeX keys.
