@@ -14,6 +14,7 @@ pdflibdir = $(pkgperllibdir)/pdf
 pdflib_DATA = \
 	src/pdf/bib.pm \
 	src/pdf/org.pm \
+	src/pdf/www.pm \
 	$(END_OF_LINE)
 
 EXTRA_DIST = $(DATA)

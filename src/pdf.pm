@@ -29,6 +29,7 @@ use Getopt::Long;
 use fmdtools;
 use fmdtools::pdf::bib;
 use fmdtools::pdf::org;
+use fmdtools::pdf::www;
 
 # PDF library configuration
 our %config = fmdtools::get_library_config('pdf');
@@ -68,6 +69,88 @@ sub act {
       @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, @bibentries);
 
       # regenerate keys for modified BibTeX entries
+      fmdtools::pdf::org::generate_bib_keys(@bibentries);
+
+      # write BibTeX entries to PDF metadata
+      @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
+
+      # filter BibTeX entries of PDF files in library
+      @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+
+      # reorganise any PDF files already in library
+      fmdtools::pdf::org::organise_library_PDFs(@bibentries) if @bibentries > 0;
+
+    }
+
+    when ("retrieve") {
+      croak "$0: action '$action' requires arguments" unless @args > 0;
+
+      # handle options
+      my $source = 'ads';
+      my $parser = Getopt::Long::Parser->new;
+      $parser->getoptionsfromarray(\@args,
+                                   "from|f=s" => \$source,
+                                  ) or croak "$0: could not parse options for action '$action'";
+      croak "$0: action '$action' takes exactly 2 arguments" unless @args == 2;
+      my ($pdffile, $query) = @args;
+      croak "$0: PDF file '$pdffile' does not exist" unless -f $pdffile;
+
+      # retrieve BibTeX data
+      my $bibstr;
+      given ($source) {
+
+        # query NASA ADS
+        when ('ads') {
+          $bibstr = fmdtools::pdf::www::query_ads($query);
+        }
+
+        default {
+          croak "$0: unknown source '$source'";
+        }
+
+      }
+      $bibstr =~ s/^\s+//;
+      $bibstr =~ s/\s+$//;
+
+      # write BibTeX data to a temporary file for editing
+      my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+      binmode($fh, ":encoding(iso-8859-1)");
+      {
+
+        # try to parse BibTeX data
+        my $bibentry;
+        eval {
+          $bibentry = fmdtools::pdf::bib::read_bib_from_str($bibstr);
+        };
+        if (defined($bibentry)) {
+
+          # set name of PDF file
+          $bibentry->set('file', $pdffile);
+
+          # generate initial key for BibTeX entry
+          fmdtools::pdf::org::generate_bib_keys(($bibentry));
+
+          # coerse entry into BibTeX database structure
+          $bibentry->silently_coerce();
+
+          # write BibTeX entry
+          fmdtools::pdf::bib::write_bib_to_fh($fh, ($bibentry));
+
+        } else {
+
+          # try to add 'file' field to BibTeX data manually
+          $bibstr =~ s/\s*}$/,\n  file = {$pdffile}\n}/;
+
+          # write BibTeX data
+          print $fh "\n$bibstr\n";
+
+        }
+      }
+
+      # edit BibTeX data
+      my @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, ());
+
+      # regenerate key for modified BibTeX entry
       fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
       # write BibTeX entries to PDF metadata
