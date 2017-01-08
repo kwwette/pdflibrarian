@@ -531,6 +531,21 @@ EOF
     return @bibentries;
 }
 
+sub remove_tex_markup {
+    my (@words) = @_;
+
+    # remove TeX markup
+    foreach (@words) {
+        s/~/ /g;
+        s/\\\w+//g;
+        s/\\.//g;
+        s/[{}]//g;
+        s/\$//g;
+    }
+
+    return wantarray ? @words : "@words";
+}
+
 sub format_bib_authors {
     my ($nameformat, $maxauthors, $etal, @authors) = @_;
 
@@ -538,9 +553,7 @@ sub format_bib_authors {
     my $authorformat = new Text::BibTeX::NameFormat($nameformat);
     foreach my $author (@authors) {
         $author = $authorformat->apply($author);
-        $author =~ s/~/ /g;
-        $author =~ s/[{}]//g;
-        $author =~ s/\\.//g;
+        $author = remove_tex_markup($author);
         if ($author =~ /\sCollaboration$/i) {
             $author =~ s/\s.*$//;
         }
@@ -577,7 +590,7 @@ sub generate_bib_keys {
         $key .= $bibentry->get("year");
 
         # add abbreviated title
-        my $title = $bibentry->get("title");
+        my $title = remove_tex_markup($bibentry->get("title"));
         $title =~ tr/@/A/;
         $title =~ s/[^\w\d\s-]//g;
         my @words;
@@ -644,8 +657,7 @@ sub organise_library_PDFs {
         my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
         # format and abbreviate title
-        my $title = $bibentry->get("title");
-        $title =~ s/[^\w\d\s-]//g;
+        my $title = remove_tex_markup($bibentry->get("title"));
         $title = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $title)));
 
         # make new name for PDF; should be unique within library
