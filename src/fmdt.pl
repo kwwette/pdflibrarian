@@ -1,6 +1,6 @@
 #!@PERL@
 
-# Copyright (C) 2016 Karl Wette
+# Copyright (C) 2016--2017 Karl Wette
 #
 # This file is part of fmdtools.
 #
