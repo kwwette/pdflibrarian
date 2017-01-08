@@ -67,18 +67,21 @@ sub act {
 
       # edit BibTeX entries in PDF files
       @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, @bibentries);
+      break if @bibentries == 0;
 
       # regenerate keys for modified BibTeX entries
       fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
       # write BibTeX entries to PDF metadata
       @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
+      break if @bibentries == 0;
 
       # filter BibTeX entries of PDF files in library
       @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+      break if @bibentries == 0;
 
       # reorganise any PDF files already in library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries) if @bibentries > 0;
+      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
     }
 
@@ -149,18 +152,21 @@ sub act {
 
       # edit BibTeX data
       my @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, ());
+      break if @bibentries == 0;
 
       # regenerate key for modified BibTeX entry
       fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
       # write BibTeX entries to PDF metadata
       @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
+      break if @bibentries == 0;
 
       # filter BibTeX entries of PDF files in library
       @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+      break if @bibentries == 0;
 
       # reorganise any PDF files already in library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries) if @bibentries > 0;
+      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
     }
 
