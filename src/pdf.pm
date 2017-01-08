@@ -581,39 +581,75 @@ sub generate_bib_keys {
         my $key = "";
 
         # add formatted authors, editors, or collaborations
-        my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
-        @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
-        @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
-        $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
+        {
+            my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
+            @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
+            @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
+            $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
+        }
 
         # add year
         $key .= $bibentry->get("year");
 
         # add abbreviated title
-        my $title = remove_tex_markup($bibentry->get("title"));
-        $title =~ tr/@/A/;
-        $title =~ s/[^\w\d\s-]//g;
-        my @words;
-        foreach my $word (fmdtools::remove_short_words(split(/\s+/, $title))) {
-            $word = ucfirst($word);
-            if (scalar(() = $word =~ /[A-Z]/g) > 1) {
-                $word =~ s/[^A-Z]//g;
-            } else {
-                $word =~ s/[aeiou]//g;
-            }
-            $word = substr($word, 0, 3);
-            push @words, $word if @words < 4 || grep { $word eq $_ } qw(I II III IV V VI VII VIII IX);
-        }
-        $key .= ':' . join('', @words);
-        given ($bibentry->type) {
+        {
+            my $title = remove_tex_markup($bibentry->get("title"));
+            $title =~ s/[^\w\d\s]//g;
 
-            # append volume number (if any) for books
-            when (/book$/) {
-                my $volume = $bibentry->get("volume");
-                if (defined($volume)) {
-                    $key .= ".$volume";
+            # make common object identifiers into one word
+            $title =~ s/([A-Z]+)\s([A-Z]*\d{4,})/$1$2/g;
+
+            # build list of title words to use, and possibly determine a suffix
+            my $suffix = "";
+            my @words;
+            foreach my $word (fmdtools::remove_short_words(split(/\s+/, $title))) {
+
+                # ignore pure numbers
+                next if $word =~ /^\d+$/;
+
+                # use longest word containing at least 4 digits as an identifier
+                if ($word =~ /\d{4,}/) {
+                    $suffix = $word if length($suffix) < length($word);
+                }
+
+                # use any Roman numeral as a suffix, and stop processing title
+                if (grep { $word eq $_ } qw(II III IV V VI VII VIII IX)) {
+                    $suffix = $word;
+                    last;
+                }
+
+                push @words, $word;
+            }
+            unless (length($suffix) > 0) {
+                given ($bibentry->type) {
+
+                    # append volume number (if any) for books
+                    when (/book$/) {
+                        $suffix = $bibentry->get("volume") if $bibentry->exists("volume");
+                    }
+
                 }
             }
+
+            # abbreviate title words
+            my @wordlens = (3, 3, 2, 2, 2);
+            foreach my $word (sort { length($b) <=> length($a) } @words) {
+
+                # always include some words in full
+                next if $word =~ /^\w\d$/;
+
+                # abbreviate word to the next available length, after removing vowels
+                my $wordlen = shift(@wordlens) // 1;
+                my $shrt = ucfirst($word);
+                $shrt =~ s/[aeiou]//g;
+                $shrt = substr($shrt, 0, $wordlen);
+
+                map { s/^$word$/$shrt/ } @words;
+            }
+
+            # add abbreviated title and suffix to key
+            $key .= ':' . join('', @words);
+            $key .= ":$suffix" if length($suffix) > 0;
 
         }
 
