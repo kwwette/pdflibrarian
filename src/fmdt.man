@@ -56,10 +56,10 @@ Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
 Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
 
 .RE
-\fBremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
+\fBremove\fP [\fB\-t\fP|\fB\-\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
 .RS 4
 Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
-Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-remove\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
+Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
 
 .RE
 \fBreorganise\fP

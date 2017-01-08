@@ -219,7 +219,7 @@ sub act {
       my $removedir = File::Spec->tmpdir();
       my $parser = Getopt::Long::Parser->new;
       $parser->getoptionsfromarray(\@args,
-                                   "remove-to|r=s" => \$removedir,
+                                   "to|t=s" => \$removedir,
                                   ) or croak "$0: could not parse options for action '$action'";
       croak "$0: '$removedir' is not a directory" unless -d $removedir;
 
