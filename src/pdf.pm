@@ -696,9 +696,8 @@ sub organise_library_PDFs {
         }
 
         # organise by first word of title
-        my $firstword = $title;
+        my $firstword = ucfirst($title);
         $firstword =~ s/\s.*$//;
-        $firstword =~ s/^(.)/\U$1\E/;
         push @shelves, ["Titles", $firstword, ""];
 
         # organise by year
