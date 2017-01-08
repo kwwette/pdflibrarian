@@ -23,6 +23,7 @@ no warnings 'experimental::smartmatch';
 use feature qw/switch/;
 
 use Carp;
+use Config::Simple;
 use File::Spec;
 use File::Find;
 use File::stat;
@@ -65,28 +66,38 @@ sub is_in_dir {
     return 1;
 }
 
-sub get_library_dir {
+sub get_library_config {
     my ($type) = @_;
 
-    # determine library directory
-    my $libdir;
-    given ($type) {
-        when ('PDF') {
-            my $homedir = $ENV{'HOME'} // croak "$0: could not determine home directory";
-            $libdir = File::Spec->catdir($homedir, 'PDFLibrary');
-        }
-        default {
-            croak "$0: unknown library type '$type'";
-        }
+    # get home directory
+    my $homedir = $ENV{'HOME'} // croak "$0: could not determine home directory";
+
+    # create default configuration
+    my %fullconfig = (
+                      'pdf.libdir' => File::Spec->catdir($homedir, 'PDFLibrary')
+                     );
+
+    # read configuration
+    my $configfile = File::Spec->catdir($homedir, '.fmdtconfig');
+    if (-f $configfile) {
+        Config::Simple->import_from($configfile, \%fullconfig);
     }
-    $libdir = File::Spec->rel2abs($libdir);
+
+    # filter out configuration options for this type
+    my %config;
+    while (my ($key, $value) = each %fullconfig) {
+        next unless $key =~ s/^\Q$type.\E//i;
+        $config{$key} = $value;
+    }
 
     # make library directory
-    if (! -d $libdir) {
-        mkdir($libdir) or croak "$0: could not make directory '$libdir': $!";
+    croak "$0: unknown library type '$type'" unless defined($config{libdir});
+    $config{libdir} = File::Spec->rel2abs($config{libdir});
+    if (! -d $config{libdir}) {
+        mkdir($config{libdir}) or croak "$0: could not make directory '$config{libdir}': $!";
     }
 
-    return $libdir;
+    return %config;
 }
 
 sub get_data_file {

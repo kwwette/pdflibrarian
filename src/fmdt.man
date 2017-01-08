@@ -15,7 +15,13 @@ Display this help message.
 .RS 4
 PDF file metadata tools.
 
-.SH PDF ACTIONS
+.SH CONFIGURATION
+
+User-specific configuration options can be set in the file `~/.fmdtconfig'.
+
+.SH PDF FILE METADATA TOOLS
+
+.SS Actions
 
 .RE
 \fIedit\fP {\fIfiles\fP|\fIdirectories\fP}...
@@ -35,7 +41,7 @@ Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
 .RE
 \fIadd\fP {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
-Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library, usually organised under `~/PDFLibrary'.
+Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
 
 .RE
 \fIremove\fP [\fB\-r\fP|\fB\-\-remove\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
@@ -47,3 +53,12 @@ Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\
 \fIreorganise\fP
 .RS 4
 Reorganise all files in the PDF library, and regenerate BibTeX keys.
+
+.SS Configuration Options
+
+The following configuration options can be set under the section \fI[pdf]\fP:
+
+.RE
+\fIlibdir\fP
+.RS 4
+Location of the PDF library; defaults to `~/PDFLibrary'.

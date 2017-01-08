@@ -40,8 +40,8 @@ use Text::Unidecode;
 
 use fmdtools;
 
-# PDF library location
-my $pdflibdir = fmdtools::get_library_dir('PDF');
+# PDF library configuration
+my %config = fmdtools::get_library_config('pdf');
 
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
@@ -90,7 +90,7 @@ sub act {
             @bibentries = write_bib_to_PDF(@bibentries);
 
             # filter BibTeX entries of PDF files in library
-            @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
+            @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
 
             # reorganise any PDF files already in library
             organise_library_PDFs(@bibentries) if @bibentries > 0;
@@ -165,8 +165,8 @@ sub act {
             croak "$0: action '$action' takes no arguments" unless @args == 0;
 
             # get list of unique PDF files in library
-            my @pdffiles = fmdtools::find_unique_files('pdf', $pdflibdir);
-            croak "$0: no PDF files in library $pdflibdir" unless @pdffiles > 0;
+            my @pdffiles = fmdtools::find_unique_files('pdf', $config{libdir});
+            croak "$0: no PDF files in library $config{libdir}" unless @pdffiles > 0;
 
             # read BibTeX entries from PDF metadata
             my @bibentries = read_bib_from_PDF(@pdffiles);
@@ -703,7 +703,7 @@ sub organise_library_PDFs {
     croak "$0: no PDF files to organise" unless @pdffiles > 0;
 
     # add existing PDF files in library to file/inode hashes
-    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $config{libdir});
 
     # organise PDFs in library
     foreach my $bibentry (@bibentries) {
@@ -805,16 +805,16 @@ sub organise_library_PDFs {
         }
 
         # make shelves into library filenames
-        my @newpdffiles = fmdtools::make_library_filenames($pdflibdir, $newpdffile, 'pdf', @shelves);
+        my @newpdffiles = fmdtools::make_library_filenames($config{libdir}, $newpdffile, 'pdf', @shelves);
 
         # create library links
-        fmdtools::make_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, @newpdffiles);
+        fmdtools::make_library_links($config{libdir}, \%file2inode, \%inode2files, $pdffile, @newpdffiles);
 
     }
-    fmdtools::progress("organised %i PDFs in $pdflibdir\n", scalar(@bibentries));
+    fmdtools::progress("organised %i PDFs in $config{libdir}\n", scalar(@bibentries));
 
     # finalise library organisation
-    fmdtools::finalise_library($pdflibdir);
+    fmdtools::finalise_library($config{libdir});
 
 }
 
@@ -830,15 +830,15 @@ sub remove_library_PDFs {
     croak "$0: no PDF files to organise" unless @pdffiles > 0;
 
     # add existing PDF files in library to file/inode hashes
-    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+    fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $config{libdir});
 
     # remove PDFs from library
     foreach my $pdffile (@pdffiles) {
-        fmdtools::remove_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, $removedir);
+        fmdtools::remove_library_links($config{libdir}, \%file2inode, \%inode2files, $pdffile, $removedir);
     }
     progress("removed %i PDFs to $removedir\n", scalar(@pdffiles));
 
     # finalise library organisation
-    fmdtools::finalise_library($pdflibdir);
+    fmdtools::finalise_library($config{libdir});
 
 }
