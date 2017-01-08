@@ -59,6 +59,17 @@ sub bib_checksum {
   return $digest->hexdigest;
 }
 
+sub read_bib_from_str {
+  my ($bibstr) = @_;
+
+  # read BibTeX entry from a string
+  my $bibentry = new Text::BibTeX::BibEntry $bibstr;
+  croak "$0: failed to parse BibTeX entry" unless $bibentry->parse_ok;
+  $bibentry->{structure} = $structure;
+
+  return $bibentry;
+}
+
 sub read_bib_from_PDF {
   my (@pdffiles) = @_;
 
@@ -87,9 +98,7 @@ sub read_bib_from_PDF {
         $bibstr = $bibtext;
       }
     }
-    my $bibentry = new Text::BibTeX::BibEntry $bibstr;
-    croak "$0: failed to parse BibTeX entry" unless $bibentry->parse_ok;
-    $bibentry->{structure} = $structure;
+    my $bibentry = read_bib_from_str($bibstr);
 
     # save name of PDF file
     $bibentry->set('file', $pdffile);
