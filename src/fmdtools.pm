@@ -214,7 +214,7 @@ sub make_library_filenames {
     foreach (@path) {
       $_ = unidecode($_);
       s/[^\w\d]/-/g;
-      s/--+/-/;
+      s/--+/-/g;
       s/^-+//;
       s/-+$//;
     }
