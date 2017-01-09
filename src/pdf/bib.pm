@@ -290,9 +290,9 @@ sub write_bib_to_PDF {
     $pdf->preferences(-displaytitle => 1);
 
     # write XMP metadata to PDF file
-    my $xmp = $pdf->xmpMetadata();
-    croak "$0: PDF metadata is not an XMP packet" unless !defined($xmp) || $xmp =~ /^<\?xpacket[^?]*\?>/;
-    croak "$0: PDF XMP packet cannot be updated" unless !defined($xmp) || $xmp =~ /<\?xpacket end=['"]w['"]\?>$/;
+    my $xmp = $pdf->xmpMetadata() // "";
+    croak "$0: PDF metadata is not an XMP packet" unless length($xmp) == 0 || $xmp =~ /^<\?xpacket[^?]*\?>/;
+    croak "$0: PDF XMP packet cannot be updated" unless length($xmp) == 0 || $xmp =~ /<\?xpacket end=['"]w['"]\?>$/;
     my $xmphead = "<?xpacket begin='﻿' id='W5M0MpCehiHzreSzNTczkc9d'?>\n";
     my $xmpdata = encode('utf-8', $xml->documentElement()->toString(0), Encode::FB_CROAK);
     my $xmptail = "\n<?xpacket end='w'?>";
