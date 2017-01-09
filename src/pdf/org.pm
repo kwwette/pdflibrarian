@@ -303,7 +303,7 @@ sub remove_library_PDFs {
   foreach my $pdffile (@pdffiles) {
     fmdtools::remove_library_links($pdflibdir, \%file2inode, \%inode2files, $pdffile, $removedir);
   }
-  progress("removed %i PDFs to $removedir\n", scalar(@pdffiles));
+  fmdtools::progress("removed %i PDFs to $removedir\n", scalar(@pdffiles));
 
   # finalise library organisation
   fmdtools::finalise_library($pdflibdir);
