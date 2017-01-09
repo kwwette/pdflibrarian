@@ -19,8 +19,6 @@ package fmdtools;
 
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use Config::Simple;
@@ -182,10 +180,7 @@ sub parallel_loop {
     my $out = &$body($in);
     return $out;
   };
-  my @outarray = iterate_as_array(
-                                  { workers => $ncpus, batch => 1 },
-                                  \&$worker, $inarray
-                                 );
+  my @outarray = iterate_as_array( { workers => $ncpus, batch => 1 }, \&$worker, $inarray );
   progress($progfmt . "\n", $total, $total);
 
   return @outarray;

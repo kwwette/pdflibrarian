@@ -19,8 +19,6 @@ package fmdtools::pdf::org;
 
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use File::Spec;
@@ -121,14 +119,10 @@ sub generate_bib_keys {
         push @words, $word;
       }
       unless (length($suffix) > 0) {
-        given ($bibentry->type) {
 
-          # append volume number (if any) for books
-          when (/book$/) {
-            $suffix = $bibentry->get("volume") if $bibentry->exists("volume");
-          }
+        # append volume number (if any) for books
+        $suffix = $bibentry->get("volume") if $bibentry->type =~ /book$/ && $bibentry->exists("volume");
 
-        }
       }
 
       # abbreviate title words
@@ -171,6 +165,7 @@ sub generate_bib_keys {
 
 sub organise_library_PDFs {
   my (@bibentries) = @_;
+  return unless @bibentries > 0;
 
   # get PDF library location
   my $pdflibdir = $fmdtools::pdf::config{libdir};
@@ -205,19 +200,10 @@ sub organise_library_PDFs {
     $newpdffile = "@authors" unless length($newpdffile) > 0;
     $newpdffile = "@editors" unless length($newpdffile) > 0;
     $newpdffile .= " $title";
-    given ($bibentry->type) {
-
-      # append report number (if any) for technical reports
-      when ("techreport") {
-        $newpdffile .= " no" . $bibentry->get("number") if $bibentry->exists("number");
-      }
-
-      # append volume number (if any) for books
-      when (/book$/) {
-        $newpdffile .= " v" . $bibentry->get("volume") if $bibentry->exists("volume");
-      }
-
-    }
+    # append report number (if any) for technical reports
+    $newpdffile .= " no" . $bibentry->get("number") if $bibentry->type eq "techreport" && $bibentry->exists("number");
+    # append volume number (if any) for books
+    $newpdffile .= " v" . $bibentry->get("volume") if $bibentry->type =~ /book$/ && $bibentry->exists("volume");
 
     # list of shelves to organise this file under
     my @shelves;
@@ -252,37 +238,33 @@ sub organise_library_PDFs {
       push @shelves, ["Keywords", @subkeywords, ""];
     }
 
-    given ($bibentry->type) {
-
-      # organise articles by journal
-      when ("article") {
-        my $journal = $bibentry->get("journal") // "NO JOURNAL";
-        if ($journal =~ /arxiv/i) {
-          my $eprint = $bibentry->get("eprint") // "NO EPRINT";
-          push @shelves, ["Articles", "arXiv", "$eprint"];
-        } else {
-          my $volume = $bibentry->get("volume") // "NO VOLUME";
-          my $pages = $bibentry->get("pages") // "NO PAGES";
-          push @shelves, ["Articles", $journal, "v$volume", "p$pages"];
-        }
+    # organise articles by journal
+    if ($bibentry->type eq "article") {
+      my $journal = $bibentry->get("journal") // "NO JOURNAL";
+      if ($journal =~ /arxiv/i) {
+        my $eprint = $bibentry->get("eprint") // "NO EPRINT";
+        push @shelves, ["Articles", "arXiv", "$eprint"];
+      } else {
+        my $volume = $bibentry->get("volume") // "NO VOLUME";
+        my $pages = $bibentry->get("pages") // "NO PAGES";
+        push @shelves, ["Articles", $journal, "v$volume", "p$pages"];
       }
+    }
 
-      # organise technical reports by institution
-      when ("techreport") {
-        my $institution = $bibentry->get("institution") // "NO INSTITUTION";
-        push @shelves, ["Tech Reports", $institution, ""];
-      }
+    # organise technical reports by institution
+    if ($bibentry->type eq "techreport") {
+      my $institution = $bibentry->get("institution") // "NO INSTITUTION";
+      push @shelves, ["Tech Reports", $institution, ""];
+    }
 
-      # organise books
-      when (/book$/) {
-        push @shelves, ["Books", ""];
-      }
+    # organise books
+    if ($bibentry->type =~ /book$/) {
+      push @shelves, ["Books", ""];
+    }
 
-      # organise theses
-      when (/thesis$/) {
-        push @shelves, ["Theses", ""];
-      }
-
+    # organise theses
+    if ($bibentry->type =~ /thesis$/) {
+      push @shelves, ["Theses", ""];
     }
 
     # make shelves into library filenames

@@ -19,8 +19,6 @@ package fmdtools::pdf::bib;
 
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use Scalar::Util qw(blessed);
@@ -208,16 +206,12 @@ sub read_bib_from_file {
   if (length($errmsgs) > 0) {
     foreach my $msg (split(/\n/, $errmsgs)) {
       $msg =~ s/^$filename,\s*//;
-      given ($msg) {
-        when (/^line (\d+)[,:]?\s*(.*)$/) {
-          push @$errors, { from => $1, msg => $2 };
-        }
-        when (/^lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
-          push @$errors, { from => $1, to => $2, msg => $3 };
-        }
-        default {
-          push @$errors, { msg => $msg };
-        }
+      if ($msg =~ /^line (\d+)[,:]?\s*(.*)$/) {
+        push @$errors, { from => $1, msg => $2 };
+      } elsif ($msg =~ /^lines (\d+)-(\d+)[,:]?\s*(.*)$/) {
+        push @$errors, { from => $1, to => $2, msg => $3 };
+      } else {
+        push @$errors, { msg => $msg };
       }
     }
   }

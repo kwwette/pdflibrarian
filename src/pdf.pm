@@ -19,8 +19,6 @@ package fmdtools::pdf;
 
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use File::Spec;
@@ -40,231 +38,205 @@ sub act {
   my ($action, @args) = @_;
 
   # handle action
-  given ($action) {
+  if ($action eq "edit") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
 
-    when ("edit") {
-      croak "$0: action '$action' requires arguments" unless @args > 0;
+    # get list of unique PDF files
+    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    croak "$0: no PDF files to edit" unless @pdffiles > 0;
 
-      # get list of unique PDF files
-      my @pdffiles = fmdtools::find_unique_files('pdf', @args);
-      croak "$0: no PDF files to edit" unless @pdffiles > 0;
+    # read BibTeX entries from PDF metadata
+    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
 
-      # read BibTeX entries from PDF metadata
-      my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
+    # generate initial keys for BibTeX entries
+    fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
-      # generate initial keys for BibTeX entries
-      fmdtools::pdf::org::generate_bib_keys(@bibentries);
+    # coerse entries into BibTeX database structure
+    foreach my $bibentry (@bibentries) {
+      $bibentry->silently_coerce();
+    }
 
-      # coerse entries into BibTeX database structure
-      foreach my $bibentry (@bibentries) {
+    # write BibTeX entries to a temporary file for editing
+    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+    binmode($fh, ":encoding(iso-8859-1)");
+    fmdtools::pdf::bib::write_bib_to_fh($fh, @bibentries);
+
+    # edit BibTeX entries in PDF files
+    @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, @bibentries);
+
+    # regenerate keys for modified BibTeX entries
+    fmdtools::pdf::org::generate_bib_keys(@bibentries);
+
+    # write BibTeX entries to PDF metadata
+    @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
+
+    # filter BibTeX entries of PDF files in library
+    @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+
+    # reorganise any PDF files already in library
+    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
+
+  } elsif ($action eq "retrieve" || $action eq "import") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
+
+    # handle options
+    my $source = 'ads';
+    my $parser = Getopt::Long::Parser->new;
+    $parser->getoptionsfromarray(\@args,
+                                 "from|f=s" => \$source,
+                                ) or croak "$0: could not parse options for action '$action'";
+    croak "$0: action '$action' takes exactly 2 arguments" unless @args == 2;
+    my ($pdffile, $query) = @args;
+    croak "$0: PDF file '$pdffile' does not exist" unless -f $pdffile;
+    $pdffile = File::Spec->rel2abs($pdffile);
+
+    # retrieve BibTeX data
+    my $bibstr;
+    if ($source eq 'ads') {
+
+      # query NASA ADS
+      $bibstr = fmdtools::pdf::www::query_ads($query);
+
+    } else {
+      croak "$0: unknown source '$source'";
+    }
+    $bibstr =~ s/^\s+//;
+    $bibstr =~ s/\s+$//;
+
+    # write BibTeX data to a temporary file for editing
+    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+    binmode($fh, ":encoding(iso-8859-1)");
+    {
+
+      # try to parse BibTeX data
+      my $bibentry;
+      eval {
+        $bibentry = fmdtools::pdf::bib::read_bib_from_str($bibstr);
+      };
+      if (defined($bibentry)) {
+
+        # set name of PDF file
+        $bibentry->set('file', $pdffile);
+
+        # generate initial key for BibTeX entry
+        fmdtools::pdf::org::generate_bib_keys(($bibentry));
+
+        # coerse entry into BibTeX database structure
         $bibentry->silently_coerce();
+
+        # write BibTeX entry
+        fmdtools::pdf::bib::write_bib_to_fh($fh, ($bibentry));
+
+      } else {
+
+        # try to add 'file' field to BibTeX data manually
+        $bibstr =~ s/\s*}$/,\n  file = {$pdffile}\n}/;
+
+        # write BibTeX data
+        print $fh "\n$bibstr\n";
+
       }
+    }
 
-      # write BibTeX entries to a temporary file for editing
-      my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
-      binmode($fh, ":encoding(iso-8859-1)");
-      fmdtools::pdf::bib::write_bib_to_fh($fh, @bibentries);
+    # edit BibTeX data
+    my @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, ());
 
-      # edit BibTeX entries in PDF files
-      @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, @bibentries);
-      break if @bibentries == 0;
+    # regenerate key for modified BibTeX entries
+    fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
-      # regenerate keys for modified BibTeX entries
-      fmdtools::pdf::org::generate_bib_keys(@bibentries);
+    # write BibTeX entries to PDF metadata
+    @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
 
-      # write BibTeX entries to PDF metadata
-      @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
-      break if @bibentries == 0;
+    if ($action ne "import") {
 
       # filter BibTeX entries of PDF files in library
       @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
-      break if @bibentries == 0;
-
-      # reorganise any PDF files already in library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
     }
 
-    when (["retrieve", "import"]) {
-      croak "$0: action '$action' requires arguments" unless @args > 0;
+    # retrieve: reorganise any PDF files already in library
+    # import: add PDF files to library
+    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
-      # handle options
-      my $source = 'ads';
-      my $parser = Getopt::Long::Parser->new;
-      $parser->getoptionsfromarray(\@args,
-                                   "from|f=s" => \$source,
-                                  ) or croak "$0: could not parse options for action '$action'";
-      croak "$0: action '$action' takes exactly 2 arguments" unless @args == 2;
-      my ($pdffile, $query) = @args;
-      croak "$0: PDF file '$pdffile' does not exist" unless -f $pdffile;
+  } elsif ($action eq "export") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
 
-      # retrieve BibTeX data
-      my $bibstr;
-      given ($source) {
+    # handle options
+    my @exclude;
+    my $parser = Getopt::Long::Parser->new;
+    $parser->getoptionsfromarray(\@args,
+                                 "exclude|e=s" => \@exclude,
+                                ) or croak "$0: could not parse options for action '$action'";
 
-        # query NASA ADS
-        when ('ads') {
-          $bibstr = fmdtools::pdf::www::query_ads($query);
-        }
+    # get list of unique PDF files
+    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    croak "$0: no PDF files to read from" unless @pdffiles > 0;
 
-        default {
-          croak "$0: unknown source '$source'";
-        }
+    # read BibTeX entries from PDF metadata
+    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
 
+    # exclude BibTeX fields
+    foreach my $bibfield (('file', @exclude)) {
+      foreach my $bibentry (@bibentries) {
+        $bibentry->delete($bibfield);
       }
-      $bibstr =~ s/^\s+//;
-      $bibstr =~ s/\s+$//;
-
-      # write BibTeX data to a temporary file for editing
-      my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
-      binmode($fh, ":encoding(iso-8859-1)");
-      {
-
-        # try to parse BibTeX data
-        my $bibentry;
-        eval {
-          $bibentry = fmdtools::pdf::bib::read_bib_from_str($bibstr);
-        };
-        if (defined($bibentry)) {
-
-          # set name of PDF file
-          $bibentry->set('file', $pdffile);
-
-          # generate initial key for BibTeX entry
-          fmdtools::pdf::org::generate_bib_keys(($bibentry));
-
-          # coerse entry into BibTeX database structure
-          $bibentry->silently_coerce();
-
-          # write BibTeX entry
-          fmdtools::pdf::bib::write_bib_to_fh($fh, ($bibentry));
-
-        } else {
-
-          # try to add 'file' field to BibTeX data manually
-          $bibstr =~ s/\s*}$/,\n  file = {$pdffile}\n}/;
-
-          # write BibTeX data
-          print $fh "\n$bibstr\n";
-
-        }
-      }
-
-      # edit BibTeX data
-      my @bibentries = fmdtools::pdf::bib::edit_bib_in_fh($fh, ());
-      break if @bibentries == 0;
-
-      # regenerate key for modified BibTeX entries
-      fmdtools::pdf::org::generate_bib_keys(@bibentries);
-
-      # write BibTeX entries to PDF metadata
-      @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
-      break if @bibentries == 0;
-
-      if ($action ne "import") {
-
-        # filter BibTeX entries of PDF files in library
-        @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
-        break if @bibentries == 0;
-
-      }
-
-      # retrieve: reorganise any PDF files already in library
-      # import: add PDF files to library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
-
     }
 
-    when ("export") {
-      croak "$0: action '$action' requires arguments" unless @args > 0;
+    # error if duplicate BibTeX keys are found
+    my @dupkeys = fmdtools::pdf::bib::find_duplicate_keys(@bibentries);
+    croak "$0: exported BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
 
-      # handle options
-      my @exclude;
-      my $parser = Getopt::Long::Parser->new;
-      $parser->getoptionsfromarray(\@args,
-                                   "exclude|e=s" => \@exclude,
-                                  ) or croak "$0: could not parse options for action '$action'";
+    # print BibTeX entries
+    fmdtools::pdf::bib::write_bib_to_fh(\*STDOUT, @bibentries);
 
-      # get list of unique PDF files
-      my @pdffiles = fmdtools::find_unique_files('pdf', @args);
-      croak "$0: no PDF files to read from" unless @pdffiles > 0;
+  } elsif ($action eq "add") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
 
-      # read BibTeX entries from PDF metadata
-      my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
+    # get list of unique PDF files
+    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    croak "$0: no PDF files to read from" unless @pdffiles > 0;
 
-      # exclude BibTeX fields
-      foreach my $bibfield (('file', @exclude)) {
-        foreach my $bibentry (@bibentries) {
-          $bibentry->delete($bibfield);
-        }
-      }
+    # read BibTeX entries from PDF metadata
+    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
 
-      # error if duplicate BibTeX keys are found
-      my @dupkeys = fmdtools::pdf::bib::find_duplicate_keys(@bibentries);
-      croak "$0: exported BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
+    # add PDF files to library
+    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
-      # print BibTeX entries
-      fmdtools::pdf::bib::write_bib_to_fh(\*STDOUT, @bibentries);
+  } elsif ($action eq "remove") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
 
-    }
+    # handle options
+    my $removedir = File::Spec->tmpdir();
+    my $parser = Getopt::Long::Parser->new;
+    $parser->getoptionsfromarray(\@args,
+                                 "to|t=s" => \$removedir,
+                                ) or croak "$0: could not parse options for action '$action'";
+    croak "$0: '$removedir' is not a directory" unless -d $removedir;
 
-    when ("add") {
-      croak "$0: action '$action' requires arguments" unless @args > 0;
+    # remove PDF files from library
+    fmdtools::pdf::org::remove_library_PDFs($removedir, @args);
 
-      # get list of unique PDF files
-      my @pdffiles = fmdtools::find_unique_files('pdf', @args);
-      croak "$0: no PDF files to read from" unless @pdffiles > 0;
+  } elsif ($action eq "reorganise") {
+    croak "$0: action '$action' takes no arguments" unless @args == 0;
 
-      # read BibTeX entries from PDF metadata
-      my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
+    # get list of unique PDF files in library
+    my @pdffiles = fmdtools::find_unique_files('pdf', $config{libdir});
+    croak "$0: no PDF files in library $config{libdir}" unless @pdffiles > 0;
 
-      # add PDF files to library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
+    # read BibTeX entries from PDF metadata
+    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
 
-    }
+    # regenerate keys for all BibTeX entries
+    fmdtools::pdf::org::generate_bib_keys(@bibentries);
 
-    when ("remove") {
-      croak "$0: action '$action' requires arguments" unless @args > 0;
+    # write BibTeX entries to PDF metadata
+    fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
 
-      # handle options
-      my $removedir = File::Spec->tmpdir();
-      my $parser = Getopt::Long::Parser->new;
-      $parser->getoptionsfromarray(\@args,
-                                   "to|t=s" => \$removedir,
-                                  ) or croak "$0: could not parse options for action '$action'";
-      croak "$0: '$removedir' is not a directory" unless -d $removedir;
+    # reorganise PDF files in library
+    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
-      # remove PDF files from library
-      fmdtools::pdf::org::remove_library_PDFs($removedir, @args);
-
-    }
-
-    when ("reorganise") {
-      croak "$0: action '$action' takes no arguments" unless @args == 0;
-
-      # get list of unique PDF files in library
-      my @pdffiles = fmdtools::find_unique_files('pdf', $config{libdir});
-      croak "$0: no PDF files in library $config{libdir}" unless @pdffiles > 0;
-
-      # read BibTeX entries from PDF metadata
-      my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
-
-      # regenerate keys for all BibTeX entries
-      fmdtools::pdf::org::generate_bib_keys(@bibentries);
-
-      # write BibTeX entries to PDF metadata
-      fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
-
-      # reorganise PDF files in library
-      fmdtools::pdf::org::organise_library_PDFs(@bibentries);
-
-    }
-
-    # unknown action
-    default {
-      croak "$0: unknown action '$action'";
-    }
-
+  } else {
+    croak "$0: unknown action '$action'";
   }
 
   return 0;

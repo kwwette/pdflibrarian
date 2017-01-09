@@ -19,8 +19,6 @@ package fmdtools::pdf::www;
 
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use HTTP::Request;

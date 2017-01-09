@@ -20,8 +20,6 @@
 use v@PERLVERSION@;
 use strict;
 use warnings;
-no warnings 'experimental::smartmatch';
-use feature qw/switch/;
 
 use Carp;
 use Getopt::Long qw(:config pass_through);
@@ -41,19 +39,14 @@ if ($help) {
   exit 1;
 }
 
-# handle toolsets and actions
+# toolsets and actions
 my $toolset = shift @ARGV // croak "$0: no toolset given";
 my $action = shift @ARGV // croak "$0: no action given";
-given ($toolset) {
 
-  # PDF toolset
-  when ("pdf") {
-    exit fmdtools::pdf::act($action, @ARGV);
-  }
-
-  # unknown toolset
-  default {
-    croak "$0: unknown toolset '$toolset'";
-  }
-
+# PDF toolset
+if ($toolset eq 'pdf') {
+  exit fmdtools::pdf::act($action, @ARGV);
 }
+
+# unknown toolset
+croak "$0: unknown toolset '$toolset'";
