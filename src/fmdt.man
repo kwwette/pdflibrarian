@@ -33,7 +33,7 @@ Any modifications are then written back to the PDF files given by the \fIfile\fP
 \fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
 
 .RE
-\fBretrieve\fP|\fBimport\fP [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP \fIquery\fP
+\fBretrieve\fP|\fBimport\fP [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP [\fIquery\fP]
 .RS 4
 Interrogate the online \fIsource\fP using the given \fIquery\fP, and write any matched BibTeX bibliographic data to a temporary file.
 This file is then opened in an editing program, as for \fIedit\fP.
@@ -44,6 +44,8 @@ The following \fIsource\fPs are supported:
 .RS 3
 \fBads\fP: Query the NASA ADS database.
 .RE
+
+If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
 
 .RE
 \fBexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...

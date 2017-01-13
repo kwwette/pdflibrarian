@@ -86,10 +86,18 @@ sub act {
     $parser->getoptionsfromarray(\@args,
                                  "from|f=s" => \$source,
                                 ) or croak "$0: could not parse options for action '$action'";
-    croak "$0: action '$action' takes exactly 2 arguments" unless @args == 2;
+    croak "$0: action '$action' takes no more than 2 arguments" unless @args <= 2;
     my ($pdffile, $query) = @args;
+
+    # check for existence of PDF file
     croak "$0: PDF file '$pdffile' does not exist" unless -f $pdffile;
     $pdffile = File::Spec->rel2abs($pdffile);
+
+    # prompt for query, if not given
+    if (!defined($query)) {
+      $query = fmdtools::prompt("Query to send to source '$source': ");
+      croak "$0: no query for PDF file '$pdffile'" unless $query ne "";
+    }
 
     # retrieve BibTeX data
     my $bibstr;

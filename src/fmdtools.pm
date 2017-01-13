@@ -30,6 +30,7 @@ use Parallel::Iterator qw(iterate_as_array);
 use File::chmod qw(chmod);
 use File::Basename qw(dirname basename);
 use Text::Unidecode;
+use Term::ReadLine;
 
 $File::chmod::UMASK = 0;
 
@@ -51,6 +52,18 @@ sub progress {
   print STDERR "$0: $msg";
   flush STDERR;
 
+}
+
+sub prompt {
+  my ($prompt) = @_;
+
+  # prompt the user
+  my $term = Term::ReadLine->new($0);
+  my $result = $term->readline($prompt);
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+
+  return $result;
 }
 
 sub is_in_dir {
