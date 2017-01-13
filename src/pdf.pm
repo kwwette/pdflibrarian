@@ -81,7 +81,7 @@ sub act {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # handle options
-    my $source = 'ads';
+    my $source = 'ADS';
     my $parser = Getopt::Long::Parser->new;
     $parser->getoptionsfromarray(\@args,
                                  "from|f=s" => \$source,
@@ -93,22 +93,20 @@ sub act {
     croak "$0: PDF file '$pdffile' does not exist" unless -f $pdffile;
     $pdffile = File::Spec->rel2abs($pdffile);
 
+    # check existence of source
+    my %sources = (
+                   ADS => \&fmdtools::pdf::www::query_ads
+                  );
+    croak "$0: unknown source '$source'" unless defined($sources{$source});
+
     # prompt for query, if not given
     if (!defined($query)) {
-      $query = fmdtools::prompt("Query to send to source '$source': ");
+      $query = fmdtools::prompt("Query to send to $source: ");
       croak "$0: no query for PDF file '$pdffile'" unless $query ne "";
     }
 
     # retrieve BibTeX data
-    my $bibstr;
-    if ($source eq 'ads') {
-
-      # query NASA ADS
-      $bibstr = fmdtools::pdf::www::query_ads($query);
-
-    } else {
-      croak "$0: unknown source '$source'";
-    }
+    my $bibstr = $sources{$source}($query);
     $bibstr =~ s/^\s+//;
     $bibstr =~ s/\s+$//;
 

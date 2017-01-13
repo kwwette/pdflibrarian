@@ -42,7 +42,7 @@ Any modifications are then written to the given PDF \fIfile\fP.
 
 The following \fIsource\fPs are supported:
 .RS 3
-\fBads\fP: Query the NASA ADS database.
+\fBADS\fP: Query the NASA ADS database.
 .RE
 
 If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
