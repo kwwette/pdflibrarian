@@ -126,7 +126,7 @@ sub generate_bib_keys {
       unless (length($suffix) > 0) {
 
         # append volume number (if any) for books and proceedings
-        $suffix = $bibentry->get("volume") if $bibentry->type =~ /(?:book$|^proceedings$)/ && $bibentry->exists("volume");
+        $suffix = $bibentry->get("volume") if grep { $bibentry->type eq $_ } qw(book inbook proceedings) && $bibentry->exists("volume");
 
       }
 
@@ -211,7 +211,7 @@ sub organise_library_PDFs {
       $newpdffile .= " no" . $bibentry->get("number") if $bibentry->type eq "techreport" && $bibentry->exists("number");
 
       # append volume number (if any) for books and proceedings
-      $newpdffile .= " v" . $bibentry->get("volume") if $bibentry->type =~ /(?:book$|^proceedings$)/ && $bibentry->exists("volume");
+      $newpdffile .= " v" . $bibentry->get("volume") if grep { $bibentry->type eq $_ } qw(book inbook proceedings) && $bibentry->exists("volume");
 
     }
 
@@ -268,12 +268,12 @@ sub organise_library_PDFs {
     }
 
     # organise books and (whole) proceedings
-    if ($bibentry->type =~ /(?:book$|^proceedings$)/) {
+    if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) {
       push @shelves, ["Books", ""];
     }
 
     # organise articles in collections and proceedings
-    if ($bibentry->type =~ /^(?:incollection|inproceedings|conference)$/) {
+    if (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
       my $booktitle = $bibentry->get("booktitle");
       if (!defined($booktitle)) {
         $booktitle = "NO BOOKTITLE";
@@ -284,7 +284,7 @@ sub organise_library_PDFs {
     }
 
     # organise theses
-    if ($bibentry->type =~ /thesis$/) {
+    if (grep { $bibentry->type eq $_ } qw(mastersthesis phdthesis)) {
       push @shelves, ["Theses", ""];
     }
 
