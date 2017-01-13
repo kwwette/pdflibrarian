@@ -91,7 +91,7 @@ sub generate_bib_keys {
     }
 
     # add year
-    my $year = $bibentry->get("year") // "NO YEAR";
+    my $year = $bibentry->get("year") // "";
     $key .= $year;
 
     # add abbreviated title
