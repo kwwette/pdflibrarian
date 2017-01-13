@@ -197,7 +197,7 @@ sub organise_library_PDFs {
     my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
     # format and abbreviate title
-    my $title = remove_tex_markup($bibentry->get("title"));
+    my $title = remove_tex_markup($bibentry->get("title") // "NO-TITLE");
     $title = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $title)));
 
     # make new name for PDF; should be unique within library
@@ -230,7 +230,7 @@ sub organise_library_PDFs {
     push @shelves, ["Titles", $firstword, ""];
 
     # organise by year
-    my $year = $bibentry->get("year") // "NO YEAR";
+    my $year = $bibentry->get("year") // "NO-YEAR";
     push @shelves, ["Years", $year, ""];
 
     # organise by keyword(s)
@@ -240,7 +240,7 @@ sub organise_library_PDFs {
       $keywords{$_} = 1;
     }
     if (keys %keywords == 0) {
-      $keywords{"NO KEYWORDS"} = 1;
+      $keywords{"NO-KEYWORDS"} = 1;
     }
     foreach my $keyword (keys %keywords) {
       my @subkeywords = split ',', $keyword;
@@ -250,20 +250,20 @@ sub organise_library_PDFs {
 
     # organise articles by journal
     if ($bibentry->type eq "article") {
-      my $journal = $bibentry->get("journal") // "NO JOURNAL";
+      my $journal = $bibentry->get("journal") // "NO-JOURNAL";
       if ($journal =~ /arxiv/i) {
-        my $eprint = $bibentry->get("eprint") // "NO EPRINT";
+        my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
         push @shelves, ["Articles", "arXiv", "$eprint"];
       } else {
-        my $volume = $bibentry->get("volume") // "NO VOLUME";
-        my $pages = $bibentry->get("pages") // "NO PAGES";
+        my $volume = $bibentry->get("volume") // "NO-VOLUME";
+        my $pages = $bibentry->get("pages") // "NO-PAGES";
         push @shelves, ["Articles", $journal, "v$volume", "p$pages"];
       }
     }
 
     # organise technical reports by institution
     if ($bibentry->type eq "techreport") {
-      my $institution = $bibentry->get("institution") // "NO INSTITUTION";
+      my $institution = $bibentry->get("institution") // "NO-INSTITUTION";
       push @shelves, ["Tech Reports", $institution, ""];
     }
 
@@ -274,12 +274,8 @@ sub organise_library_PDFs {
 
     # organise articles in collections and proceedings
     if (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
-      my $booktitle = $bibentry->get("booktitle");
-      if (!defined($booktitle)) {
-        $booktitle = "NO BOOKTITLE";
-      } else {
-        $booktitle = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $booktitle)));
-      }
+      my $booktitle = remove_tex_markup($bibentry->get("booktitle") // "NO-BOOKTITLE");
+      $booktitle = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $booktitle)));
       push @shelves, ["In", $booktitle, ""];
     }
 
