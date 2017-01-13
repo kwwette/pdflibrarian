@@ -119,7 +119,7 @@ sub edit_file {
 }
 
 sub find_files {
-  my ($file2inode, $inode2files, $extn, @files_dirs) = @_;
+  my ($libdir, $file2inode, $inode2files, $extn, @files_dirs) = @_;
   die unless ref($file2inode) eq 'HASH';
   die unless ref($inode2files) eq 'HASH';
 
@@ -144,19 +144,23 @@ sub find_files {
       find({wanted => \&$wanted, no_chdir => 1}, $_);
     } elsif (-f $_) {
       &$wanted($_);
+    } elsif (!File::Spec->file_name_is_absolute($_) && -d File::Spec->catdir($libdir, $_)) {
+      find({wanted => \&$wanted, no_chdir => 1}, File::Spec->catdir($libdir, $_));
+    } elsif (!File::Spec->file_name_is_absolute($_) && -f File::Spec->catfile($libdir, $_)) {
+      &$wanted(File::Spec->catfile($libdir, $_));
     } else {
-      croak "$0: '$_' is neither a file nor a directory";
+      croak "$0: '$_' is neither a file nor a directory, either by itself or within '$libdir'";
     }
   }
 
 }
 
 sub find_unique_files {
-  my ($extn, @files_dirs) = @_;
+  my ($libdir, $extn, @files_dirs) = @_;
 
   # return list of unique files
   my (%file2inode, %inode2files);
-  find_files(\%file2inode, \%inode2files, $extn, @files_dirs);
+  find_files($libdir, \%file2inode, \%inode2files, $extn, @files_dirs);
   my @uniqfiles = map { @{$_}[0] } values(%inode2files);
 
   return @uniqfiles;

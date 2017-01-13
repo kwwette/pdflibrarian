@@ -31,6 +31,7 @@ use fmdtools::pdf::www;
 
 # PDF library configuration
 our %config = fmdtools::get_library_config('pdf');
+my $pdflibdir = $config{libdir};
 
 1;
 
@@ -42,7 +43,7 @@ sub act {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # get list of unique PDF files
-    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
     croak "$0: no PDF files to edit" unless @pdffiles > 0;
 
     # read BibTeX entries from PDF metadata
@@ -71,7 +72,7 @@ sub act {
     @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
 
     # filter BibTeX entries of PDF files in library
-    @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+    @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
 
     # reorganise any PDF files already in library
     fmdtools::pdf::org::organise_library_PDFs(@bibentries);
@@ -150,7 +151,7 @@ sub act {
     if ($action ne "import") {
 
       # filter BibTeX entries of PDF files in library
-      @bibentries = grep { fmdtools::is_in_dir($config{libdir}, $_->get('file')) } @bibentries;
+      @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
 
     }
 
@@ -169,7 +170,7 @@ sub act {
                                 ) or croak "$0: could not parse options for action '$action'";
 
     # get list of unique PDF files
-    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
     croak "$0: no PDF files to read from" unless @pdffiles > 0;
 
     # read BibTeX entries from PDF metadata
@@ -193,7 +194,7 @@ sub act {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # get list of unique PDF files
-    my @pdffiles = fmdtools::find_unique_files('pdf', @args);
+    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
     croak "$0: no PDF files to read from" unless @pdffiles > 0;
 
     # read BibTeX entries from PDF metadata
@@ -220,8 +221,8 @@ sub act {
     croak "$0: action '$action' takes no arguments" unless @args == 0;
 
     # get list of unique PDF files in library
-    my @pdffiles = fmdtools::find_unique_files('pdf', $config{libdir});
-    croak "$0: no PDF files in library $config{libdir}" unless @pdffiles > 0;
+    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', $pdflibdir);
+    croak "$0: no PDF files in library $pdflibdir" unless @pdffiles > 0;
 
     # read BibTeX entries from PDF metadata
     my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);

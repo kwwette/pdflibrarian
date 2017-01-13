@@ -178,14 +178,14 @@ sub organise_library_PDFs {
 
   # find PDF files to organise
   my (@files_dirs, %file2inode, %inode2files);
-  fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', map { $_->get('file') } @bibentries);
+  fmdtools::find_files($pdflibdir, \%file2inode, \%inode2files, 'pdf', map { $_->get('file') } @bibentries);
 
   # get list of unique PDF files
   my @pdffiles = map { @{$_}[0] } values(%inode2files);
   croak "$0: no PDF files to organise" unless @pdffiles > 0;
 
   # add existing PDF files in library to file/inode hashes
-  fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+  fmdtools::find_files($pdflibdir, \%file2inode, \%inode2files, 'pdf', $pdflibdir);
 
   # organise PDFs in library
   foreach my $bibentry (@bibentries) {
@@ -307,14 +307,14 @@ sub remove_library_PDFs {
 
   # find PDF files to organise
   my (%file2inode, %inode2files);
-  fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', @files_dirs);
+  fmdtools::find_files($pdflibdir, \%file2inode, \%inode2files, 'pdf', @files_dirs);
 
   # get list of unique PDF files
   my @pdffiles = map { @{$_}[0] } values(%inode2files);
   croak "$0: no PDF files to organise" unless @pdffiles > 0;
 
   # add existing PDF files in library to file/inode hashes
-  fmdtools::find_files(\%file2inode, \%inode2files, 'pdf', $pdflibdir);
+  fmdtools::find_files($pdflibdir, \%file2inode, \%inode2files, 'pdf', $pdflibdir);
 
   # remove PDFs from library
   foreach my $pdffile (@pdffiles) {
