@@ -34,11 +34,15 @@ sub remove_tex_markup {
 
   # remove TeX markup
   foreach (@words) {
-    s/~/ /g;
-    s/\\\w+//g;
-    s/\\.//g;
-    s/[{}]//g;
-    s/\$//g;
+    if (!defined($_)) {
+      $_ = "";
+    } else {
+      s/~/ /g;
+      s/\\\w+//g;
+      s/\\.//g;
+      s/[{}]//g;
+      s/\$//g;
+    }
   }
 
   return wantarray ? @words : "@words";
@@ -87,7 +91,8 @@ sub generate_bib_keys {
     }
 
     # add year
-    $key .= $bibentry->get("year");
+    my $year = $bibentry->get("year") // "NO YEAR";
+    $key .= $year;
 
     # add abbreviated title
     {
@@ -220,7 +225,7 @@ sub organise_library_PDFs {
     push @shelves, ["Titles", $firstword, ""];
 
     # organise by year
-    my $year = $bibentry->get("year");
+    my $year = $bibentry->get("year") // "NO YEAR";
     push @shelves, ["Years", $year, ""];
 
     # organise by keyword(s)

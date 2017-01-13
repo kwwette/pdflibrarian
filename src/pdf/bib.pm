@@ -79,7 +79,7 @@ sub read_bib_from_PDF {
 
     # open PDF file and read XMP metadata
     my $pdf = PDF::API2->open($pdffile);
-    my $xmp = $pdf->xmpMetadata();
+    my $xmp = $pdf->xmpMetadata() // "";
     $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
     $pdf->end();
 
