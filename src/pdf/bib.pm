@@ -377,6 +377,15 @@ EOF
       push @errors, { msg => "duplicated key '$dupkey'" };
     }
 
+    # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
+    foreach my $bibentry (@bibentries) {
+      foreach my $bibfield ($bibentry->fieldlist()) {
+        if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
+          push @errors, { msg => "entry @{[$bibentry->key]} contains possibly duplicate fields '${bibfield}' and '${bibfield}s'" };
+        }
+      }
+    }
+
     # BibTeX entries have been successfully read
     last if @errors == 0;
 
