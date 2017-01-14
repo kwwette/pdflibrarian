@@ -59,7 +59,8 @@ sub prompt {
 
   # prompt the user
   my $term = Term::ReadLine->new($0);
-  my $result = $term->readline($prompt);
+  $term->ornaments(0);
+  my $result = $term->readline("$0: $prompt? ");
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
 

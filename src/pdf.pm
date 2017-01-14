@@ -101,7 +101,7 @@ sub act {
 
     # prompt for query, if not given
     if (!defined($query)) {
-      $query = fmdtools::prompt("Query to send to $source: ");
+      $query = fmdtools::prompt("query to send to $source");
       croak "$0: no query for PDF file '$pdffile'" unless $query ne "";
     }
 
