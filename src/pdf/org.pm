@@ -248,8 +248,9 @@ sub organise_library_PDFs {
       push @shelves, ["Keywords", @subkeywords, ""];
     }
 
-    # organise articles by journal
     if ($bibentry->type eq "article") {
+
+      # organise articles by journal
       my $journal = $bibentry->get("journal") // "NO-JOURNAL";
       if ($journal =~ /arxiv/i) {
         my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
@@ -259,29 +260,35 @@ sub organise_library_PDFs {
         my $pages = $bibentry->get("pages") // "NO-PAGES";
         push @shelves, ["Articles", $journal, "v$volume", "p$pages"];
       }
-    }
 
-    # organise technical reports by institution
-    if ($bibentry->type eq "techreport") {
+    } elsif ($bibentry->type eq "techreport") {
+
+      # organise technical reports by institution
       my $institution = $bibentry->get("institution") // "NO-INSTITUTION";
       push @shelves, ["Tech Reports", $institution, ""];
-    }
 
-    # organise books and (whole) proceedings
-    if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) {
+    } elsif (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) {
+
+      # organise books and (whole) proceedings
       push @shelves, ["Books", ""];
-    }
 
-    # organise articles in collections and proceedings
-    if (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
+    } elsif (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
+
+      # organise articles in collections and proceedings
       my $booktitle = remove_tex_markup($bibentry->get("booktitle") // "NO-BOOKTITLE");
       $booktitle = join(' ', map { ucfirst($_) } fmdtools::remove_short_words(split(/\s+/, $booktitle)));
       push @shelves, ["In", $booktitle, ""];
-    }
 
-    # organise theses
-    if (grep { $bibentry->type eq $_ } qw(mastersthesis phdthesis)) {
+    } elsif (grep { $bibentry->type eq $_ } qw(mastersthesis phdthesis)) {
+
+      # organise theses
       push @shelves, ["Theses", ""];
+
+    } else {
+
+      # organise everything else
+      push @shelves, ["Misc", ""];
+
     }
 
     # make shelves into library filenames
