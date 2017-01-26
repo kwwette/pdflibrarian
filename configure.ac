@@ -86,8 +86,7 @@ FMDT_CHECK_PERL_MODULE([XML::LibXML])
 FMDT_CHECK_PERL_MODULE([XML::LibXSLT])
 
 # check for fallback editor
-AC_SUBST([fallback_editor],[''])
-AM_SUBST_NOTMAKE([fallback_editor])
+fallback_editor=
 AC_CHECK_PROGS([fallback_editor],[emacs nano vim ed])
 AS_IF([test "x${fallback_editor}" = x],[
   AC_MSG_ERROR([could not find an editing program])
