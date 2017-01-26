@@ -230,6 +230,7 @@ sub make_library_filenames {
     my @path = @{$_};
     $path[-1] .= " $newfile";
     foreach (@path) {
+      die unless defined($_) && $_ ne "";
       $_ = unidecode($_);
       s/[[:punct:]]//g;
       s/[^\w\d]/-/g;
