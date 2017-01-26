@@ -24,6 +24,17 @@ User-specific configuration options can be set in the file \fB~/.fmdtconfig\fP.
 .SS Actions
 
 .RE
+\fBadd\fP {\fIfiles\fP|\fIdirectories\fP}...
+.RS 4
+Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
+
+.RE
+\fBremove\fP [\fB\-t\fP|\fB\-\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
+.RS 4
+Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
+Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
+
+.RE
 \fBedit\fP [\fB\-a\fP|\fB\-\-add\fP] {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
@@ -55,17 +66,6 @@ If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
 .RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
 Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
-
-.RE
-\fBadd\fP {\fIfiles\fP|\fIdirectories\fP}...
-.RS 4
-Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
-
-.RE
-\fBremove\fP [\fB\-t\fP|\fB\-\-to\fP \fIdirectory\fP] {\fIlibrary files\fP|\fIlibrary directories\fP}...
-.RS 4
-Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
-Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
 
 .RE
 \fBreorganise\fP

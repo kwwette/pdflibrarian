@@ -39,7 +39,34 @@ sub act {
   my ($action, @args) = @_;
 
   # handle action
-  if ($action eq "edit") {
+  if ($action eq "add") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
+
+    # get list of unique PDF files
+    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
+    croak "$0: no PDF files to read from" unless @pdffiles > 0;
+
+    # read BibTeX entries from PDF metadata
+    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
+
+    # add PDF files to library
+    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
+
+  } elsif ($action eq "remove") {
+    croak "$0: action '$action' requires arguments" unless @args > 0;
+
+    # handle options
+    my $removedir = File::Spec->tmpdir();
+    my $parser = Getopt::Long::Parser->new;
+    $parser->getoptionsfromarray(\@args,
+                                 "to|t=s" => \$removedir,
+                                ) or croak "$0: could not parse options for action '$action'";
+    croak "$0: '$removedir' is not a directory" unless -d $removedir;
+
+    # remove PDF files from library
+    fmdtools::pdf::org::remove_library_PDFs($removedir, @args);
+
+  } elsif ($action eq "edit") {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # handle options
@@ -199,33 +226,6 @@ sub act {
 
     # print BibTeX entries
     fmdtools::pdf::bib::write_bib_to_fh(\*STDOUT, @bibentries);
-
-  } elsif ($action eq "add") {
-    croak "$0: action '$action' requires arguments" unless @args > 0;
-
-    # get list of unique PDF files
-    my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
-    croak "$0: no PDF files to read from" unless @pdffiles > 0;
-
-    # read BibTeX entries from PDF metadata
-    my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
-
-    # add PDF files to library
-    fmdtools::pdf::org::organise_library_PDFs(@bibentries);
-
-  } elsif ($action eq "remove") {
-    croak "$0: action '$action' requires arguments" unless @args > 0;
-
-    # handle options
-    my $removedir = File::Spec->tmpdir();
-    my $parser = Getopt::Long::Parser->new;
-    $parser->getoptionsfromarray(\@args,
-                                 "to|t=s" => \$removedir,
-                                ) or croak "$0: could not parse options for action '$action'";
-    croak "$0: '$removedir' is not a directory" unless -d $removedir;
-
-    # remove PDF files from library
-    fmdtools::pdf::org::remove_library_PDFs($removedir, @args);
 
   } elsif ($action eq "reorganise") {
     croak "$0: action '$action' takes no arguments" unless @args == 0;
