@@ -42,6 +42,13 @@ sub act {
   if ($action eq "edit") {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
+    # handle options
+    my $add = 0;
+    my $parser = Getopt::Long::Parser->new;
+    $parser->getoptionsfromarray(\@args,
+                                 "add|a" => \$add,
+                                ) or croak "$0: could not parse options for action '$action'";
+
     # get list of unique PDF files
     my @pdffiles = fmdtools::find_unique_files($pdflibdir, 'pdf', @args);
     croak "$0: no PDF files to edit" unless @pdffiles > 0;
@@ -71,19 +78,21 @@ sub act {
     # write BibTeX entries to PDF metadata
     @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
 
-    # filter BibTeX entries of PDF files in library
-    @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
+    # filter BibTeX entries of PDF files in library (unless --add was given)
+    @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries unless $add;
 
-    # reorganise any PDF files already in library
+    # add PDF files to library and/or reorganise any PDF files already in library
     fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
-  } elsif ($action eq "retrieve" || $action eq "import") {
+  } elsif ($action eq "retrieve") {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # handle options
+    my $add = 0;
     my $source = 'ADS';
     my $parser = Getopt::Long::Parser->new;
     $parser->getoptionsfromarray(\@args,
+                                 "add|a" => \$add,
                                  "from|f=s" => \$source,
                                 ) or croak "$0: could not parse options for action '$action'";
     croak "$0: action '$action' takes no more than 2 arguments" unless @args <= 2;
@@ -154,15 +163,10 @@ sub act {
     # write BibTeX entries to PDF metadata
     @bibentries = fmdtools::pdf::bib::write_bib_to_PDF(@bibentries);
 
-    if ($action ne "import") {
+    # filter BibTeX entries of PDF files in library (unless --add was given)
+    @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries unless $add;
 
-      # filter BibTeX entries of PDF files in library
-      @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
-
-    }
-
-    # retrieve: reorganise any PDF files already in library
-    # import: add PDF files to library
+    # add PDF files to library and/or reorganise any PDF files already in library
     fmdtools::pdf::org::organise_library_PDFs(@bibentries);
 
   } elsif ($action eq "export") {
