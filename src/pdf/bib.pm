@@ -78,10 +78,13 @@ sub read_bib_from_PDF {
     my ($pdffile) = @_;
 
     # open PDF file and read XMP metadata
-    my $pdf = PDF::API2->open($pdffile);
-    my $xmp = $pdf->xmpMetadata() // "";
-    $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
-    $pdf->end();
+    my $xmp = "";
+    eval {
+      my $pdf = PDF::API2->open($pdffile);
+      $xmp = $pdf->xmpMetadata() // "";
+      $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
+      $pdf->end();
+    };
 
     # convert BibTeX XML (if any) to parsed BibTeX entry
     my $bibstr = '@article{key,}';
@@ -274,7 +277,35 @@ sub write_bib_to_PDF {
     $xmlmeta->insertBefore($xmldcentry, $xmlbibentry);
 
     # open PDF file
-    my $pdf = PDF::API2->open($pdffile);
+    my $pdf;
+    eval {
+      $pdf = PDF::API2->open($pdffile);
+    } or do {
+      my $error = $@;
+
+      # do we have ghostscript?
+      my $gs = $fmdtools::programs{'ghostscript'};
+      if (!defined($gs)) {
+        die $error;
+      }
+
+      # try to run ghostscript conversion on PDF file
+      my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$0: could not create temporary file";
+      system($gs, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
+      eval {
+        $pdf = PDF::API2->open($fh->filename);
+      } or do {
+        croak "$0: $error";
+      };
+
+      # use converted PDF file
+      $fh->unlink_on_destroy(0);
+      link($pdffile, "$pdffile.bak") or croak "$0: could not link '$pdffile' to '$pdffile.bak': $!";
+      rename($fh->filename, $pdffile) or croak "$0: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
+      unlink("$pdffile.bak") or croak "$0: could not unlink '$pdffile.bak': $!";
+      $pdf = PDF::API2->open($pdffile);
+
+    };
 
     # write document information to PDF file
     my %pdfinfo = $pdf->info();

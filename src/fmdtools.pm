@@ -37,6 +37,10 @@ $File::chmod::UMASK = 0;
 our $PACKAGE = "@PACKAGE@";
 our $VERSION = @VERSION@;
 
+our %programs = (
+                 'ghostscript' => "@ghostscript@",
+                );
+
 my $prefix = "@prefix@";
 my $datarootdir = "@datarootdir@";
 my $pkgdatadir = "@datadir@/@PACKAGE@";

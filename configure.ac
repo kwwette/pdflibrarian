@@ -92,6 +92,10 @@ AS_IF([test "x${fallback_editor}" = x],[
   AC_MSG_ERROR([could not find an editing program])
 ])
 
+# check for optional programs
+ghostscript=
+AC_CHECK_PROGS([ghostscript],[gs])
+
 # output files
 AC_CONFIG_FILES([
   Makefile
