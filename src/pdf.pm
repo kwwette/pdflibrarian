@@ -32,6 +32,7 @@ use fmdtools::pdf::www;
 # PDF library configuration
 our %config = fmdtools::get_library_config('pdf',
                                            'libdir' => File::Spec->catdir(fmdtools::get_home_dir(), 'PDFLibrary'),
+                                           'object_id_regex' => '[A-Z]+\s*[A-Z]*?\d{5,}',
                                           );
 my $pdflibdir = $config{libdir};
 

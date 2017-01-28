@@ -77,6 +77,13 @@ sub format_bib_authors {
 sub generate_bib_keys {
   my (@bibentries) = @_;
 
+  # get regular expression which matches object identifiers in titles
+  my $objid_re;
+  {
+    my $objid_re_str = $fmdtools::pdf::config{object_id_regex} // "";
+    $objid_re = qr/$objid_re_str/ if length($objid_re_str) > 0;
+  }
+
   # generate keys for BibTeX entries
   my $keys = 0;
   foreach my $bibentry (@bibentries) {
@@ -98,44 +105,31 @@ sub generate_bib_keys {
     {
       my $title = remove_tex_markup($bibentry->get("title"));
       $title =~ s/[^\w\d\s]//g;
-
-      # make common object identifiers into one word
-      $title =~ s/([A-Z]+)\s([A-Z]*\d{4,})/$1$2/g;
-
-      # build list of title words to use, and possibly determine a suffix
       my $suffix = "";
-      my @words;
-      foreach my $word (fmdtools::remove_short_words(split(/\s+/, $title))) {
 
-        # ignore pure numbers
-        next if $word =~ /^\d+$/;
-
-        # use longest word containing at least 4 digits as an identifier
-        if ($word =~ /\d{4,}/) {
-          $suffix = $word if length($suffix) < length($word);
+      # extract any object identifiers, add the longest identifier found to suffix
+      if (defined($objid_re)) {
+        my $longest_objid = "";
+        while ($title =~ /\b$objid_re/g) {
+          $longest_objid = $& if length($longest_objid) < length($&);
         }
-
-        # use any Roman numeral as a suffix, and stop processing title
-        if (grep { $word eq $_ } qw(II III IV V VI VII VIII IX)) {
-          $suffix = $word;
-          last;
-        }
-
-        push @words, $word;
-      }
-      unless (length($suffix) > 0) {
-
-        # append volume number (if any) for books and proceedings
-        $suffix = $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
-
+        $suffix .= ':' . $longest_objid if length($longest_objid) > 0;
+        $title =~ s/\b$objid_re//g;
       }
 
       # abbreviate title words
+      my @words = fmdtools::remove_short_words(split(/\s+/, $title));
       my @wordlens = (3, 3, 2, 2, 2);
       foreach my $word (sort { length($b) <=> length($a) } @words) {
 
-        # always include some words in full
-        next if $word =~ /^\w\d$/;
+        # add any Roman numeral to suffix, and stop processing title
+        if (grep { $word eq $_ } qw(II III IV V VI VII VIII IX)) {
+          $suffix .= ":$word";
+          last;
+        }
+
+        # always include numbers in full
+        next if $word =~ /^\d+$/;
 
         # abbreviate word to the next available length, after removing vowels
         my $wordlen = shift(@wordlens) // 1;
@@ -146,9 +140,16 @@ sub generate_bib_keys {
         map { s/^$word$/$shrt/ } @words;
       }
 
+      unless (length($suffix) > 0) {
+
+        # add volume number (if any) to suffix for books and proceedings
+        $suffix .= ':v' . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
+
+      }
+
       # add abbreviated title and suffix to key
       $key .= ':' . join('', @words);
-      $key .= ":$suffix" if length($suffix) > 0;
+      $key .= $suffix if length($suffix) > 0;
 
     }
 
@@ -158,7 +159,7 @@ sub generate_bib_keys {
 
     # set key to generated key, unless start of key matches generated key
     # - this is so user can further customise key by appending characters
-    unless ($bibentry->key =~ /^$key/) {
+    unless ($bibentry->key =~ /^$key($|:)/) {
       $bibentry->set_key($key);
       ++$keys;
     }
