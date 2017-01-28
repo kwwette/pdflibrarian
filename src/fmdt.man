@@ -62,10 +62,11 @@ The following \fIsource\fPs are supported:
 If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
 
 .RE
-\fBexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... {\fIfiles\fP|\fIdirectories\fP}...
+\fBexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... [\fB\-s\fP|\fB\-\-set\fP \fIBibTeX-field\fP\fB=\fP\fIvalue\fP]... {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and print to standard output.
 Any \fIBibTeX-field\fPs given to \fB\-\-exclude\fP are removed before printing.
+Any \fIBibTeX-field\fPs given to \fB\-\-set\fP will be set to \fIvalue\fP.
 
 .RE
 \fBreorganise\fP

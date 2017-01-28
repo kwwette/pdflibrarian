@@ -203,10 +203,11 @@ sub act {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # handle options
-    my @exclude;
+    my (@exclude, %set);
     my $parser = Getopt::Long::Parser->new;
     $parser->getoptionsfromarray(\@args,
                                  "exclude|e=s" => \@exclude,
+                                 "set|s=s" => \%set,
                                 ) or croak "$0: could not parse options for action '$action'";
 
     # get list of unique PDF files
@@ -216,11 +217,18 @@ sub act {
     # read BibTeX entries from PDF metadata
     my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
 
-    # exclude BibTeX fields
-    foreach my $bibfield (('file', @exclude)) {
-      foreach my $bibentry (@bibentries) {
+    foreach my $bibentry (@bibentries) {
+
+      # exclude BibTeX fields
+      foreach my $bibfield (('file', @exclude)) {
         $bibentry->delete($bibfield);
       }
+
+      # set BibTeX fields
+      while (my ($bibfield, $bibvalue) = each %set) {
+        $bibentry->set($bibfield, $bibvalue);
+      }
+
     }
 
     # error if duplicate BibTeX keys are found
