@@ -30,7 +30,9 @@ use fmdtools::pdf::org;
 use fmdtools::pdf::www;
 
 # PDF library configuration
-our %config = fmdtools::get_library_config('pdf');
+our %config = fmdtools::get_library_config('pdf',
+                                           'libdir' => File::Spec->catdir(fmdtools::get_home_dir(), 'PDFLibrary'),
+                                          );
 my $pdflibdir = $config{libdir};
 
 1;

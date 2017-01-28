@@ -85,19 +85,25 @@ sub is_in_dir {
   return 1;
 }
 
-sub get_library_config {
-  my ($type) = @_;
+sub get_home_dir {
 
   # get home directory
   my $homedir = $ENV{'HOME'} // croak "$0: could not determine home directory";
 
+  return $homedir;
+}
+
+sub get_library_config {
+  my ($type, %defaultconfig) = @_;
+
   # create default configuration
-  my %fullconfig = (
-                    'pdf.libdir' => File::Spec->catdir($homedir, 'PDFLibrary')
-                   );
+  my %fullconfig;
+  while (my ($key, $value) = each %defaultconfig) {
+    $fullconfig{"$type.$key"} = $value;
+  }
 
   # read configuration
-  my $configfile = File::Spec->catdir($homedir, '.fmdtconfig');
+  my $configfile = File::Spec->catdir(get_home_dir(), '.fmdtconfig');
   if (-f $configfile) {
     Config::Simple->import_from($configfile, \%fullconfig);
   }
