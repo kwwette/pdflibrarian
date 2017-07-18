@@ -103,6 +103,9 @@ sub query_ads {
   my $apitoken = $fmdtools::pdf::config{ads_api_token};
   croak "$0: could not determine ADS API token" unless defined($apitoken);
 
+  # perform common replacements to aid user cut-and-pasting
+  $query =~ s|^http://dx.doi.org/|doi:|;
+
   # send query to ADS
   my $querycontent;
   {
