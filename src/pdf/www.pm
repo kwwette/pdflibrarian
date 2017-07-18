@@ -104,7 +104,7 @@ sub query_ads {
   croak "$0: could not determine ADS API token" unless defined($apitoken);
 
   # perform common replacements to aid user cut-and-pasting
-  $query =~ s|^http://dx.doi.org/|doi:|;
+  $query =~ s|^https?://(?:dx.)?doi.org/|doi:|;
 
   # send query to ADS
   my $querycontent;
