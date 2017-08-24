@@ -24,6 +24,29 @@ User-specific configuration options can be set in the file \fB~/.fmdtconfig\fP.
 .SS Actions
 
 .RE
+\fBimport\fP [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP [\fIquery\fP]
+.RS 4
+Interrogate the online \fIsource\fP using the given \fIquery\fP, and write any matched BibTeX bibliographic data to a temporary file.
+This file is then opened in an editing program, as for \fIedit\fP.
+Any modifications are then written to the given PDF \fIfile\fP, which is then imported into the PDF library.
+
+The following \fIsource\fPs are supported:
+.RS 3
+\fBADS\fP: Query the NASA ADS database.
+.RE
+
+If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
+
+.RE
+\fBedit\fP {\fIfiles\fP|\fIdirectories\fP}...
+.RS 4
+Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
+This file is then opened in an editing program, given either by the \fB$VISUAL\fP or \fB$EDITOR\fP environment variables, or else the program \fB@fallback_editor@\fP.
+Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry, and the PDF library links reorganised as appropriate.
+
+\fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
+
+.RE
 \fBadd\fP {\fIfiles\fP|\fIdirectories\fP}...
 .RS 4
 Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
@@ -33,33 +56,6 @@ Add PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, to the PDF library.
 .RS 4
 Remove PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, from the PDF library.
 Copies of the removed PDF files are saved to the \fIdirectory\fP given by \fB\-\-to\fP, which default to the system temporary directory, e.g. \fB/tmp\fP.
-
-.RE
-\fBedit\fP [\fB\-a\fP|\fB\-\-add\fP] {\fIfiles\fP|\fIdirectories\fP}...
-.RS 4
-Read BibTeX bibliographic data from PDF \fIfiles\fP, or PDF files within \fIdirectories\fP, and write to a temporary file.
-This file is then opened in an editing program, given either by the \fB$VISUAL\fP or \fB$EDITOR\fP environment variables, or else the program \fB@fallback_editor@\fP.
-Any modifications are then written back to the PDF files given by the \fIfile\fP field in each BibTeX entry.
-
-\fBfmdt\fP will also automatically generate a key for each BibTeX entry, based upon its author list, year, and title.
-
-If \fB\-\-add\fP is given, \fBfmdt\fP will also add any modified \fIfiles\fP to the PDF library.
-
-.RE
-\fBretrieve\fP [\fB\-a\fP|\fB\-\-add\fP] [\fB\-f\fP|\fB\-\-from\fP \fIsource\fP] \fIfile\fP [\fIquery\fP]
-.RS 4
-Interrogate the online \fIsource\fP using the given \fIquery\fP, and write any matched BibTeX bibliographic data to a temporary file.
-This file is then opened in an editing program, as for \fIedit\fP.
-Any modifications are then written to the given PDF \fIfile\fP.
-
-If \fB\-\-add\fP is given, \fBfmdt\fP will also add \fIfile\fP to the PDF library.
-
-The following \fIsource\fPs are supported:
-.RS 3
-\fBADS\fP: Query the NASA ADS database.
-.RE
-
-If \fIquery\fP is not given, \fBfmdt\fP will prompt for it on the command line.
 
 .RE
 \fBexport\fP [\fB\-e\fP|\fB\-\-exclude\fP \fIBibTeX-field\fP]... [\fB\-s\fP|\fB\-\-set\fP \fIBibTeX-field\fP\fB=\fP\fIvalue\fP]... {\fIfiles\fP|\fIdirectories\fP}...
