@@ -192,9 +192,10 @@ sub act {
     croak "$0: action '$action' requires arguments" unless @args > 0;
 
     # handle options
-    my (@exclude, %set);
+    my ($minimal, @exclude, %set);
     my $parser = Getopt::Long::Parser->new;
     $parser->getoptionsfromarray(\@args,
+                                 "minimal|m" => \$minimal,
                                  "exclude|e=s" => \@exclude,
                                  "set|s=s" => \%set,
                                 ) or croak "$0: could not parse options for action '$action'";
@@ -205,6 +206,9 @@ sub act {
 
     # read BibTeX entries from PDF metadata
     my @bibentries = fmdtools::pdf::bib::read_bib_from_PDF(@pdffiles);
+
+    # exclude pre-defined BibTeX fields if mimial entry is requested
+    unshift @exclude, qw(keyword abstract) if $minimal;
 
     foreach my $bibentry (@bibentries) {
 
