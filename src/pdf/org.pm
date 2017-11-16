@@ -220,7 +220,12 @@ sub organise_library_PDFs {
     my @shelves;
 
     # organise by first author and collaboration
-    push @shelves, ["Authors", $authors[0], ""];
+    if (@authors > 0) {
+      push @shelves, ["Authors", $authors[0], ""];
+    }
+    if (@editors > 0) {
+      push @shelves, ["Authors", $editors[0], ""];
+    }
     if (@collaborations > 0) {
       push @shelves, ["Authors", $collaborations[0], ""];
     }
