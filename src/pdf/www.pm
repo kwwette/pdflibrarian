@@ -106,6 +106,9 @@ sub query_ads {
   # perform common replacements to aid user cut-and-pasting
   $query =~ s|^https?://(?:dx.)?doi.org/|doi:|;
 
+  # escape any colons in query value
+  $query =~ s{^([^:]*):(.*)$}{ my $k = $1; my $v = $2; $v =~ s|:|\\:|g; "$k:$v" }e;
+
   # send query to ADS
   my $querycontent;
   {
