@@ -70,20 +70,20 @@ AC_DEFUN([FMDT_CHECK_PERL_MODULE],[
     ])
   ])
 ])
-FMDT_CHECK_PERL_MODULE([Capture::Tiny])
-FMDT_CHECK_PERL_MODULE([Config::Simple])
-FMDT_CHECK_PERL_MODULE([File::chmod])
-FMDT_CHECK_PERL_MODULE([JSON])
+FMDT_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
+FMDT_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
+FMDT_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
+FMDT_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
 FMDT_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
-FMDT_CHECK_PERL_MODULE([PDF::API2])
-FMDT_CHECK_PERL_MODULE([Parallel::Iterator])
-FMDT_CHECK_PERL_MODULE([Sys::CPU])
+FMDT_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
+FMDT_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
+FMDT_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
 FMDT_CHECK_PERL_MODULE([Term::ReadLine])
-FMDT_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])
+FMDT_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
 FMDT_CHECK_PERL_MODULE([Text::Unidecode])
 FMDT_CHECK_PERL_MODULE([URI])
 FMDT_CHECK_PERL_MODULE([XML::LibXML])
-FMDT_CHECK_PERL_MODULE([XML::LibXSLT])
+FMDT_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 
 # check for fallback editor
 fallback_editor=
