@@ -1,8 +1,4 @@
-File MetaData Tools
-===================
+PDF Librarian
+=============
 
-FMDT is a command-line utility for managing collections of certain file types
-through their metadata.
-
-At present it is primarily aimed at organising collections of PDF files of
-academic papers, theses, etc. through metadata stored in BibTeX format.
+PDF Librarian manages a library of academic papers in PDF format with embedded BibTeX metadata.

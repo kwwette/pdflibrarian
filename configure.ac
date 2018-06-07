@@ -1,10 +1,9 @@
 AC_PREREQ([2.69])
-AC_INIT([fmdtools],[0.1])
+AC_INIT([PDFLibrarian],[0.1])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.14 foreign])
 AM_SILENT_RULES([yes])
-AC_SUBST([DATE],[`date +'%Y-%m-%d'`])
 
 # check for standard programs
 AC_PROG_INSTALL
@@ -52,7 +51,7 @@ AC_CONFIG_COMMANDS_PRE([
 ])
 
 # check for Perl modules
-AC_DEFUN([FMDT_CHECK_PERL_MODULE],[
+AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
   AC_MSG_CHECKING([for Perl module $1])
   AS_IF([${PERL} -M'$1' -e '0' >/dev/null 2>&1],[
     AC_MSG_RESULT([yes])
@@ -70,20 +69,20 @@ AC_DEFUN([FMDT_CHECK_PERL_MODULE],[
     ])
   ])
 ])
-FMDT_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
-FMDT_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
-FMDT_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
-FMDT_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
-FMDT_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
-FMDT_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
-FMDT_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
-FMDT_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
-FMDT_CHECK_PERL_MODULE([Term::ReadLine])
-FMDT_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
-FMDT_CHECK_PERL_MODULE([Text::Unidecode])
-FMDT_CHECK_PERL_MODULE([URI])
-FMDT_CHECK_PERL_MODULE([XML::LibXML])
-FMDT_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
+dnl PDFLBR_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
+dnl PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
+dnl PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
+dnl PDFLBR_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Term::ReadLine])
+dnl PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
+dnl PDFLBR_CHECK_PERL_MODULE([Text::Unidecode])
+dnl PDFLBR_CHECK_PERL_MODULE([URI])
+dnl PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
+dnl PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 
 # check for fallback editor
 fallback_editor=
@@ -99,8 +98,8 @@ AC_CHECK_PROGS([ghostscript],[gs])
 # output files
 AC_CONFIG_FILES([
   Makefile
-  pre-inst/fmdt.1:src/fmdt.man
-  pre-inst/fmdt:src/fmdt.pl
-  pre-inst/fmdtools.pm:src/fmdtools.pm
 ])
+  dnl pre-inst/fmdt.1:src/fmdt.man
+  dnl pre-inst/fmdt:src/fmdt.pl
+  dnl pre-inst/fmdtools.pm:src/fmdtools.pm
 AC_OUTPUT

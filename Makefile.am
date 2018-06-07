@@ -1,24 +1,24 @@
-bin_SCRIPTS = pre-inst/fmdt
+# bin_SCRIPTS = pre-inst/fmdt
 
-man_MANS = pre-inst/fmdt.1
+# man_MANS = pre-inst/fmdt.1
 
-perllib_DATA = \
-	pre-inst/fmdtools.pm \
-	$(END_OF_LINE)
+# perllib_DATA = \
+# 	pre-inst/fmdtools.pm \
+# 	$(END_OF_LINE)
 
-pkgperllib_DATA = \
-	src/pdf.pm \
-	$(END_OF_LINE)
+# pkgperllib_DATA = \
+# 	src/pdf.pm \
+# 	$(END_OF_LINE)
 
-pdflibdir = $(pkgperllibdir)/pdf
-pdflib_DATA = \
-	src/pdf/bib.pm \
-	src/pdf/org.pm \
-	src/pdf/www.pm \
-	$(END_OF_LINE)
+# pdflibdir = $(pkgperllibdir)/pdf
+# pdflib_DATA = \
+# 	src/pdf/bib.pm \
+# 	src/pdf/org.pm \
+# 	src/pdf/www.pm \
+# 	$(END_OF_LINE)
 
-EXTRA_DIST = $(DATA)
-pkgdata_DATA = \
-	src/pdf/dublincore.xsl \
-	src/pdf/bibtex.xsl \
-	$(END_OF_LINE)
+# EXTRA_DIST = $(DATA)
+# pkgdata_DATA = \
+# 	src/pdf/dublincore.xsl \
+# 	src/pdf/bibtex.xsl \
+# 	$(END_OF_LINE)
