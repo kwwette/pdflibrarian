@@ -26,8 +26,9 @@ use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::util qw(find_pdf_files);
+use pdflibrarian::util qw(unique_list find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 
 =pod
 
@@ -88,13 +89,16 @@ write_bib_to_fh($fh, @bibentries);
 # regenerate keys for modified BibTeX entries
 generate_bib_keys(@bibentries);
 
-# write BibTeX entries to PDF metadata
-@bibentries = write_bib_to_pdf(@bibentries);
+# write BibTeX entries to PDF metadata; return modified BibTeX entries
+my @modbibentries = write_bib_to_pdf(@bibentries);
 
-# # filter BibTeX entries of PDF files in library
-# @bibentries = grep { fmdtools::is_in_dir($pdflibdir, $_->get('file')) } @bibentries;
+# ensure all PDF files are part of library; return PDF files which have been added
+my @newbibentries = update_pdf_lib(@bibentries);
 
-# # add PDF files to library and/or reorganise any PDF files already in library
-# fmdtools::pdf::org::organise_library_pdfs(@bibentries);
+# update links in PDF links directory to real PDF files
+make_pdf_links(unique_list(@newbibentries, @modbibentries));
+
+# cleanup PDF links directory
+cleanup_links();
 
 exit 0;

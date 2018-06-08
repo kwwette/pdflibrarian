@@ -99,5 +99,7 @@ AC_CONFIG_FILES([
   pre-inst/config.pm:src/config.pm
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
   pre-inst/pdf-lbr-read-bib:src/pdf-lbr-read-bib.pl
+  pre-inst/pdf-lbr-rebuild:src/pdf-lbr-rebuild.pl
+  pre-inst/pdf-lbr-remove-pdf:src/pdf-lbr-remove-pdf.pl
 ])
 AC_OUTPUT

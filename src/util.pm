@@ -30,15 +30,45 @@ use Sys::CPU;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(find_pdf_files progress parallel_loop remove_tex_markup remove_short_words);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files progress parallel_loop remove_tex_markup remove_short_words);
 
 1;
+
+sub unique_list {
+
+  # return a list containing only unique elements
+  my %seen;
+  grep !$seen{$_}++, @_;
+
+}
+
+sub is_in_dir {
+  my ($dir, $path) = @_;
+
+  # return true if '$path' is in '$dir', false otherwise
+  sub spliteverything {
+    my ($v, $d, $f) = File::Spec->splitpath(File::Spec->rel2abs($_[0]));
+    my @d = File::Spec->splitdir(File::Spec->catdir($d));
+    ($v, @d, $f)
+  }
+  my @dir = spliteverything($dir);
+  my @path = spliteverything($path);
+  return 0 if @dir > @path;
+  while (@dir) {
+    return 0 if shift(@dir) ne shift(@path);
+  }
+
+  return 1;
+}
 
 sub find_pdf_files {
 
   # return unique found PDF files
   my %pdffiles;
-  my $wanted = sub { 
+  my $wanted = sub {
+    if (-l $_) {
+      $_ = readlink($_) or croak "$0: could not resolve '$_': %!";
+    }
     return unless -f && mimetype($_) eq 'application/pdf';
     $pdffiles{File::Spec->rel2abs($_)} = 1;
   };
@@ -47,11 +77,11 @@ sub find_pdf_files {
   foreach (@_) {
     if (-d $_) {
       find({wanted => \&$wanted, no_chdir => 1}, $_);
-    } elsif (-f $_) {
+    } elsif (-r $_) {
       &$wanted($_);
     } elsif (!File::Spec->file_name_is_absolute($_) && -d File::Spec->catdir($pdflinkdir, $_)) {
       find({wanted => \&$wanted, no_chdir => 1}, File::Spec->catdir($pdflinkdir, $_));
-    } elsif (!File::Spec->file_name_is_absolute($_) && -f File::Spec->catfile($pdflinkdir, $_)) {
+    } elsif (!File::Spec->file_name_is_absolute($_) && -r File::Spec->catfile($pdflinkdir, $_)) {
       &$wanted(File::Spec->catfile($pdflinkdir, $_));
     } else {
       croak "$0: '$_' is neither a file nor a directory, either by itself or within '$pdflinkdir'";

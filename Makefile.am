@@ -1,11 +1,14 @@
 bin_SCRIPTS = \
 	pre-inst/pdf-lbr-edit-bib \
 	pre-inst/pdf-lbr-read-bib \
+	pre-inst/pdf-lbr-rebuild \
+	pre-inst/pdf-lbr-remove-pdf \
 	$(END_OF_LINE)
 
 pkgperllib_DATA = \
 	pre-inst/config.pm \
 	src/bibtex.pm \
+	src/library.pm \
 	src/util.pm \
 	$(END_OF_LINE)
 
