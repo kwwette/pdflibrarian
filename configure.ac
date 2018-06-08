@@ -8,10 +8,6 @@ AM_SILENT_RULES([yes])
 # check for standard programs
 AC_PROG_INSTALL
 AC_PROG_SED
-AC_PATH_PROG([MAN],[man])
-AS_IF([test "x${MAN}" = x],[
-  AC_MSG_ERROR([could not find man])
-])
 
 # check for Perl
 AC_SUBST([PERLVERSION],[5.18.0])
@@ -69,20 +65,22 @@ AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
     ])
   ])
 ])
-dnl PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
-dnl PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
+PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
+PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
+PDFLBR_CHECK_PERL_MODULE([File::HomeDir])   dnl libfile-homedir-perl
+PDFLBR_CHECK_PERL_MODULE([File::MimeInfo])   dnl libfile-mimeinfo-perl
+PDFLBR_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
+PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
+PDFLBR_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
+PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
+PDFLBR_CHECK_PERL_MODULE([Text::Unidecode])
+PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
+PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 dnl PDFLBR_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
 dnl PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
 dnl PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
-dnl PDFLBR_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
-dnl PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
-dnl PDFLBR_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
 dnl PDFLBR_CHECK_PERL_MODULE([Term::ReadLine])
-dnl PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
-dnl PDFLBR_CHECK_PERL_MODULE([Text::Unidecode])
 dnl PDFLBR_CHECK_PERL_MODULE([URI])
-dnl PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
-dnl PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 
 # check for fallback editor
 fallback_editor=
@@ -98,8 +96,8 @@ AC_PATH_PROGS([ghostscript],[gs])
 # output files
 AC_CONFIG_FILES([
   Makefile
+  pre-inst/config.pm:src/config.pm
+  pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
+  pre-inst/pdf-lbr-read-bib:src/pdf-lbr-read-bib.pl
 ])
-  dnl pre-inst/fmdt.1:src/fmdt.man
-  dnl pre-inst/fmdt:src/fmdt.pl
-  dnl pre-inst/fmdtools.pm:src/fmdtools.pm
 AC_OUTPUT

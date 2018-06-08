@@ -1,24 +1,16 @@
-# bin_SCRIPTS = pre-inst/fmdt
+bin_SCRIPTS = \
+	pre-inst/pdf-lbr-edit-bib \
+	pre-inst/pdf-lbr-read-bib \
+	$(END_OF_LINE)
 
-# man_MANS = pre-inst/fmdt.1
+pkgperllib_DATA = \
+	pre-inst/config.pm \
+	src/bibtex.pm \
+	src/util.pm \
+	$(END_OF_LINE)
 
-# perllib_DATA = \
-# 	pre-inst/fmdtools.pm \
-# 	$(END_OF_LINE)
-
-# pkgperllib_DATA = \
-# 	src/pdf.pm \
-# 	$(END_OF_LINE)
-
-# pdflibdir = $(pkgperllibdir)/pdf
-# pdflib_DATA = \
-# 	src/pdf/bib.pm \
-# 	src/pdf/org.pm \
-# 	src/pdf/www.pm \
-# 	$(END_OF_LINE)
-
-# EXTRA_DIST = $(DATA)
-# pkgdata_DATA = \
-# 	src/pdf/dublincore.xsl \
-# 	src/pdf/bibtex.xsl \
-# 	$(END_OF_LINE)
+EXTRA_DIST = $(DATA)
+pkgdata_DATA = \
+	src/bibtex.xsl \
+	src/dublincore.xsl \
+	$(END_OF_LINE)

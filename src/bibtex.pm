@@ -1,41 +1,45 @@
-# Copyright (C) 2016--2017 Karl Wette
+# Copyright (C) 2016--2018 Karl Wette
 #
-# This file is part of fmdtools.
+# This file is part of PDF Librarian.
 #
-# fmdtools is free software: you can redistribute it and/or modify
+# PDF Librarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
 #
-# fmdtools is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
+# PDF Librarian is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with fmdtools. If not, see <http://www.gnu.org/licenses/>.
-
-package fmdtools::pdf::bib;
+# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
+package pdflibrarian::bibtex;
+use Exporter 'import';
+
+use Capture::Tiny;
 use Carp;
-use Scalar::Util qw(blessed);
-use List::Util qw(max);
 use Digest::SHA;
 use Encode;
 use File::Temp;
-use Capture::Tiny;
+use List::Util qw(max);
 use PDF::API2;
-use Text::BibTeX;
+use Scalar::Util qw(blessed);
 use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
+use Text::BibTeX;
+use Text::Unidecode;
 use XML::LibXML;
 use XML::LibXSLT;
 
-use fmdtools;
-use fmdtools::pdf;
+use pdflibrarian::config;
+use pdflibrarian::util qw(progress parallel_loop remove_tex_markup remove_short_words);
+
+our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
@@ -46,13 +50,14 @@ foreach my $type ($structure->types()) {
 1;
 
 sub bib_checksum {
-  my ($bibentry) = @_;
+  my ($bibentry, @exclude) = @_;
 
   # generate a checksum for a BibTeX entry
+  push @exclude, 'checksum';
   my $digest = Digest::SHA->new();
   $digest->add($bibentry->type, $bibentry->key);
   foreach my $bibfield (sort { $a cmp $b } $bibentry->fieldlist()) {
-    next if $bibfield eq 'checksum';
+    next if grep /^$bibfield$/, @exclude;
     $digest->add($bibfield, $bibentry->get($bibfield));
   }
 
@@ -68,97 +73,6 @@ sub read_bib_from_str {
   $bibentry->{structure} = $structure;
 
   return $bibentry;
-}
-
-sub read_bib_from_PDF {
-  my (@pdffiles) = @_;
-
-  # read BibTeX entries from PDF files
-  my $body = sub {
-    my ($pdffile) = @_;
-
-    # open PDF file and read XMP metadata
-    my $xmp = "";
-    eval {
-      my $pdf = PDF::API2->open($pdffile);
-      $xmp = $pdf->xmpMetadata() // "";
-      $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
-      $pdf->end();
-    };
-
-    # convert BibTeX XML (if any) to parsed BibTeX entry
-    my $bibstr = '@article{key,}';
-    if (length($xmp) > 0) {
-      my $xml = XML::LibXML->load_xml(string => $xmp);
-      my $xslt = XML::LibXSLT->new();
-      my $xsltstylesrc = XML::LibXML->load_xml(location => fmdtools::get_data_file("bibtex.xsl"));
-      my $xsltstyle = $xslt->parse_stylesheet($xsltstylesrc);
-      my $bib = $xsltstyle->transform($xml);
-      my $bibtext = $bib->textContent();
-      $bibtext =~ s/^\s+//;
-      $bibtext =~ s/\s+$//;
-      if (length($bibtext) > 0) {
-        $bibstr = $bibtext;
-      }
-    }
-    my $bibentry = read_bib_from_str($bibstr);
-
-    # save name of PDF file
-    $bibentry->set('file', $pdffile);
-
-    return $bibentry;
-  };
-  my @bibentries = fmdtools::parallel_loop("reading %i/%i BibTeX entries from PDF", \@pdffiles, $body);
-
-  # add checksums to BibTeX entries
-  foreach my $bibentry (@bibentries) {
-    my $checksum = bib_checksum($bibentry);
-    $bibentry->set('checksum', $checksum);
-  }
-
-  return @bibentries;
-}
-
-sub write_bib_to_fh {
-  my ($fh, @bibentries) = @_;
-
-  # print BibTeX entries
-  for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
-
-    # create a copy of BibTeX entry
-    $bibentry = $bibentry->clone();
-
-    # remove checksum before printing
-    $bibentry->delete('checksum');
-
-    # arrange BibTeX fields in the following order
-    my %order;
-    my $orderidx;
-    foreach my $bibfield (
-                          qw(keyword),
-                          $structure->required_fields($bibentry->type),
-                          $structure->optional_fields($bibentry->type),
-                          qw(eid doi archiveprefix primaryclass eprint oai2identifier url adsurl adsnote),
-                          sort { $a cmp $b } $bibentry->fieldlist()
-                         ) {
-      $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield) && !defined($order{$bibfield});
-    }
-    foreach my $bibfield (
-                          qw(abstract comments file)
-                         ) {
-      $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield);
-    }
-    my @fieldlist = sort { $order{$a} <=> $order{$b} } keys(%order);
-    $bibentry->set_fieldlist(\@fieldlist);
-
-    # print entry
-    my $bibstr = $bibentry->print_s();
-    $bibstr =~ s/^\s+//g;
-    $bibstr =~ s/\s+$//g;
-    print $fh "\n", encode('iso-8859-1', $bibstr, Encode::FB_CROAK), "\n";
-
-  }
-
 }
 
 sub read_bib_from_file {
@@ -221,8 +135,107 @@ sub read_bib_from_file {
 
 }
 
-sub write_bib_to_PDF {
+sub read_bib_from_pdf {
+  my (@pdffiles) = @_;
+
+  # get location of BibTeX XSLT style file
+  my $xsltbibtex = File::Spec->catfile($pkgdatadir, 'bibtex.xsl');
+  croak "$0: missing XSLT style file '$xsltbibtex'" unless -f $xsltbibtex;
+
+  # read BibTeX entries from PDF files
+  my $body = sub {
+    my ($pdffile) = @_;
+
+    # open PDF file and read XMP metadata
+    my $xmp = "";
+    eval {
+      my $pdf = PDF::API2->open($pdffile);
+      $xmp = $pdf->xmpMetadata() // "";
+      $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
+      $pdf->end();
+    };
+
+    # convert BibTeX XML (if any) to parsed BibTeX entry
+    my $bibstr = '@article{key,}';
+    if (length($xmp) > 0) {
+      my $xml = XML::LibXML->load_xml(string => $xmp);
+      my $xslt = XML::LibXSLT->new();
+      my $xsltstylesrc = XML::LibXML->load_xml(location => $xsltbibtex);
+      my $xsltstyle = $xslt->parse_stylesheet($xsltstylesrc);
+      my $bib = $xsltstyle->transform($xml);
+      my $bibtext = $bib->textContent();
+      $bibtext =~ s/^\s+//;
+      $bibtext =~ s/\s+$//;
+      if (length($bibtext) > 0) {
+        $bibstr = $bibtext;
+      }
+    }
+    my $bibentry = read_bib_from_str($bibstr);
+
+    # save name of PDF file
+    $bibentry->set('file', $pdffile);
+
+    return $bibentry;
+  };
+  my @bibentries = parallel_loop("reading BibTeX entries from %i/%i PDF files", \@pdffiles, $body);
+
+  # add checksums to BibTeX entries
+  foreach my $bibentry (@bibentries) {
+    my $checksum = bib_checksum($bibentry);
+    $bibentry->set('checksum', $checksum);
+  }
+
+  return @bibentries;
+}
+
+sub write_bib_to_fh {
+  my ($fh, @bibentries) = @_;
+
+  # print BibTeX entries
+  for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+
+    # create a copy of BibTeX entry
+    $bibentry = $bibentry->clone();
+
+    # remove checksum before printing
+    $bibentry->delete('checksum');
+
+    # arrange BibTeX fields in the following order
+    my %order;
+    my $orderidx;
+    foreach my $bibfield (
+                          qw(keyword),
+                          $structure->required_fields($bibentry->type),
+                          $structure->optional_fields($bibentry->type),
+                          qw(eid doi archiveprefix primaryclass eprint oai2identifier url adsurl adsnote),
+                          sort { $a cmp $b } $bibentry->fieldlist()
+                         ) {
+      $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield) && !defined($order{$bibfield});
+    }
+    foreach my $bibfield (
+                          qw(abstract comments file)
+                         ) {
+      $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield);
+    }
+    my @fieldlist = sort { $order{$a} <=> $order{$b} } keys(%order);
+    $bibentry->set_fieldlist(\@fieldlist);
+
+    # print entry
+    my $bibstr = $bibentry->print_s();
+    $bibstr =~ s/^\s+//g;
+    $bibstr =~ s/\s+$//g;
+    print $fh "\n", encode('iso-8859-1', $bibstr, Encode::FB_CROAK), "\n";
+
+  }
+
+}
+
+sub write_bib_to_pdf {
   my (@bibentries) = @_;
+
+  # get location of DublinCore XSLT style file
+  my $xsltdublincore = File::Spec->catfile($pkgdatadir, 'dublincore.xsl');
+  croak "$0: missing XSLT style file '$xsltdublincore'" unless -f $xsltdublincore;
 
   # filter out unmodified BibTeX entries
   my @modbibentries;
@@ -232,7 +245,7 @@ sub write_bib_to_PDF {
     push @modbibentries, $bibentry;
     $bibentry->set('checksum', $checksum);
   }
-  fmdtools::progress("not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries) if @modbibentries < @bibentries;
+  progress("not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries) if @modbibentries < @bibentries;
 
   # write modified BibTeX entries to PDF files
   my $body = sub {
@@ -269,7 +282,7 @@ sub write_bib_to_PDF {
 
     # convert BibTeX XML to DublinCore XML and append
     my $xslt = XML::LibXSLT->new();
-    my $xsltstylesrc = XML::LibXML->load_xml(location => fmdtools::get_data_file("dublincore.xsl"));
+    my $xsltstylesrc = XML::LibXML->load_xml(location => $xsltdublincore);
     my $xsltstyle = $xslt->parse_stylesheet($xsltstylesrc);
     my $xmldc = $xsltstyle->transform($xml);
     my $xmldcentry = $xmldc->documentElement()->cloneNode(1);
@@ -284,14 +297,13 @@ sub write_bib_to_PDF {
       my $error = $@;
 
       # do we have ghostscript?
-      my $gs = $fmdtools::programs{'ghostscript'};
-      if (!defined($gs)) {
+      if (!defined($ghostscript)) {
         die $error;
       }
 
       # try to run ghostscript conversion on PDF file
       my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$0: could not create temporary file";
-      system($gs, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
+      system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
       eval {
         $pdf = PDF::API2->open($fh->filename);
       } or do {
@@ -339,7 +351,7 @@ sub write_bib_to_PDF {
     $pdf->end();
 
   };
-  fmdtools::parallel_loop("writing %i/%i BibTeX entries to PDF", \@modbibentries, $body);
+  parallel_loop("writing BibTeX entries to %i/%i PDF files", \@modbibentries, $body);
 
   return @modbibentries;
 }
@@ -398,13 +410,14 @@ EOF
     $oldfh = $fh;
 
     # edit BibTeX entries
-    fmdtools::edit_file($fh->filename);
+    my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
+    system($editor, $fh->filename) == 0 or croak "$0: could not edit file '$fh->filename' with editing program '$editor'";
 
     # try to re-read BibTeX entries
     read_bib_from_file(\@errors, \@bibentries, $fh->filename);
 
     # error if duplicate BibTeX keys are found
-    foreach my $dupkey (find_duplicate_keys(@bibentries)) {
+    foreach my $dupkey (find_dup_bib_keys(@bibentries)) {
       push @errors, { msg => "duplicated key '$dupkey'" };
     }
 
@@ -437,7 +450,7 @@ EOF
   return @bibentries;
 }
 
-sub find_duplicate_keys {
+sub find_dup_bib_keys {
   my (@bibentries) = @_;
 
   # find duplicate keys in BibTeX entries
@@ -447,4 +460,108 @@ sub find_duplicate_keys {
   }
 
   return grep { $keycount{$_} > 1 } keys(%keycount);
+}
+
+sub format_bib_authors {
+  my ($nameformat, $maxauthors, $etal, @authors) = @_;
+
+  # format authors
+  my $authorformat = new Text::BibTeX::NameFormat($nameformat);
+  foreach my $author (@authors) {
+    $author = $authorformat->apply($author);
+    $author = remove_tex_markup($author);
+    if ($author =~ /\sCollaboration$/i) {
+      $author =~ s/\s.*$//;
+    }
+  }
+
+  if (@authors > 0) {
+
+    # limit number of authors to '$maxathors'
+    @authors = ($authors[0], $etal) if defined($maxauthors) && @authors > $maxauthors;
+
+    # replace 'others' with preferred form of 'et al.'
+    $authors[-1] = $etal if $authors[-1] eq "others";
+
+  }
+
+  return @authors;
+}
+
+sub generate_bib_keys {
+  my (@bibentries) = @_;
+
+  # generate keys for BibTeX entries
+  my $keys = 0;
+  foreach my $bibentry (@bibentries) {
+    my $key = "";
+
+    # add formatted authors, editors, or collaborations
+    {
+      my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
+      @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
+      @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
+      $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
+    }
+
+    # add year
+    my $year = $bibentry->get("year") // "";
+    $key .= $year;
+
+    # add abbreviated title
+    {
+      my $title = remove_tex_markup($bibentry->get("title"));
+      $title =~ s/[^\w\d\s]//g;
+      my $suffix = "";
+
+      # abbreviate title words
+      my @words = remove_short_words(split(/\s+/, $title));
+      my @wordlens = (3, 3, 2, 2, 2);
+      foreach my $word (sort { length($b) <=> length($a) } @words) {
+
+        # add any Roman numeral to suffix, and stop processing title
+        if (grep { $word eq $_ } qw(II III IV V VI VII VIII IX)) {
+          $suffix .= ":$word";
+          last;
+        }
+
+        # always include numbers in full
+        next if $word =~ /^\d+$/;
+
+        # abbreviate word to the next available length, after removing vowels
+        my $wordlen = shift(@wordlens) // 1;
+        my $shrt = ucfirst($word);
+        $shrt =~ s/[aeiou]//g;
+        $shrt = substr($shrt, 0, $wordlen);
+
+        map { s/^$word$/$shrt/ } @words;
+      }
+
+      unless (length($suffix) > 0) {
+
+        # add volume number (if any) to suffix for books and proceedings
+        $suffix .= ':v' . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
+
+      }
+
+      # add abbreviated title and suffix to key
+      $key .= ':' . join('', @words);
+      $key .= $suffix if length($suffix) > 0;
+
+    }
+
+    # sanitise key
+    $key = unidecode($key);
+    $key =~ s/[^\w\d:]//g;
+
+    # set key to generated key, unless start of key matches generated key
+    # - this is so user can further customise key by appending characters
+    unless ($bibentry->key =~ /^$key($|:)/) {
+      $bibentry->set_key($key);
+      ++$keys;
+    }
+
+  }
+  progress("generated keys for %i BibTeX entries\n", $keys) if $keys > 0;
+
 }
