@@ -86,7 +86,7 @@ dnl PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 
 # check for fallback editor
 fallback_editor=
-AC_CHECK_PROGS([fallback_editor],[emacs nano vim ed])
+AC_CHECK_PROGS([fallback_editor],[editor emacs gedit nano vim])
 AS_IF([test "x${fallback_editor}" = x],[
   AC_MSG_ERROR([could not find an editing program])
 ])
