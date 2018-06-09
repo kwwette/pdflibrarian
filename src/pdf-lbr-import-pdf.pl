@@ -23,10 +23,8 @@ use warnings;
 
 use Capture::Tiny;
 use Carp;
-use File::MimeInfo::Magic;
 use Getopt::Long;
 use Pod::Usage;
-use Text::Unidecode;
 
 @perl_use_lib@;
 use pdflibrarian::config;
