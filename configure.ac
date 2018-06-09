@@ -69,18 +69,19 @@ PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
 PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
 PDFLBR_CHECK_PERL_MODULE([File::HomeDir])   dnl libfile-homedir-perl
 PDFLBR_CHECK_PERL_MODULE([File::MimeInfo])   dnl libfile-mimeinfo-perl
+PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
+PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
 PDFLBR_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
 PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
 PDFLBR_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
 PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
 PDFLBR_CHECK_PERL_MODULE([Text::Unidecode])
+PDFLBR_CHECK_PERL_MODULE([URI])
+PDFLBR_CHECK_PERL_MODULE([Wx])   dnl libwx-perl
 PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
 PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
 dnl PDFLBR_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
-dnl PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
-dnl PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
 dnl PDFLBR_CHECK_PERL_MODULE([Term::ReadLine])
-dnl PDFLBR_CHECK_PERL_MODULE([URI])
 
 # check for fallback editor
 fallback_editor=
@@ -98,6 +99,8 @@ AC_CONFIG_FILES([
   Makefile
   pre-inst/config.pm:src/config.pm
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
+  pre-inst/pdf-lbr-import-pdf:src/pdf-lbr-import-pdf.pl
+  pre-inst/pdf-lbr-query-ads:src/pdf-lbr-query-ads.pl
   pre-inst/pdf-lbr-read-bib:src/pdf-lbr-read-bib.pl
   pre-inst/pdf-lbr-rebuild:src/pdf-lbr-rebuild.pl
   pre-inst/pdf-lbr-remove-pdf:src/pdf-lbr-remove-pdf.pl

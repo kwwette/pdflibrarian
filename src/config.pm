@@ -55,6 +55,11 @@ our $pdffiledir;
 push @EXPORT, '$pdflinkdir';
 our $pdflinkdir;
 
+push @EXPORT, '$pref_query_database';
+our $pref_query_database;
+push @EXPORT, '%query_databases';
+our %query_databases;
+
 1;
 
 INIT {
@@ -72,6 +77,9 @@ INIT {
   # ensure default configuration values are set
   my %config = (
                 'general.pdflinkdir'    => File::Spec->catdir(File::HomeDir->my_home, 'PDFLibrary'),
+                'general.prefquery'     => 'Astrophysics Data System using Digital Object Identifier',
+                'query-ads.name'        => 'Astrophysics Data System using Digital Object Identifier',
+                'query-ads.cmd'         => "$bindir/pdf-lbr-query-ads --query doi:%s",
                 );
   while (my ($key, $value) = each %config) {
     $cfg->param($key, $value) unless defined($cfg->param($key)) && length($cfg->param($key)) > 0;
@@ -85,6 +93,21 @@ INIT {
 
   # set PDF links directory
   $pdflinkdir = $config{'general.pdflinkdir'};
+
+  # set query database
+  $pref_query_database = $config{'general.prefquery'};
+  foreach (keys %config) {
+    if (/^(query-[^.]+)\.name/) {
+      my $block = $1;
+      my $name = $config{"$block.name"};
+      my $cmd = $config{"$block.cmd"};
+      if ($cmd =~ /^[^%]+[%]s[^%]*$/) {
+        $query_databases{$name} = $cmd;
+      } else {
+        croak "$0: invalid query command '$cmd' for database '$name'";
+      }
+    }
+  }
 
   # create directories for PDF files
   $pdffiledir = File::HomeDir->my_dist_data('pdflibrarian', { create => 1 });

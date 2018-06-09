@@ -31,7 +31,7 @@ use Sys::CPU;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file progress parallel_loop remove_tex_markup remove_short_words);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file extract_doi_from_pdf progress parallel_loop remove_tex_markup remove_short_words);
 
 1;
 
@@ -126,6 +126,42 @@ sub open_pdf_file {
   };
 
   return $pdf;
+}
+
+sub extract_doi_from_pdf {
+  my ($pdffile) = @_;
+
+  # open PDF file
+  my $pdf = open_pdf_file($pdffile);
+
+  # try to extract a DOI from PDF info structure
+  my @pdfinfotags = $pdf->infoMetaAttributes();
+  push @pdfinfotags, qw(DOI doi);
+  $pdf->infoMetaAttributes(@pdfinfotags);
+  my %pdfinfo = $pdf->info();
+  while (my ($key, $value) = each %pdfinfo) {
+    if ($key =~ /^doi$/i) {
+      $pdf->end();
+      return $value;
+    }
+  }
+
+  # try to extract a DOI from PDF info structure
+  my $xmp = $pdf->xmpMetadata() // "";
+  $xmp =~ s/\s+//g;
+  if ($xmp =~ m|doi>([^<]+)<|) {
+    $pdf->end();
+    return $1;
+  }
+
+  # try to extract a DOI from PDF text
+  my $text = $pdf->stringify();
+  $text =~ s/\s+//g;
+  if ($text =~ m|UR[IL]\(https?://(?:dx\.)?doi\.org/([^()]+)\)/|) {
+    return $1;
+  }
+
+  return undef;
 }
 
 sub progress {
