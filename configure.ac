@@ -88,6 +88,13 @@ AS_IF([test "x${fallback_editor}" = x],[
   AC_MSG_ERROR([could not find an editing program])
 ])
 
+# check for external PDF viewer
+external_pdf_viewer=
+AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf])
+AS_IF([test "x${external_pdf_viewer}" = x],[
+  AC_MSG_ERROR([could not find an external PDF viewer])
+])
+
 # check for optional programs
 ghostscript=
 AC_PATH_PROGS([ghostscript],[gs])

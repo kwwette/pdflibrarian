@@ -31,7 +31,7 @@ use Sys::CPU;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file extract_doi_from_pdf parallel_loop remove_tex_markup remove_short_words);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file extract_doi_from_pdf parallel_loop remove_tex_markup remove_short_words run_async kill_async);
 
 1;
 
@@ -225,4 +225,27 @@ sub remove_short_words {
   @words = grep { my $word = $_; ! scalar grep { $word =~ /^$_$/i } @short_words } @words;
 
   return wantarray ? @words : "@words";
+}
+
+sub run_async {
+
+  # execute command in separate process group
+  my $pid = fork();
+  croak "$0: could not fork: $!" unless defined($pid);
+  if ($pid == 0) {
+    setpgrp;
+    exec(@_);
+    exit 1;
+  }
+
+  return $pid;
+}
+
+sub kill_async {
+
+  # kill process group
+  foreach my $pid (@_) {
+    kill 'TERM', -$pid if defined($pid);
+  }
+
 }

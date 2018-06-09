@@ -30,7 +30,7 @@ use Text::Unidecode;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(extract_doi_from_pdf);
+use pdflibrarian::util qw(extract_doi_from_pdf run_async kill_async);
 use pdflibrarian::query_dialog qw(do_query_dialog);
 use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
@@ -78,11 +78,17 @@ foreach my $pdffile (@pdffiles) {
   $pdffile = File::Spec->rel2abs($pdffile);
 }
 
+# process IDs of PDF files opened in external viewer
+my @pids;
+
 # try to retrieve BibTeX records for all PDF files, and write BibTeX data to a temporary file for editing
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
 my $havebibstr = 0;
 PDFFILE: foreach my $pdffile (@pdffiles) {
+
+  # open PDF file in external viewer
+  my $pid = run_async $external_pdf_viewer, $pdffile;
 
   # extract a DOI from PDF file, use for default query text
   my $query_text = extract_doi_from_pdf($pdffile) // "";
@@ -96,6 +102,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     # ask user for query database and query text
     ($query_db_name, $query_text) = do_query_dialog($pdffile, $query_db_name, $query_text, $error_message);
     if (!defined($query_db_name)) {
+      kill_async $pid;
       print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
       next PDFFILE;
     }
@@ -119,6 +126,9 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     $error_message =~ s/\s+$//;
 
   } while ($error_message ne '');
+
+  # store process ID of PDF external viewer
+  push @pids, $pid;
 
   # try to parse BibTeX data
   my $bibentry;
@@ -154,7 +164,10 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
 }
 
 # return if there are no BibTeX records to edit
-exit 0 unless $havebibstr;
+if (!$havebibstr) {
+  kill_async @pids;
+  exit 0;
+}
 
 # edit BibTeX records
 my @bibentries = edit_bib_in_fh($fh, ());
@@ -173,5 +186,8 @@ make_pdf_links(@bibentries);
 
 # cleanup PDF links directory
 cleanup_links();
+
+# close external PDF viewers
+kill_async @pids;
 
 exit 0;

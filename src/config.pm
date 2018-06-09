@@ -45,6 +45,8 @@ our $pkgdatadir = "@datadir@/@PACKAGE@";
 
 push @EXPORT, '$fallback_editor';
 our $fallback_editor = "@fallback_editor@";
+push @EXPORT, '$external_pdf_viewer';
+our $external_pdf_viewer = "@external_pdf_viewer@";
 push @EXPORT, '$ghostscript';
 our $ghostscript = "@ghostscript@";
 
