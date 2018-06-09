@@ -30,7 +30,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(is_in_dir find_pdf_files progress);
+use pdflibrarian::util qw(is_in_dir find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 
@@ -79,7 +79,7 @@ croak "$0: '$linkpath' is not in the PDF library" unless is_in_dir($pdffiledir, 
 my ($linkvol, $linkdir, $linkfile) = File::Spec->splitpath($linkpath);
 my $removedpdffile = File::Spec->catfile(File::Spec->curdir(), $linkfile);
 move($pdffile, $removedpdffile) or croak "$0: could not move '$pdffile' to '$removedpdffile': $!";
-progress("removed PDF file to '$removedpdffile'\n");
+print STDERR "$0: removed PDF file to '$removedpdffile'\n";
 
 # cleanup PDF links directory
 cleanup_links();

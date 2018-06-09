@@ -31,7 +31,7 @@ use Sys::CPU;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file extract_doi_from_pdf progress parallel_loop remove_tex_markup remove_short_words);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file extract_doi_from_pdf parallel_loop remove_tex_markup remove_short_words);
 
 1;
 
@@ -164,16 +164,6 @@ sub extract_doi_from_pdf {
   return undef;
 }
 
-sub progress {
-
-  # print progress
-  my $fmt = shift(@_);
-  my $msg = sprintf($fmt, @_);
-  print STDERR "$0: $msg";
-  flush STDERR;
-
-}
-
 sub parallel_loop {
   my ($progfmt, $inarray, $body) = @_;
   die unless ref($inarray) eq 'ARRAY';
@@ -188,12 +178,16 @@ sub parallel_loop {
   my $total = scalar(@$inarray);
   my $worker = sub {
     my ($id, $in) = @_;
-    progress($progfmt . "\r", $id, $total) if $id % (3 * $ncpus) == 0;
+    if ($id % (3 * $ncpus) == 0) {
+      printf STDERR "$0: $progfmt\r", $id, $total;
+      flush STDERR;
+    }
     my $out = &$body($in);
     return $out;
   };
   my @outarray = Parallel::Iterator::iterate_as_array( { workers => $ncpus, batch => 1 }, \&$worker, $inarray );
-  progress($progfmt . "\n", $total, $total);
+  printf STDERR "$0: $progfmt\n", $total, $total;
+  flush STDERR;
 
   return @outarray;
 }

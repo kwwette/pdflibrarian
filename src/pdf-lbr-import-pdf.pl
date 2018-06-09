@@ -30,7 +30,7 @@ use Text::Unidecode;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(progress extract_doi_from_pdf);
+use pdflibrarian::util qw(extract_doi_from_pdf);
 use pdflibrarian::query_dialog qw(do_query_dialog);
 use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
@@ -85,7 +85,7 @@ do {
   # ask user for query database and query text
   ($query_db_name, $query_text) = do_query_dialog($pdffile, $query_db_name, $query_text, $error_message);
   if (!defined($query_db_name)) {
-    progress("import of PDF file '$pdffile' has been cancelled\n");
+    print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
     exit 1;
   }
 

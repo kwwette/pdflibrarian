@@ -36,7 +36,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(open_pdf_file progress parallel_loop remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(open_pdf_file parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -241,7 +241,7 @@ sub write_bib_to_pdf {
     push @modbibentries, $bibentry;
     $bibentry->set('checksum', $checksum);
   }
-  progress("not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries) if @modbibentries < @bibentries;
+  printf STDERR "$0: not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries if @modbibentries < @bibentries;
 
   # write modified BibTeX entries to PDF files
   my $body = sub {
@@ -531,6 +531,6 @@ sub generate_bib_keys {
     }
 
   }
-  progress("generated keys for %i BibTeX entries\n", $keys) if $keys > 0;
+  printf STDERR "$0: generated keys for %i BibTeX entries\n", $keys if $keys > 0;
 
 }

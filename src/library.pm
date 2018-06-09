@@ -30,7 +30,7 @@ use File::stat;
 use Text::Unidecode;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(is_in_dir progress remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_short_words);
 use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
 
 our @EXPORT_OK = qw(update_pdf_lib make_pdf_links cleanup_links);
@@ -69,7 +69,7 @@ sub update_pdf_lib {
     $bibentry->set('file', $pdflibfile);
 
   }
-  progress("added %i PDF files to '$pdffiledir'\n", scalar(@newbibentries)) if @newbibentries > 0;
+  printf STDERR "$0: added %i PDF files to '$pdffiledir'\n", scalar(@newbibentries) if @newbibentries > 0;
 
   return @newbibentries;
 }
@@ -219,7 +219,7 @@ sub make_pdf_links {
     }
 
   }
-  progress("made links to %i PDF files in '$pdflinkdir'\n", scalar(@bibentries));
+  printf STDERR "$0: made links to %i PDF files in '$pdflinkdir'\n", scalar(@bibentries);
 
 }
 
@@ -235,6 +235,6 @@ sub cleanup_links {
     }
   };
   find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflinkdir);
-  progress("cleaned up PDF file links in '$pdflinkdir'\n");
+  printf STDERR "$0: cleaned up PDF file links in '$pdflinkdir'\n";
 
 }
