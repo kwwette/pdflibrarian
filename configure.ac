@@ -80,8 +80,6 @@ PDFLBR_CHECK_PERL_MODULE([URI])
 PDFLBR_CHECK_PERL_MODULE([Wx])   dnl libwx-perl
 PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
 PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
-dnl PDFLBR_CHECK_PERL_MODULE([File::chmod])   dnl libfile-chmod-perl
-dnl PDFLBR_CHECK_PERL_MODULE([Term::ReadLine])
 
 # check for fallback editor
 fallback_editor=
