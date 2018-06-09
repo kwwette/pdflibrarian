@@ -29,12 +29,12 @@ use base qw(Wx::Dialog);
 
 use pdflibrarian::config;
 
-our $combo;
-our $text;
+our $query_db_name_combo;
+our $query_value_combo;
 our $buttonok;
 
 sub new {
-  my ($class, $pdffile, $query_db_name, $query_text, $error_message) = @_;
+  my ($class, $pdffile, $query_db_name, $query_value, $query_values, $error_message) = @_;
 
   # create dialog
   my $self = $class->SUPER::new(undef, -1, "Import $pdffile - PDF Librarian", &Wx::wxDefaultPosition, &Wx::wxDefaultSize, wxDIALOG_NO_PARENT | wxDEFAULT_DIALOG_STYLE);
@@ -48,7 +48,7 @@ sub new {
   my $message;
   if ($error_message ne '') {
     $message = <<"EOM";
-PDF Librarian has queries online database '$query_db_name' with the query value '$query_text'. Unfortunately the query returned the following errors:
+PDF Librarian has queries online database '$query_db_name' with the query value '$query_value'. Unfortunately the query returned the following errors:
 
 $error_message
 
@@ -65,7 +65,7 @@ $pdffile
 
 in order to import the file into the PDF library.
 
-Please select the online database below, and supply a query value which uniquely identified the paper. By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper for use in the query.
+Please select the online database below, and supply a query value which uniquely identified the paper. By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper for use in the query, but this may well be incorrect and therefore should be double-checked.
 
 Please press the 'Run Query' button (or the Enter key) when ready to run the query, or else the 'Cancel Query' button (or the Esc key) to cancel the import of the PDF paper.
 
@@ -73,14 +73,14 @@ EOM
   }
   $topsizer->Add(Wx::StaticText->new($panel, -1, $message, [-1, -1], [500, 300]), 1, wxEXPAND | wxALL, 10);
 
-  # add combo box for query database
+  # add read-only combo box for query database
   my @query_db_names = sort { $a cmp $b } keys(%query_databases);
-  $combo = Wx::ComboBox->new($panel, -1, $query_db_name, [-1, -1], [500, 30], \@query_db_names, wxCB_READONLY | wxTE_PROCESS_ENTER);
-  $topsizer->Add($combo, 0, wxEXPAND | wxALL, 10);
+  $query_db_name_combo = Wx::ComboBox->new($panel, -1, $query_db_name, [-1, -1], [500, 30], \@query_db_names, wxCB_READONLY | wxTE_PROCESS_ENTER);
+  $topsizer->Add($query_db_name_combo, 0, wxEXPAND | wxALL, 10);
 
-  # add text box for DOI
-  $text = Wx::TextCtrl->new($panel, -1, $query_text, [-1, -1], [500, 30], wxTE_PROCESS_ENTER);
-  $topsizer->Add($text, 0, wxEXPAND | wxALL, 10);
+  # add editable combo box for DOI
+  $query_value_combo = Wx::ComboBox->new($panel, -1, $query_value, [-1, -1], [500, 30], \@{$query_values}, wxTE_PROCESS_ENTER);
+  $topsizer->Add($query_value_combo, 0, wxEXPAND | wxALL, 10);
 
   # create buttons and sizer
   my $buttonsizer = Wx::BoxSizer->new(wxHORIZONTAL);
@@ -98,10 +98,10 @@ EOM
   $self->SetSizerAndFit($mainsizer);
 
   # register events
-  EVT_TEXT($self, $combo, \&on_text);
-  EVT_TEXT($self, $text, \&on_text);
-  EVT_TEXT_ENTER($self, $combo, \&on_enter);
-  EVT_TEXT_ENTER($self, $text, \&on_enter);
+  EVT_TEXT($self, $query_db_name_combo, \&on_text);
+  EVT_TEXT($self, $query_value_combo, \&on_text);
+  EVT_TEXT_ENTER($self, $query_db_name_combo, \&on_enter);
+  EVT_TEXT_ENTER($self, $query_value_combo, \&on_enter);
   on_text();
 
   return $self;
@@ -110,26 +110,26 @@ EOM
 sub get_data {
 
   # get query database name
-  my $combo_value = $combo->GetValue();
-  $combo_value =~ s/^\s+//;
-  $combo_value =~ s/\s+$//;
+  my $query_db_name_combo_value = $query_db_name_combo->GetValue();
+  $query_db_name_combo_value =~ s/^\s+//;
+  $query_db_name_combo_value =~ s/\s+$//;
 
-  # get query text
-  my $text_value = $text->GetValue();
-  $text_value =~ s/^\s+//;
-  $text_value =~ s/\s+$//;
+  # get query value
+  my $query_value_combo_value = $query_value_combo->GetValue();
+  $query_value_combo_value =~ s/^\s+//;
+  $query_value_combo_value =~ s/\s+$//;
 
-  return ($combo_value, $text_value);
+  return ($query_db_name_combo_value, $query_value_combo_value);
 }
 
 sub on_text {
   my ($self, $event) = @_;
 
-  # query database and query text
-  my ($query_db_name, $query_text) = get_data();
+  # query database and query value
+  my ($query_db_name, $query_value) = get_data();
 
   # enable/disable "Run Query" button
-  $buttonok->Enable(length($query_db_name) > 0 && length($query_text) > 0);
+  $buttonok->Enable(length($query_db_name) > 0 && length($query_value) > 0);
 
 }
 
@@ -145,22 +145,71 @@ sub on_enter {
 package pdflibrarian::query_dialog;
 use Exporter 'import';
 
+use CAM::PDF;
 use Wx qw(:id);
 
-our @EXPORT_OK = qw(do_query_dialog);
+use pdflibrarian::util qw(unique_list open_pdf_file);
+
+our @EXPORT_OK = qw(extract_query_values_from_pdf do_query_dialog);
+
+sub extract_query_values_from_pdf {
+  my ($pdffile) = @_;
+
+  # try to extract possible query values
+  my @query_values;
+
+  {
+    # open PDF file (with PDF::AP2)
+    my $pdf = open_pdf_file($pdffile);
+
+    # try to extract a DOI from PDF info structure
+    my @pdfinfotags = $pdf->infoMetaAttributes();
+    push @pdfinfotags, qw(DOI doi);
+    $pdf->infoMetaAttributes(@pdfinfotags);
+    my %pdfinfo = $pdf->info();
+    while (my ($key, $value) = each %pdfinfo) {
+      if ($key =~ /^doi$/i) {
+        push @query_values, $value;
+      }
+    }
+
+    # try to extract a DOI from PDF info structure
+    my $xmp = $pdf->xmpMetadata() // "";
+    $xmp =~ s/\s+//g;
+    while ($xmp =~ m|doi>([^<]+)<|ig) {
+      push @query_values, $1;
+    }
+  }
+
+  {
+    # open PDF file with CAM::PDF
+    my $pdf = CAM::PDF->new($pdffile);
+
+    # try to extract a DOI from PDF text
+    for (my $i = 1; $i <= $pdf->numPages(); ++$i) {
+      my $text = $pdf->getPageText($i);
+      $text =~ s/\s+/ /g;
+      while ($text =~ m|doi: *([^ ]+)|ig) {
+        push @query_values, $1;
+      }
+    }
+  }
+
+  return unique_list(@query_values);
+}
 
 sub do_query_dialog {
-  my ($pdffile, $query_db_name, $query_text, $error_message) = @_;
-  my ($ui_query_db_name, $ui_query_text);
+  my ($pdffile, $query_db_name, $query_value, $query_values, $error_message) = @_;
+  my ($ui_query_db_name, $ui_query_value);
 
   # show dialog
-  my $dialog = pdflibrarian::query_dialog::dialog->new($pdffile, $query_db_name, $query_text, $error_message);
+  my $dialog = pdflibrarian::query_dialog::dialog->new($pdffile, $query_db_name, $query_value, $query_values, $error_message);
   if ($dialog->ShowModal() == wxID_OK) {
 
-    # query database and query text
-    ($ui_query_db_name, $ui_query_text) = $dialog->get_data();
+    # query database and query value
+    ($ui_query_db_name, $ui_query_value) = $dialog->get_data();
 
   }
 
-  return ($ui_query_db_name, $ui_query_text);
+  return ($ui_query_db_name, $ui_query_value);
 }

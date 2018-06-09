@@ -65,6 +65,7 @@ AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
     ])
   ])
 ])
+PDFLBR_CHECK_PERL_MODULE([CAM::PDF])   dnl libcam-pdf-perl
 PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
 PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
 PDFLBR_CHECK_PERL_MODULE([File::HomeDir])   dnl libfile-homedir-perl

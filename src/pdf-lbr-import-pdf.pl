@@ -30,8 +30,8 @@ use Text::Unidecode;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(extract_doi_from_pdf run_async kill_async);
-use pdflibrarian::query_dialog qw(do_query_dialog);
+use pdflibrarian::util qw(run_async kill_async);
+use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
 use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 
@@ -91,7 +91,8 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
   my $pid = run_async $external_pdf_viewer, $pdffile;
 
   # extract a DOI from PDF file, use for default query text
-  my $query_text = extract_doi_from_pdf($pdffile) // "";
+  my @query_values = extract_query_values_from_pdf($pdffile);
+  my $query_value = (@query_values > 0) ? $query_values[0] : "";
 
   # ask user for query database and query text
   my $query_db_name = $pref_query_database;
@@ -100,7 +101,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
   do {
 
     # ask user for query database and query text
-    ($query_db_name, $query_text) = do_query_dialog($pdffile, $query_db_name, $query_text, $error_message);
+    ($query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
     if (!defined($query_db_name)) {
       kill_async $pid;
       print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
@@ -108,7 +109,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     }
 
     # run query command
-    my $query_cmd = sprintf("$query_databases{$query_db_name}", $query_text);
+    my $query_cmd = sprintf("$query_databases{$query_db_name}", $query_value);
     my $exit_status;
     ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
       system($query_cmd);
