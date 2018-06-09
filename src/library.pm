@@ -223,6 +223,8 @@ sub make_pdf_links {
 }
 
 sub cleanup_links {
+  my ($all) = @_;
+  $all = defined($all) && $all eq 'all';
 
   # remove broken links and empty directories
   my $wanted = sub {
@@ -230,10 +232,14 @@ sub cleanup_links {
       rmdir $_;
     }
     if (-l $_) {
-      stat($_) or (unlink($_) or croak "$0: could not unlink '$_': $!");
+      my $unlink = $all;
+      stat($_) or $unlink = 1;
+      if ($unlink) {
+        unlink($_) or croak "$0: could not unlink '$_': $!";
+      }
     }
   };
   find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflinkdir);
-  printf STDERR "$0: cleaned up PDF file links in '$pdflinkdir'\n";
+  printf STDERR "$0: cleaned up PDF file links in '$pdflinkdir'\n" unless $all;
 
 }

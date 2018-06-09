@@ -28,7 +28,7 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::config;
 use pdflibrarian::util qw(find_pdf_files);
-use pdflibrarian::bibtex qw(read_bib_from_pdf);
+use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 
 =pod
@@ -66,8 +66,14 @@ my @pdffiles = find_pdf_files($pdffiledir);
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
 
+# regenerate keys for BibTeX entries
+generate_bib_keys(@bibentries);
+
 # ensure all PDF files are part of library
 update_pdf_lib(@bibentries);
+
+# cleanup all PDF links directory
+cleanup_links('all');
 
 # make links in PDF links directory to real PDF files
 make_pdf_links(@bibentries);
