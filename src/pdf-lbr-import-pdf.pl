@@ -39,21 +39,23 @@ use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 
 =head1 NAME
 
-B<pdf-lbr-import-pdf> - Import a PDF file into the PDF library.
+B<pdf-lbr-import-pdf> - Import PDF files into the PDF library.
 
 =head1 SYNOPSIS
 
 B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-import-pdf> I<file>
+B<pdf-lbr-import-pdf> I<files>...
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-import-pdf> imports a PDF I<file> into the PDF library.
+B<pdf-lbr-import-pdf> imports PDF I<files> into the PDF library.
 
-It will first try to determine a Digital Object Identifier from the contents of the PDF I<file>.
+The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s).
 
-TODO
+By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper(s) for use in the query.
+
+If the query is successful, the user will have an opportunity to edit the BibTeX record(s) before the PDF I<files> are added to the library.
 
 =head1 PART OF
 
@@ -69,50 +71,53 @@ GetOptions(
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # check input
-croak "$0: requires a single argument" unless @ARGV == 1;
-my $pdffile = $ARGV[0];
-croak "$0: '$pdffile' is not a PDF file" unless -f $pdffile && mimetype($pdffile) eq 'application/pdf';
+my @pdffiles = @ARGV;
+croak "$0: no PDF files to import" unless @pdffiles > 0;
+foreach my $pdffile (@pdffiles) {
+  croak "$0: '$pdffile' is not a PDF file" unless -f $pdffile && mimetype($pdffile) eq 'application/pdf';
+}
 
-# extract a DOI from PDF file, use for default query text
-my $query_text = extract_doi_from_pdf($pdffile) // "";
-
-# ask user for query database and query text
-my $query_db_name = $pref_query_database;
-my $error_message = '';
-my $bibstr;
-do {
-
-  # ask user for query database and query text
-  ($query_db_name, $query_text) = do_query_dialog($pdffile, $query_db_name, $query_text, $error_message);
-  if (!defined($query_db_name)) {
-    print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
-    exit 1;
-  }
-
-  # run query command
-  my $query_cmd = sprintf("$query_databases{$query_db_name}", $query_text);
-  my $exit_status;
-  ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
-    system($query_cmd);
-    if ($? == -1) {
-      print STDERR "\n'$query_cmd' failed to execute: $!\n";
-    } elsif ($? & 127) {
-      printf STDERR "\n'$query_cmd' died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
-    } elsif ($? != 0) {
-      printf STDERR "\n'$query_cmd' exited with value %d\n", $? >> 8;
-    }
-  };
-  $bibstr =~ s/^\s+//;
-  $bibstr =~ s/\s+$//;
-  $error_message =~ s/^\s+//;
-  $error_message =~ s/\s+$//;
-
-} while ($error_message ne '');
-
-# write BibTeX data to a temporary file for editing
+# try to retrieve BibTeX records for all PDF files, and write BibTeX data to a temporary file for editing
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
-{
+my $havebibstr = 0;
+PDFFILE: foreach my $pdffile (@pdffiles) {
+
+  # extract a DOI from PDF file, use for default query text
+  my $query_text = extract_doi_from_pdf($pdffile) // "";
+
+  # ask user for query database and query text
+  my $query_db_name = $pref_query_database;
+  my $bibstr;
+  my $error_message = '';
+  do {
+
+    # ask user for query database and query text
+    ($query_db_name, $query_text) = do_query_dialog($pdffile, $query_db_name, $query_text, $error_message);
+    if (!defined($query_db_name)) {
+      print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
+      next PDFFILE;
+    }
+
+    # run query command
+    my $query_cmd = sprintf("$query_databases{$query_db_name}", $query_text);
+    my $exit_status;
+    ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
+      system($query_cmd);
+      if ($? == -1) {
+        print STDERR "\n'$query_cmd' failed to execute: $!\n";
+      } elsif ($? & 127) {
+        printf STDERR "\n'$query_cmd' died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
+      } elsif ($? != 0) {
+        printf STDERR "\n'$query_cmd' exited with value %d\n", $? >> 8;
+      }
+    };
+    $bibstr =~ s/^\s+//;
+    $bibstr =~ s/\s+$//;
+    $error_message =~ s/^\s+//;
+    $error_message =~ s/\s+$//;
+
+  } while ($error_message ne '');
 
   # try to parse BibTeX data
   my $bibentry;
@@ -132,6 +137,7 @@ binmode($fh, ":encoding(iso-8859-1)");
 
     # write BibTeX entry
     write_bib_to_fh($fh, ($bibentry));
+    $havebibstr = 1;
 
   } else {
 
@@ -140,11 +146,16 @@ binmode($fh, ":encoding(iso-8859-1)");
 
     # write BibTeX data
     print $fh "\n$bibstr\n";
+    $havebibstr = 1;
 
   }
+
 }
 
-# edit BibTeX data
+# return if there are no BibTeX records to edit
+exit 0 unless $havebibstr;
+
+# edit BibTeX records
 my @bibentries = edit_bib_in_fh($fh, ());
 
 # regenerate keys for BibTeX entry
