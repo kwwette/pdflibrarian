@@ -157,7 +157,7 @@ sub extract_doi_from_pdf {
   # try to extract a DOI from PDF text
   my $text = $pdf->stringify();
   $text =~ s/\s+//g;
-  if ($text =~ m|UR[IL]\(https?://(?:dx\.)?doi\.org/([^()]+)\)/|) {
+  if ($text =~ m|UR[IL]\(https?://(?:\w+\.)?doi\.org/([^()]+)\)|) {
     return $1;
   }
 
