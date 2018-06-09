@@ -23,7 +23,7 @@ use Exporter 'import';
 
 use Carp;
 use Config::Simple;
-use File::HomeDir;
+use File::BaseDir;
 use File::Path;
 use File::Spec;
 
@@ -66,11 +66,15 @@ our %query_databases;
 
 INIT {
 
-  # get location of configuration file
-  $cfgdir = File::HomeDir->my_dist_config('pdflibrarian', { create => 1 });
-  my $cfgfile = File::Spec->catfile($cfgdir, 'pdflibrarian.ini');
+  # check for user home directory
+  croak "$0: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
+
+  # create configuration directory
+  $cfgdir = File::BaseDir->config_home('pdflibrarian');
+  File::Path::make_path($cfgdir);
 
   # read configuration file
+  my $cfgfile = File::Spec->catfile($cfgdir, 'pdflibrarian.ini');
   my $cfg = new Config::Simple(syntax => 'ini');
   if (-f $cfgfile) {
     $cfg->read($cfgfile);
@@ -78,7 +82,7 @@ INIT {
 
   # ensure default configuration values are set
   my %config = (
-                'general.pdflinkdir'    => File::Spec->catdir(File::HomeDir->my_home, 'PDFLibrary'),
+                'general.pdflinkdir'    => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
                 'general.prefquery'     => 'Astrophysics Data System using Digital Object Identifier',
                 'query-ads.name'        => 'Astrophysics Data System using Digital Object Identifier',
                 'query-ads.cmd'         => "$bindir/pdf-lbr-query-ads --query doi:%s",
@@ -112,7 +116,7 @@ INIT {
   }
 
   # create directories for PDF files
-  $pdffiledir = File::HomeDir->my_dist_data('pdflibrarian', { create => 1 });
+  $pdffiledir = File::BaseDir->data_home('pdflibrarian');
   for (my $i = 0; $i < 16; ++$i) {
     my $dir = File::Spec->catdir($pdffiledir, sprintf("%x", $i));
     File::Path::make_path($dir);

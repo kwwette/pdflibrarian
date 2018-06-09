@@ -68,7 +68,7 @@ AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
 PDFLBR_CHECK_PERL_MODULE([CAM::PDF])   dnl libcam-pdf-perl
 PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
 PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
-PDFLBR_CHECK_PERL_MODULE([File::HomeDir])   dnl libfile-homedir-perl
+PDFLBR_CHECK_PERL_MODULE([File::BaseDir])   dnl libfile-basedir-perl
 PDFLBR_CHECK_PERL_MODULE([File::MimeInfo])   dnl libfile-mimeinfo-perl
 PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
 PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
