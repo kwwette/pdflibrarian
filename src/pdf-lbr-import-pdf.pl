@@ -30,7 +30,7 @@ use Text::Unidecode;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(run_async kill_async);
+use pdflibrarian::util qw(find_pdf_files run_async kill_async);
 use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
 use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
@@ -45,11 +45,11 @@ B<pdf-lbr-import-pdf> - Import PDF files into the PDF library.
 
 B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-import-pdf> I<files>...
+B<pdf-lbr-import-pdf> I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-import-pdf> imports PDF I<files> into the PDF library.
+B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library.
 
 The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s).
 
@@ -70,13 +70,9 @@ GetOptions(
           ) or croak "$0: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
-# check input
-my @pdffiles = @ARGV;
+# get list of PDF files
+my @pdffiles = find_pdf_files(@ARGV);
 croak "$0: no PDF files to import" unless @pdffiles > 0;
-foreach my $pdffile (@pdffiles) {
-  croak "$0: '$pdffile' is not a PDF file" unless -f $pdffile && mimetype($pdffile) eq 'application/pdf';
-  $pdffile = File::Spec->rel2abs($pdffile);
-}
 
 # process IDs of PDF files opened in external viewer
 my @pids;
