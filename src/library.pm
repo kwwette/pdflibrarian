@@ -150,13 +150,17 @@ sub make_pdf_links {
 
       # make links to articles by journal
       my $journal = $bibentry->get("journal") // "NO-JOURNAL";
-      if ($journal =~ /arxiv/i) {
-        my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
-        push @links, ["Articles", "arXiv", "$eprint $pdflinkfile"];
-      } else {
+      if ($journal !~ /arxiv/i) {
         my $volume = $bibentry->get("volume") // "NO-VOLUME";
         my $pages = $bibentry->get("pages") // "NO-PAGES";
-        push @links, ["Articles", $journal, "v$volume", "p$pages $pdflinkfile"];
+        push @links, ["Journals", $journal, "v$volume", "p$pages $pdflinkfile"];
+      }
+
+      # make links to articles by pre-print server
+      if ($bibentry->exists('archiveprefix')) {
+        my $archiveprefix = $bibentry->get('archiveprefix');
+        my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
+        push @links, ["Pre Prints", "$archiveprefix $year", "$eprint $pdflinkfile"];
       }
 
     } elsif ($bibentry->type eq "techreport") {
