@@ -75,6 +75,7 @@ my @pdffiles = @ARGV;
 croak "$0: no PDF files to import" unless @pdffiles > 0;
 foreach my $pdffile (@pdffiles) {
   croak "$0: '$pdffile' is not a PDF file" unless -f $pdffile && mimetype($pdffile) eq 'application/pdf';
+  $pdffile = File::Spec->rel2abs($pdffile);
 }
 
 # try to retrieve BibTeX records for all PDF files, and write BibTeX data to a temporary file for editing
