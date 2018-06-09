@@ -187,8 +187,11 @@ sub extract_query_values_from_pdf {
     my $pdf = CAM::PDF->new($pdffile);
 
     # try to extract a DOI from PDF text
-    for (my $i = 1; $i <= $pdf->numPages(); ++$i) {
-      my $text = $pdf->getPageText($i);
+    my $pages = $pdf->numPages();
+    for (my $page = 1; $page <= $pages; ++$page) {
+      printf STDERR "$0: parsing page %i/%i of PDF file '$pdffile'\r", $page, $pages;
+      flush STDERR;
+      my $text = $pdf->getPageText($page);
       if (defined($text)) {
         $text =~ s/\s+/ /g;
         while ($text =~ m{(?:doi: |https?[:]//[\w.]*doi\.org/)([^ ]+)}ig) {
@@ -196,6 +199,8 @@ sub extract_query_values_from_pdf {
         }
       }
     }
+    printf STDERR "$0: parsed pages %i/%i of PDF file '$pdffile'\n", $pages, $pages;
+    flush STDERR;
 
   }
 
