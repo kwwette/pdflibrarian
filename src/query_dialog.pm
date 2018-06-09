@@ -181,18 +181,22 @@ sub extract_query_values_from_pdf {
     }
   }
 
-  {
+  if (@query_values == 0 ) {
+
     # open PDF file with CAM::PDF
     my $pdf = CAM::PDF->new($pdffile);
 
     # try to extract a DOI from PDF text
     for (my $i = 1; $i <= $pdf->numPages(); ++$i) {
       my $text = $pdf->getPageText($i);
-      $text =~ s/\s+/ /g;
-      while ($text =~ m|doi: *([^ ]+)|ig) {
-        push @query_values, $1;
+      if (defined($text)) {
+        $text =~ s/\s+/ /g;
+        while ($text =~ m|doi: *([^ ]+)|ig) {
+          push @query_values, $1;
+        }
       }
     }
+
   }
 
   return unique_list(@query_values);
