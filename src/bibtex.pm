@@ -27,7 +27,6 @@ use Digest::SHA;
 use Encode;
 use File::Temp;
 use List::Util qw(max);
-use PDF::API2;
 use Scalar::Util qw(blessed);
 use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
@@ -37,7 +36,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(progress parallel_loop remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(open_pdf_file progress parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -147,13 +146,10 @@ sub read_bib_from_pdf {
     my ($pdffile) = @_;
 
     # open PDF file and read XMP metadata
-    my $xmp = "";
-    eval {
-      my $pdf = PDF::API2->open($pdffile);
-      $xmp = $pdf->xmpMetadata() // "";
-      $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
-      $pdf->end();
-    };
+    my $pdf = open_pdf_file($pdffile);
+    my $xmp = $pdf->xmpMetadata() // "";
+    $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
+    $pdf->end();
 
     # convert BibTeX XML (if any) to parsed BibTeX entry
     my $bibstr = '@article{key,}';
@@ -290,34 +286,7 @@ sub write_bib_to_pdf {
     $xmlmeta->insertBefore($xmldcentry, $xmlbibentry);
 
     # open PDF file
-    my $pdf;
-    eval {
-      $pdf = PDF::API2->open($pdffile);
-    } or do {
-      my $error = $@;
-
-      # do we have ghostscript?
-      if (!defined($ghostscript)) {
-        die $error;
-      }
-
-      # try to run ghostscript conversion on PDF file
-      my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$0: could not create temporary file";
-      system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
-      eval {
-        $pdf = PDF::API2->open($fh->filename);
-      } or do {
-        croak "$0: $error";
-      };
-
-      # use converted PDF file
-      $fh->unlink_on_destroy(0);
-      link($pdffile, "$pdffile.bak") or croak "$0: could not link '$pdffile' to '$pdffile.bak': $!";
-      rename($fh->filename, $pdffile) or croak "$0: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
-      unlink("$pdffile.bak") or croak "$0: could not unlink '$pdffile.bak': $!";
-      $pdf = PDF::API2->open($pdffile);
-
-    };
+    my $pdf = open_pdf_file($pdffile);
 
     # write document information to PDF file
     my %pdfinfo = $pdf->info();

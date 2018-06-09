@@ -25,12 +25,13 @@ use Carp;
 use File::Find;
 use File::MimeInfo::Magic;
 use File::Spec;
+use PDF::API2;
 use Parallel::Iterator;
 use Sys::CPU;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files progress parallel_loop remove_tex_markup remove_short_words);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file progress parallel_loop remove_tex_markup remove_short_words);
 
 1;
 
@@ -89,6 +90,42 @@ sub find_pdf_files {
   }
 
   return keys %pdffiles;
+}
+
+sub open_pdf_file {
+  my ($pdffile) = @_;
+
+  # try to open PDF file
+  my $pdf;
+  eval {
+    $pdf = PDF::API2->open($pdffile);
+  } or do {
+    my $error = $@;
+
+    # do we have ghostscript?
+    if (!defined($ghostscript)) {
+      die $error;
+    }
+
+    # try to run ghostscript conversion on PDF file
+    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$0: could not create temporary file";
+    system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
+    eval {
+      $pdf = PDF::API2->open($fh->filename);
+    } or do {
+      croak "$0: $error";
+    };
+
+    # use converted PDF file
+    $fh->unlink_on_destroy(0);
+    link($pdffile, "$pdffile.bak") or croak "$0: could not link '$pdffile' to '$pdffile.bak': $!";
+    rename($fh->filename, $pdffile) or croak "$0: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
+    unlink("$pdffile.bak") or croak "$0: could not unlink '$pdffile.bak': $!";
+    $pdf = PDF::API2->open($pdffile);
+
+  };
+
+  return $pdf;
 }
 
 sub progress {
