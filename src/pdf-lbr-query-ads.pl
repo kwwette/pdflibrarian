@@ -27,6 +27,7 @@ use HTTP::Request;
 use JSON;
 use LWP::UserAgent;
 use Pod::Usage;
+use Text::Unidecode;
 use URI;
 
 @perl_use_lib@;
@@ -180,6 +181,7 @@ croak "$0: could not understand ADS export response" unless defined($exportjson-
 # extract BibTeX record
 my $bibstr = $exportjson->{export};
 croak "$0: BibTeX missing from ADS export response" unless length($bibstr) > 0;
+$bibstr = unidecode($bibstr);
 $bibstr =~ s/^\s+//;
 $bibstr =~ s/\s+$//;
 
