@@ -191,7 +191,7 @@ sub extract_query_values_from_pdf {
       my $text = $pdf->getPageText($i);
       if (defined($text)) {
         $text =~ s/\s+/ /g;
-        while ($text =~ m|doi: *([^ ]+)|ig) {
+        while ($text =~ m{(?:doi: |https?[:]//[\w.]*doi\.org/)([^ ]+)}ig) {
           push @query_values, $1;
         }
       }
