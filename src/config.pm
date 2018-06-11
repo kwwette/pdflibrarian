@@ -84,8 +84,10 @@ INIT {
   my %config = (
                 'general.pdflinkdir'    => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
                 'general.prefquery'     => 'Astrophysics Data System using Digital Object Identifier',
-                'query-ads.name'        => 'Astrophysics Data System using Digital Object Identifier',
-                'query-ads.cmd'         => "$bindir/pdf-lbr-query-ads --query doi:%s",
+                'query-ads-doi.name'    => 'Astrophysics Data System using Digital Object Identifier',
+                'query-ads-doi.cmd'     => "$bindir/pdf-lbr-query-ads --query doi:%s",
+                'query-ads-arxiv.name'  => 'Astrophysics Data System using arXiv Article Identifier',
+                'query-ads-arxiv.cmd'   => "$bindir/pdf-lbr-query-ads --query arxiv:%s",
                 );
   while (my ($key, $value) = each %config) {
     $cfg->param($key, $value) unless defined($cfg->param($key)) && length($cfg->param($key)) > 0;
