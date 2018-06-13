@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+test "$0" = "./bootstrap"
+
+rm -rf autom4te.cache/
+rm -f aclocal.m4
+
+AUTORECONF=${AUTORECONF:-"autoreconf"}
+echo "$0: running ${AUTORECONF}"
+${AUTORECONF}
