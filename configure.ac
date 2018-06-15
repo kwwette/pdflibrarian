@@ -100,6 +100,9 @@ AS_IF([test "x${external_pdf_viewer}" = x],[
 ghostscript=
 AC_PATH_PROGS([ghostscript],[gs])
 
+# set data installation directories
+AC_SUBST([xsltdir],['${datadir}/'"${PACKAGE}/xslt_stylesheets"])
+
 # output files
 AC_CONFIG_FILES([
   Makefile

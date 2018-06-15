@@ -40,8 +40,10 @@ my $datarootdir = "@datarootdir@";
 
 push @EXPORT, '$bindir';
 our $bindir = "@bindir@";
-push @EXPORT, '$pkgdatadir';
-our $pkgdatadir = "@datadir@/@PACKAGE@";
+push @EXPORT, '$datadir';
+our $datadir = "@datadir@";
+push @EXPORT, '$xsltdir';
+our $xsltdir = "@xsltdir@";
 
 push @EXPORT, '$fallback_editor';
 our $fallback_editor = "@fallback_editor@";
@@ -118,7 +120,7 @@ INIT {
   }
 
   # create directories for PDF files
-  $pdffiledir = File::BaseDir->data_home('pdflibrarian');
+  $pdffiledir = File::BaseDir->data_home('pdflibrarian', 'pdf_library_files');
   for (my $i = 0; $i < 16; ++$i) {
     my $dir = File::Spec->catdir($pdffiledir, sprintf("%x", $i));
     File::Path::make_path($dir);
