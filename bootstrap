@@ -2,11 +2,16 @@
 
 set -e
 
-test "$0" = "./bootstrap"
+if test "$0" != "./bootstrap"; then
+    echo "$0: must be run from top-level source directory" >&2
+    exit 1
+fi
 
 rm -rf autom4te.cache/
 rm -f aclocal.m4
 
-AUTORECONF=${AUTORECONF:-"autoreconf"}
+if test "x${AUTORECONF}" = x; then
+    AUTORECONF=autoreconf
+fi
 echo "$0: running ${AUTORECONF}"
 ${AUTORECONF}
