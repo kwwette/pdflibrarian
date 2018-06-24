@@ -14,4 +14,4 @@ if test "x${AUTORECONF}" = x; then
     AUTORECONF=autoreconf
 fi
 echo "$0: running ${AUTORECONF}"
-${AUTORECONF}
+${AUTORECONF} "$@"
