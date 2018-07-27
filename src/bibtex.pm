@@ -26,6 +26,7 @@ use Carp;
 use Digest::SHA;
 use Encode;
 use File::Temp;
+use FindBin qw($Script);
 use List::Util qw(max);
 use Scalar::Util qw(blessed);
 use Text::BibTeX::Bib;
@@ -68,7 +69,7 @@ sub read_bib_from_str {
 
   # read BibTeX entry from a string
   my $bibentry = new Text::BibTeX::BibEntry $bibstr;
-  croak "$0: failed to parse BibTeX entry" unless $bibentry->parse_ok;
+  croak "$Script: failed to parse BibTeX entry" unless $bibentry->parse_ok;
   $bibentry->{structure} = $structure;
 
   return $bibentry;
@@ -86,7 +87,7 @@ sub read_bib_from_file {
   # check that the file contains non-comment, non-enpty lines
   {
     my $nonempty = 1;
-    open(my $fh, $filename) or croak "$0: could not open file '$filename': $!";
+    open(my $fh, $filename) or croak "$Script: could not open file '$filename': $!";
     while (<$fh>) {
       next if /^%/;
       next if /^\s*$/;
@@ -100,7 +101,7 @@ sub read_bib_from_file {
   # parse the BibTeX file, capturing any error messages
   my $errmsgs;
   {
-    my $bib = new Text::BibTeX::File $filename or croak "$0: could not open file '$filename'";
+    my $bib = new Text::BibTeX::File $filename or croak "$Script: could not open file '$filename'";
     $bib->{structure} = $structure;
     $errmsgs = Capture::Tiny::capture_merged {
       while (my $bibentry = new Text::BibTeX::BibEntry $bib) {
@@ -139,7 +140,7 @@ sub read_bib_from_pdf {
 
   # get location of BibTeX XSLT style file
   my $xsltbibtex = File::Spec->catfile($xsltdir, 'bibtex.xsl');
-  croak "$0: missing XSLT style file '$xsltbibtex'" unless -f $xsltbibtex;
+  croak "$Script: missing XSLT style file '$xsltbibtex'" unless -f $xsltbibtex;
 
   # read BibTeX entries from PDF files
   my $body = sub {
@@ -231,7 +232,7 @@ sub write_bib_to_pdf {
 
   # get location of DublinCore XSLT style file
   my $xsltdublincore = File::Spec->catfile($xsltdir, 'dublincore.xsl');
-  croak "$0: missing XSLT style file '$xsltdublincore'" unless -f $xsltdublincore;
+  croak "$Script: missing XSLT style file '$xsltdublincore'" unless -f $xsltdublincore;
 
   # filter out unmodified BibTeX entries
   my @modbibentries;
@@ -241,7 +242,7 @@ sub write_bib_to_pdf {
     push @modbibentries, $bibentry;
     $bibentry->set('checksum', $checksum);
   }
-  printf STDERR "$0: not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries if @modbibentries < @bibentries;
+  printf STDERR "$Script: not writing %i unmodified BibTeX entries\n", @bibentries - @modbibentries if @modbibentries < @bibentries;
 
   # write modified BibTeX entries to PDF files
   my $body = sub {
@@ -251,7 +252,7 @@ sub write_bib_to_pdf {
     my $pdffile = $bibentry->get('file');
 
     # check for existence of PDF file
-    croak "$0: BibTeX entry @{[$bibentry->key]} cannot be written to missing PDF file '$pdffile'" unless -f $pdffile;
+    croak "$Script: BibTeX entry @{[$bibentry->key]} cannot be written to missing PDF file '$pdffile'" unless -f $pdffile;
 
     # create XML document
     my $xml = XML::LibXML::Document->new('1.0', 'utf-8');
@@ -343,7 +344,7 @@ sub edit_bib_in_fh {
     my $nerrors = @errors;
 
     # write new temporary file for editing, including any error messages
-    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
     binmode($fh, ":encoding(iso-8859-1)");
     print $fh <<"EOF";
 %% Edits to the following BibTeX entries will be written back
@@ -380,7 +381,7 @@ EOF
 
     # edit BibTeX entries
     my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
-    system($editor, $fh->filename) == 0 or croak "$0: could not edit file '$fh->filename' with editing program '$editor'";
+    system($editor, $fh->filename) == 0 or croak "$Script: could not edit file '$fh->filename' with editing program '$editor'";
 
     # try to re-read BibTeX entries
     read_bib_from_file(\@errors, \@bibentries, $fh->filename);
@@ -531,6 +532,6 @@ sub generate_bib_keys {
     }
 
   }
-  printf STDERR "$0: generated keys for %i BibTeX entries\n", $keys if $keys > 0;
+  printf STDERR "$Script: generated keys for %i BibTeX entries\n", $keys if $keys > 0;
 
 }

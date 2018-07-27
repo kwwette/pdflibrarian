@@ -22,12 +22,13 @@ use strict;
 use warnings;
 
 use Carp;
+use FindBin qw($Script);
 use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::util qw(find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys write_bib_to_fh);
+use pdflibrarian::util qw(find_pdf_files);
 
 =pod
 
@@ -73,12 +74,12 @@ GetOptions(
            "help|h" => \$help,
            "exclude|e=s" => \@exclude,
            "set|s=s" => \%set,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
 my @pdffiles = find_pdf_files(@ARGV);
-croak "$0: no PDF files to read from" unless @pdffiles > 0;
+croak "$Script: no PDF files to read from" unless @pdffiles > 0;
 
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
@@ -99,7 +100,7 @@ foreach my $bibentry (@bibentries) {
 
 # error if duplicate BibTeX keys are found
 my @dupkeys = find_dup_bib_keys(@bibentries);
-croak "$0: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
+croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
 
 # print BibTeX entries
 write_bib_to_fh(\*STDOUT, @bibentries);

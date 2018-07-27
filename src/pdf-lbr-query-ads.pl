@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Carp;
+use FindBin qw($Script);
 use Getopt::Long;
 use HTTP::Request;
 use JSON;
@@ -85,7 +86,7 @@ GetOptions(
            "help|h" => \$help,
            "query|q=s" => \$query,
            "set-api-token|s=s" => \$api_token,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get location of configuration file
@@ -108,7 +109,7 @@ exit 0 unless defined($query);
 
 # get ADS API token
 $api_token = $cfg->param('api_token');
-croak "$0: missing personal ADS API token" unless defined($api_token);
+croak "$Script: missing personal ADS API token" unless defined($api_token);
 
 # user agent for web queries
 my $useragent = LWP::UserAgent->new;
@@ -127,7 +128,7 @@ my $querycontent;
   my $result = $useragent->request($request);
   if (!$result->is_success) {
     my $status = $result->status_line;
-    croak "$0: ADS query failed: $status";
+    croak "$Script: ADS query failed: $status";
   }
   $querycontent = $result->content;
 }
@@ -138,11 +139,11 @@ eval {
   $queryjson = decode_json($querycontent);
   1;
 } or do {
-  croak "$0: could not parse ADS query response from JSON: $@";
+  croak "$Script: could not parse ADS query response from JSON: $@";
 };
-croak "$0: could not understand ADS query response" unless defined($queryjson->{response}) && defined($queryjson->{response}->{numFound});
-croak "$0: ADS query failed, no records returned" unless $queryjson->{response}->{numFound} && defined($queryjson->{response}->{docs});
-croak "$0: could not understand ADS query response" unless @{$queryjson->{response}->{docs}} > 0 && defined($queryjson->{response}->{docs}->[0]->{bibcode});
+croak "$Script: could not understand ADS query response" unless defined($queryjson->{response}) && defined($queryjson->{response}->{numFound});
+croak "$Script: ADS query failed, no records returned" unless $queryjson->{response}->{numFound} && defined($queryjson->{response}->{docs});
+croak "$Script: could not understand ADS query response" unless @{$queryjson->{response}->{docs}} > 0 && defined($queryjson->{response}->{docs}->[0]->{bibcode});
 
 # construct ADS export request into JSON
 my $exportcontent;
@@ -150,7 +151,7 @@ eval {
   $exportcontent = encode_json({ bibcode => [$queryjson->{response}->{docs}->[0]->{bibcode}]});
   1;
 } or do {
-  croak "$0: could not construct ADS export request: $@";
+  croak "$Script: could not construct ADS export request: $@";
 };
 
 # export BibTeX record from ADS
@@ -163,7 +164,7 @@ eval {
   my $result = $useragent->request($request);
   if (!$result->is_success) {
     my $status = $result->status_line;
-    croak "$0: ADS export failed: $status";
+    croak "$Script: ADS export failed: $status";
   }
   $exportcontent = $result->content;
 }
@@ -174,13 +175,13 @@ eval {
   $exportjson = decode_json($exportcontent);
   1;
 } or do {
-  croak "$0: could not parse ADS export response from JSON: $@";
+  croak "$Script: could not parse ADS export response from JSON: $@";
 };
-croak "$0: could not understand ADS export response" unless defined($exportjson->{export});
+croak "$Script: could not understand ADS export response" unless defined($exportjson->{export});
 
 # extract BibTeX record
 my $bibstr = $exportjson->{export};
-croak "$0: BibTeX missing from ADS export response" unless length($bibstr) > 0;
+croak "$Script: BibTeX missing from ADS export response" unless length($bibstr) > 0;
 $bibstr = unidecode($bibstr);
 $bibstr =~ s/^\s+//;
 $bibstr =~ s/\s+$//;

@@ -146,6 +146,7 @@ package pdflibrarian::query_dialog;
 use Exporter 'import';
 
 use CAM::PDF;
+use FindBin qw($Script);
 use Wx qw(:id);
 
 use pdflibrarian::util qw(unique_list open_pdf_file);
@@ -189,7 +190,7 @@ sub extract_query_values_from_pdf {
     # try to extract a DOI from PDF text
     my $pages = $pdf->numPages();
     for (my $page = 1; $page <= $pages; ++$page) {
-      printf STDERR "$0: parsing page %i/%i of PDF file '$pdffile'\r", $page, $pages;
+      printf STDERR "$Script: parsing page %i/%i of PDF file '$pdffile'\r", $page, $pages;
       flush STDERR;
       my $text = $pdf->getPageText($page);
       if (defined($text)) {
@@ -199,7 +200,7 @@ sub extract_query_values_from_pdf {
         }
       }
     }
-    printf STDERR "$0: parsed pages %i/%i of PDF file '$pdffile'\n", $pages, $pages;
+    printf STDERR "$Script: parsed pages %i/%i of PDF file '$pdffile'\n", $pages, $pages;
     flush STDERR;
 
   }

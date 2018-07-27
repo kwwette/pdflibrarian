@@ -27,11 +27,12 @@ use File::Find;
 use File::Path;
 use File::Spec;
 use File::stat;
+use FindBin qw($Script);
 use Text::Unidecode;
 
+use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
 use pdflibrarian::config;
 use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_short_words);
-use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
 
 our @EXPORT_OK = qw(update_pdf_lib make_pdf_links cleanup_links);
 
@@ -61,7 +62,7 @@ sub update_pdf_lib {
 
     # move PDF file into library, including if library PDF filename has changed
     if ($pdffile ne $pdflibfile) {
-      move($pdffile, $pdflibfile) or croak "$0: could not move '$pdffile' to '$pdflibfile': $!";
+      move($pdffile, $pdflibfile) or croak "$Script: could not move '$pdffile' to '$pdflibfile': $!";
       $pdffile = $pdflibfile;
     }
 
@@ -69,7 +70,7 @@ sub update_pdf_lib {
     $bibentry->set('file', $pdflibfile);
 
   }
-  printf STDERR "$0: added %i PDF files to '$pdffiledir'\n", scalar(@newbibentries) if @newbibentries > 0;
+  printf STDERR "$Script: added %i PDF files to '$pdffiledir'\n", scalar(@newbibentries) if @newbibentries > 0;
 
   return @newbibentries;
 }
@@ -215,14 +216,14 @@ sub make_pdf_links {
       # make symbolic link file
       my $linkfile = File::Spec->catfile($linkdir, "$linkfilebase.pdf");
       if (-l $linkfile) {
-        unlink($linkfile) or croak "$0: could not unlink '$linkfile': $!";
+        unlink($linkfile) or croak "$Script: could not unlink '$linkfile': $!";
       }
-      symlink($pdffile, $linkfile) or croak "$0: could not link '$linkfile' to '$pdffile': $!"
+      symlink($pdffile, $linkfile) or croak "$Script: could not link '$linkfile' to '$pdffile': $!"
 
     }
 
   }
-  printf STDERR "$0: made links to %i PDF files in '$pdflinkdir'\n", scalar(@bibentries);
+  printf STDERR "$Script: made links to %i PDF files in '$pdflinkdir'\n", scalar(@bibentries);
 
 }
 
@@ -239,11 +240,11 @@ sub cleanup_links {
       my $unlink = $all;
       stat($_) or $unlink = 1;
       if ($unlink) {
-        unlink($_) or croak "$0: could not unlink '$_': $!";
+        unlink($_) or croak "$Script: could not unlink '$_': $!";
       }
     }
   };
   find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflinkdir);
-  printf STDERR "$0: cleaned up PDF file links in '$pdflinkdir'\n" unless $all;
+  printf STDERR "$Script: cleaned up PDF file links in '$pdflinkdir'\n" unless $all;
 
 }

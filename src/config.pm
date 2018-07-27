@@ -26,6 +26,7 @@ use Config::Simple;
 use File::BaseDir;
 use File::Path;
 use File::Spec;
+use FindBin qw($Script);
 
 our @EXPORT;
 
@@ -69,7 +70,7 @@ our %query_databases;
 INIT {
 
   # check for user home directory
-  croak "$0: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
+  croak "$Script: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
 
   # create configuration directory
   $cfgdir = File::BaseDir->config_home('pdflibrarian');
@@ -114,7 +115,7 @@ INIT {
       if ($cmd =~ /^[^%]+[%]s[^%]*$/) {
         $query_databases{$name} = $cmd;
       } else {
-        croak "$0: invalid query command '$cmd' for database '$name'";
+        croak "$Script: invalid query command '$cmd' for database '$name'";
       }
     }
   }

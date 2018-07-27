@@ -25,14 +25,15 @@ use Carp;
 use File::Copy;
 use File::Spec;
 use File::stat;
+use FindBin qw($Script);
 use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::util qw(is_in_dir find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf);
+use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::util qw(is_in_dir find_pdf_files);
 
 =pod
 
@@ -62,24 +63,24 @@ PDF Librarian, version @VERSION@.
 my ($help);
 GetOptions(
            "help|h" => \$help,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # check input
-croak "$0: requires a single argument" unless @ARGV == 1;
+croak "$Script: requires a single argument" unless @ARGV == 1;
 my $linkpath = $ARGV[0];
-croak "$0: '$linkpath' is not in the PDF library" unless is_in_dir($pdflinkdir, $linkpath);
-croak "$0: '$linkpath' is not a symbolic link" unless -l $linkpath;
+croak "$Script: '$linkpath' is not in the PDF library" unless is_in_dir($pdflinkdir, $linkpath);
+croak "$Script: '$linkpath' is not a symbolic link" unless -l $linkpath;
 
 # try to resolve symbolic link
-my $pdffile = readlink($linkpath) or croak "$0: could not resolve '$linkpath': %!";
-croak "$0: '$linkpath' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
+my $pdffile = readlink($linkpath) or croak "$Script: could not resolve '$linkpath': %!";
+croak "$Script: '$linkpath' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
 
 # move PDF file to current directory, with same name as link
 my ($linkvol, $linkdir, $linkfile) = File::Spec->splitpath($linkpath);
 my $removedpdffile = File::Spec->catfile(File::Spec->curdir(), $linkfile);
-move($pdffile, $removedpdffile) or croak "$0: could not move '$pdffile' to '$removedpdffile': $!";
-print STDERR "$0: removed PDF file to '$removedpdffile'\n";
+move($pdffile, $removedpdffile) or croak "$Script: could not move '$pdffile' to '$removedpdffile': $!";
+print STDERR "$Script: removed PDF file to '$removedpdffile'\n";
 
 # cleanup PDF links directory
 cleanup_links();

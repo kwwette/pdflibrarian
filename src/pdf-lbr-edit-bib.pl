@@ -22,13 +22,14 @@ use strict;
 use warnings;
 
 use Carp;
+use FindBin qw($Script);
 use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::util qw(unique_list find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::util qw(unique_list find_pdf_files);
 
 =pod
 
@@ -60,12 +61,12 @@ PDF Librarian, version @VERSION@.
 my ($help);
 GetOptions(
            "help|h" => \$help,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
 my @pdffiles = find_pdf_files(@ARGV);
-croak "$0: no PDF files to edit" unless @pdffiles > 0;
+croak "$Script: no PDF files to edit" unless @pdffiles > 0;
 
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
@@ -79,7 +80,7 @@ foreach my $bibentry (@bibentries) {
 }
 
 # write BibTeX entries to a temporary file for editing
-my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
 write_bib_to_fh($fh, @bibentries);
 

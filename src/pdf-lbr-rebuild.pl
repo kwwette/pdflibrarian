@@ -22,14 +22,15 @@ use strict;
 use warnings;
 
 use Carp;
+use FindBin qw($Script);
 use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::util qw(find_pdf_files);
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys);
+use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::util qw(find_pdf_files);
 
 =pod
 
@@ -57,7 +58,7 @@ PDF Librarian, version @VERSION@.
 my ($help);
 GetOptions(
            "help|h" => \$help,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files in library

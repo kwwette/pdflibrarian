@@ -25,6 +25,7 @@ use Carp;
 use File::Find;
 use File::MimeInfo::Magic;
 use File::Spec;
+use FindBin qw($Script);
 use PDF::API2;
 use Parallel::Iterator;
 use Sys::CPU;
@@ -68,7 +69,7 @@ sub find_pdf_files {
   my %pdffiles;
   my $wanted = sub {
     if (-l $_) {
-      $_ = readlink($_) or croak "$0: could not resolve '$_': %!";
+      $_ = readlink($_) or croak "$Script: could not resolve '$_': %!";
     }
     return unless -f && mimetype($_) eq 'application/pdf';
     $pdffiles{File::Spec->rel2abs($_)} = 1;
@@ -85,7 +86,7 @@ sub find_pdf_files {
     } elsif (!File::Spec->file_name_is_absolute($_) && -r File::Spec->catfile($pdflinkdir, $_)) {
       &$wanted(File::Spec->catfile($pdflinkdir, $_));
     } else {
-      croak "$0: '$_' is neither a file nor a directory, either by itself or within '$pdflinkdir'";
+      croak "$Script: '$_' is neither a file nor a directory, either by itself or within '$pdflinkdir'";
     }
   }
 
@@ -108,19 +109,19 @@ sub open_pdf_file {
     }
 
     # try to run ghostscript conversion on PDF file
-    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$0: could not create temporary file";
-    system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$0: could not run ghostscript on '$pdffile'";
+    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
+    system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$Script: could not run ghostscript on '$pdffile'";
     eval {
       $pdf = PDF::API2->open($fh->filename);
     } or do {
-      croak "$0: $error";
+      croak "$Script: $error";
     };
 
     # use converted PDF file
     $fh->unlink_on_destroy(0);
-    link($pdffile, "$pdffile.bak") or croak "$0: could not link '$pdffile' to '$pdffile.bak': $!";
-    rename($fh->filename, $pdffile) or croak "$0: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
-    unlink("$pdffile.bak") or croak "$0: could not unlink '$pdffile.bak': $!";
+    link($pdffile, "$pdffile.bak") or croak "$Script: could not link '$pdffile' to '$pdffile.bak': $!";
+    rename($fh->filename, $pdffile) or croak "$Script: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
+    unlink("$pdffile.bak") or croak "$Script: could not unlink '$pdffile.bak': $!";
     $pdf = PDF::API2->open($pdffile);
 
   };
@@ -143,14 +144,14 @@ sub parallel_loop {
   my $worker = sub {
     my ($id, $in) = @_;
     if ($id % (3 * $ncpus) == 0) {
-      printf STDERR "$0: $progfmt\r", $id, $total;
+      printf STDERR "$Script: $progfmt\r", $id, $total;
       flush STDERR;
     }
     my $out = &$body($in);
     return $out;
   };
   my @outarray = Parallel::Iterator::iterate_as_array( { workers => $ncpus, batch => 1 }, \&$worker, $inarray );
-  printf STDERR "$0: $progfmt\n", $total, $total;
+  printf STDERR "$Script: $progfmt\n", $total, $total;
   flush STDERR;
 
   return @outarray;
@@ -195,7 +196,7 @@ sub run_async {
 
   # execute command in separate process group
   my $pid = fork();
-  croak "$0: could not fork: $!" unless defined($pid);
+  croak "$Script: could not fork: $!" unless defined($pid);
   if ($pid == 0) {
     setpgrp;
     exec(@_);

@@ -23,15 +23,16 @@ use warnings;
 
 use Capture::Tiny;
 use Carp;
+use FindBin qw($Script);
 use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::util qw(find_pdf_files run_async kill_async);
-use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
 use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
+use pdflibrarian::util qw(find_pdf_files run_async kill_async);
 
 =pod
 
@@ -65,18 +66,18 @@ PDF Librarian, version @VERSION@.
 my ($help);
 GetOptions(
            "help|h" => \$help,
-          ) or croak "$0: could not parse options";
+          ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
 my @pdffiles = find_pdf_files(@ARGV);
-croak "$0: no PDF files to import" unless @pdffiles > 0;
+croak "$Script: no PDF files to import" unless @pdffiles > 0;
 
 # process IDs of PDF files opened in external viewer
 my @pids;
 
 # try to retrieve BibTeX records for all PDF files, and write BibTeX data to a temporary file for editing
-my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$0: could not create temporary file";
+my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
 my $havebibstr = 0;
 PDFFILE: foreach my $pdffile (@pdffiles) {
@@ -98,7 +99,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     ($query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
     if (!defined($query_db_name)) {
       kill_async $pid;
-      print STDERR "$0: import of PDF file '$pdffile' has been cancelled\n";
+      print STDERR "$Script: import of PDF file '$pdffile' has been cancelled\n";
       next PDFFILE;
     }
 
