@@ -103,7 +103,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     }
 
     # run query command
-    my $query_cmd = sprintf("$query_databases{$query_db_name}", $query_value);
+    my $query_cmd = File::Spec->catfile($bindir, sprintf("$query_databases{$query_db_name}", $query_value));
     my $exit_status;
     ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
       system($query_cmd);
