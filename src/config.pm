@@ -32,6 +32,8 @@ our @EXPORT;
 
 push @EXPORT, '$PACKAGE';
 our $PACKAGE = "@PACKAGE@";
+push @EXPORT, '$PACKAGE_NAME';
+our $PACKAGE_NAME = "@PACKAGE_NAME@";
 push @EXPORT, '$VERSION';
 our $VERSION = "@VERSION@";
 
