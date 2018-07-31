@@ -33,6 +33,7 @@ use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
 use Text::BibTeX;
 use Text::Unidecode;
+use Text::Wrap;
 use XML::LibXML;
 use XML::LibXSLT;
 
@@ -340,41 +341,66 @@ sub edit_bib_in_fh {
   my @errors;
   while (1) {
 
-    # save number of errors in previous edit
-    my $nerrors = @errors;
-
-    # write new temporary file for editing, including any error messages
+    # open new temporary file for editing BibTeX entries
     my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
     binmode($fh, ":encoding(iso-8859-1)");
-    print $fh <<"EOF";
-%% Edits to the following BibTeX entries will be written back
-%% to the PDF file given by the 'file' field in each entry.
-%%
-%% To ABORT ANY CHANGES from being written, simply delete
-%% the relevant entries, or the entire contents of this file.
-%%
-%% Any errors encountered while parsing/writing BibTeX entries
-%% are reported below, and must be corrected:
-%%
+
+    # write header message
+    if (@errors > 0) {
+      print $fh wrap("% ", "% ", <<"EOF");
+$PACKAGE_NAME has encountered several errors in parsing the following BibTeX records. These errors are indicated with comments next to the line where the errors occurred.
+
+All errors MUST be corrected before the BibTeX records can be written back to the PDF file given by the 'file' field in each record.
+
+To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
+    } else {
+      print $fh wrap("% ", "% ", <<"EOF");
+$PACKAGE_NAME has extracted the following BibTeX records for editing. Any changes to the records will be written back to the PDF file given by the 'file' field in each record.
+
+To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
+EOF
+    }
+
+    # build hash of errors by line number
+    my %errorsbyline;
     foreach (@errors) {
       if (defined($_->{from})) {
-        if (defined($_->{to})) {
-          print $fh "%% ERROR at lines $_->{from}-$_->{to}: $_->{msg}\n";
-        } else {
-          print $fh "%% ERROR at line $_->{from}: $_->{msg}\n";
-        }
+        push @{$errorsbyline{$_->{from}}}, $_->{msg};
       } else {
-        print $fh "%% ERROR: $_->{msg}\n";
+        push @{$errorsbyline{0}}, $_->{msg};
       }
     }
+
+    # write any error messages without line numbers
+    if (defined($errorsbyline{0})) {
+      print $fh "%\n";
+      foreach (@{$errorsbyline{0}}) {
+        print $fh "% ERROR: $_\n";
+      }
+      delete $errorsbyline{0};
+    }
+
+    # write contents of old temporary file, with any error messages inline
     $oldfh->flush();
     $oldfh->seek(0, SEEK_SET);
     while (<$oldfh>) {
+      my $line = sprintf("%i", $oldfh->input_line_number);
+      foreach (@{$errorsbyline{$line}}) {
+        print $fh "% ERROR: $_\n";
+      }
+      delete $errorsbyline{$line};
       next if /^%/;
       print $fh $_;
     }
     $fh->flush();
+
+    # write any remaining error messages
+    foreach (keys %errorsbyline) {
+      foreach (@{$errorsbyline{$_}}) {
+        print $fh "% ERROR: $_\n";
+      }
+    }
 
     # save handle to new temporary file; old temporary file is deleted
     $oldfh = $fh;
@@ -402,13 +428,6 @@ EOF
 
     # BibTeX entries have been successfully read
     last if @errors == 0;
-
-    # save error messages with adjusted line numbers
-    foreach (@errors) {
-      my $linediff = @errors - $nerrors;
-      $_->{from} += $linediff if defined($_->{from});
-      $_->{to} += $linediff if defined($_->{to});
-    }
 
   }
 
