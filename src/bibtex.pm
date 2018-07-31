@@ -38,7 +38,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(open_pdf_file parallel_loop remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -361,6 +361,7 @@ $PACKAGE_NAME has extracted the following BibTeX records for editing. Any change
 To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
     }
+    print $fh "\n";
 
     # build hash of errors by line number
     my %errorsbyline;
@@ -374,24 +375,30 @@ EOF
 
     # write any error messages without line numbers
     if (defined($errorsbyline{0})) {
-      print $fh "%\n";
       foreach (@{$errorsbyline{0}}) {
         print $fh "% ERROR: $_\n";
       }
       delete $errorsbyline{0};
+      print $fh "\n";
     }
 
     # write contents of old temporary file, with any error messages inline
     $oldfh->flush();
     $oldfh->seek(0, SEEK_SET);
     while (<$oldfh>) {
+      chomp;
       my $line = sprintf("%i", $oldfh->input_line_number);
       foreach (@{$errorsbyline{$line}}) {
         print $fh "% ERROR: $_\n";
       }
       delete $errorsbyline{$line};
+      s/\s+$//;
       next if /^%/;
-      print $fh $_;
+      next if /^$/;
+      print $fh "$_\n";
+      if (/^}$/) {
+        print $fh "\n";
+      }
     }
     $fh->flush();
 
@@ -401,6 +408,9 @@ EOF
         print $fh "% ERROR: $_\n";
       }
     }
+
+    # print index of all currently-defined keywords
+    print $fh keyword_display_str();
 
     # save handle to new temporary file; old temporary file is deleted
     $oldfh = $fh;

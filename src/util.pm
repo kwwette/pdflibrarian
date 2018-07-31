@@ -29,10 +29,11 @@ use FindBin qw($Script);
 use PDF::API2;
 use Parallel::Iterator;
 use Sys::CPU;
+use Text::Wrap;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file parallel_loop remove_tex_markup remove_short_words run_async kill_async);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
 
 1;
 
@@ -127,6 +128,48 @@ sub open_pdf_file {
   };
 
   return $pdf;
+}
+
+use Data::Dumper;
+
+sub keyword_display_str {
+
+  # build list of keyword directories in PDF library
+  my $pdfkeyworddir = File::Spec->catdir($pdflinkdir, 'Keywords');
+  my @keywords;
+  my $wanted = sub {
+    return unless -d $_ && $_ ne $pdfkeyworddir;
+    my $k = join(' ', File::Spec->splitdir(File::Spec->abs2rel($_, $pdfkeyworddir)));
+    push @keywords, $k;
+  };
+  find({wanted => \&$wanted, no_chdir => 1}, $pdfkeyworddir);
+  @keywords = sort @keywords;
+  return "" unless @keywords > 0;
+
+  # build tree of keywords
+  for (my $i = 0; $i < @keywords; ++$i) {
+    for (my $j = $i + 1; $j < @keywords; ++$j) {
+      $keywords[$j] =~ s/$keywords[$i]\s+/   /;
+    }
+  }
+
+  # format keyword display string
+  my $str = join("\n", @keywords);
+  while (1) {
+    my $old = $str;
+    $str =~ s/^( +)([^\n]*)\n\1([^\n]*)$/$1$2, $3/msg;
+    last if $str eq $old;
+  }
+  my @lines = split /\n/, $str;
+  foreach (@lines) {
+    $_ =~ /^( *)/;
+    my $prefix = "%   $1";
+    $_ =~ s/^ +//;
+    $_ = wrap($prefix, $prefix, $_)
+  }
+  $str = sprintf("%% Currently defined keywords:\n%s\n", join("\n", @lines));
+
+  return $str;
 }
 
 sub parallel_loop {
