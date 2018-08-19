@@ -5,6 +5,9 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.14 foreign])
 AM_SILENT_RULES([yes])
 
+# Debian dependencies
+AC_SUBST([DEPENDS],["perl-base, xdg-utils"])
+
 # check for standard programs
 AC_PROG_INSTALL
 AC_PROG_SED
@@ -49,38 +52,31 @@ AC_CONFIG_COMMANDS_PRE([
 # check for Perl modules
 AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
   AC_MSG_CHECKING([for Perl module $1])
-  AS_IF([${PERL} -M'$1' -e '0' >/dev/null 2>&1],[
+  echo "${PERL} -e 'm4_default([$3],[use $1])'" >&AS_MESSAGE_LOG_FD
+  AS_IF([( unset DISPLAY; ${PERL} -e 'm4_default([$3],[use $1])' >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD )],[
     AC_MSG_RESULT([yes])
   ],[
     AC_MSG_RESULT([no])
     AC_MSG_ERROR([could not find Perl module $1])
   ])
-  m4_ifval([$2],[
-    AC_MSG_CHECKING([if Perl module $1 supports '$2'])
-    AS_IF([${PERL} -M'$1' -e '$2' >/dev/null 2>&1],[
-      AC_MSG_RESULT([yes])
-    ],[
-      AC_MSG_RESULT([no])
-      AC_MSG_ERROR([Perl module $1 does not support '$2'])
-    ])
-  ])
+  DEPENDS="${DEPENDS}, $2"
 ])
-PDFLBR_CHECK_PERL_MODULE([CAM::PDF])   dnl libcam-pdf-perl
-PDFLBR_CHECK_PERL_MODULE([Capture::Tiny])   dnl libcapture-tiny-perl
-PDFLBR_CHECK_PERL_MODULE([Config::Simple])   dnl libconfig-simple-perl
-PDFLBR_CHECK_PERL_MODULE([File::BaseDir])   dnl libfile-basedir-perl
-PDFLBR_CHECK_PERL_MODULE([File::MimeInfo])   dnl libfile-mimeinfo-perl
-PDFLBR_CHECK_PERL_MODULE([JSON])   dnl libjson-perl
-PDFLBR_CHECK_PERL_MODULE([LWP],[use LWP::UserAgent; use HTTP::Request])
-PDFLBR_CHECK_PERL_MODULE([PDF::API2])   dnl libpdf-api2-perl
-PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator])   dnl libparallel-iterator-perl
-PDFLBR_CHECK_PERL_MODULE([Sys::CPU])   dnl libsys-cpu-perl
-PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[Text::BibTeX::Entry->new("file", undef)])   dnl libtext-bibtex-perl
-PDFLBR_CHECK_PERL_MODULE([Text::Unidecode])
-PDFLBR_CHECK_PERL_MODULE([URI])
-PDFLBR_CHECK_PERL_MODULE([Wx])   dnl libwx-perl
-PDFLBR_CHECK_PERL_MODULE([XML::LibXML])
-PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT])   dnl libxml-libxslt-perl
+PDFLBR_CHECK_PERL_MODULE([CAM::PDF],[libcam-pdf-perl])
+PDFLBR_CHECK_PERL_MODULE([Capture::Tiny],[libcapture-tiny-perl])
+PDFLBR_CHECK_PERL_MODULE([Config::Simple],[libconfig-simple-perl])
+PDFLBR_CHECK_PERL_MODULE([File::BaseDir],[libfile-basedir-perl])
+PDFLBR_CHECK_PERL_MODULE([File::MimeInfo],[libfile-mimeinfo-perl])
+PDFLBR_CHECK_PERL_MODULE([JSON],[libjson-perl])
+PDFLBR_CHECK_PERL_MODULE([LWP],[libwww-perl, libhttp-message-perl],[use LWP; use LWP::UserAgent; use HTTP::Request])
+PDFLBR_CHECK_PERL_MODULE([PDF::API2],[libpdf-api2-perl])
+PDFLBR_CHECK_PERL_MODULE([Parallel::Iterator],[libparallel-iterator-perl])
+PDFLBR_CHECK_PERL_MODULE([Sys::CPU],[libsys-cpu-perl])
+PDFLBR_CHECK_PERL_MODULE([Text::BibTeX],[libtext-bibtex-perl],[use Text::BibTeX; Text::BibTeX::Entry->new("file", undef)])
+PDFLBR_CHECK_PERL_MODULE([Text::Unidecode],[libtext-unidecode-perl])
+PDFLBR_CHECK_PERL_MODULE([URI],[liburi-perl])
+PDFLBR_CHECK_PERL_MODULE([Wx],[libwx-perl],[use Wx::App])
+PDFLBR_CHECK_PERL_MODULE([XML::LibXML],[libxml-libxslt-perl])
+PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT],[libxml-libxslt-perl])
 
 # check for fallback editor
 fallback_editor=
@@ -106,6 +102,7 @@ AC_SUBST([xsltdir],['${datadir}/'"${PACKAGE}/xslt_stylesheets"])
 # output files
 AC_CONFIG_FILES([
   Makefile
+  debian/control
   pre-inst/config.pm:src/config.pm
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
   pre-inst/pdf-lbr-import-pdf:src/pdf-lbr-import-pdf.pl
