@@ -1,12 +1,9 @@
 AC_PREREQ([2.69])
-AC_INIT([PDFLibrarian],[0.1])
+AC_INIT([PDFLibrarian],[0.1.1])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.14 foreign])
 AM_SILENT_RULES([yes])
-
-# Debian dependencies
-AC_SUBST([DEPENDS],["perl-base, xdg-utils"])
 
 # check for standard programs
 AC_PROG_INSTALL
@@ -50,6 +47,7 @@ AC_CONFIG_COMMANDS_PRE([
 ])
 
 # check for Perl modules
+AC_SUBST([DEPENDS],["perl-base"])
 AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
   AC_MSG_CHECKING([for Perl module $1])
   echo "${PERL} -e 'm4_default([$3],[use $1])'" >&AS_MESSAGE_LOG_FD
@@ -79,21 +77,12 @@ PDFLBR_CHECK_PERL_MODULE([XML::LibXML],[libxml-libxslt-perl])
 PDFLBR_CHECK_PERL_MODULE([XML::LibXSLT],[libxml-libxslt-perl])
 
 # check for fallback editor
-fallback_editor=
-AC_PATH_PROGS([fallback_editor],[editor emacs gedit nano vim])
-AS_IF([test "x${fallback_editor}" = x],[
-  AC_MSG_ERROR([could not find an editing program])
-])
+AC_PATH_PROGS([fallback_editor],[editor emacs gedit nano vim],[editor])
 
 # check for external PDF viewer
-external_pdf_viewer=
-AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf])
-AS_IF([test "x${external_pdf_viewer}" = x],[
-  AC_MSG_ERROR([could not find an external PDF viewer])
-])
+AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf],[xdg-open])
 
 # check for optional programs
-ghostscript=
 AC_PATH_PROGS([ghostscript],[gs])
 
 # set data installation directories
