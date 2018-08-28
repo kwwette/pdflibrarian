@@ -161,7 +161,7 @@ sub make_pdf_links {
       if ($bibentry->exists('archiveprefix')) {
         my $archiveprefix = $bibentry->get('archiveprefix');
         my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
-        push @links, ["Pre Prints", "$archiveprefix $year", "$eprint $pdflinkfile"];
+        push @links, ["Pre Prints", "$archiveprefix", $year, "$eprint $pdflinkfile"];
       }
 
     } elsif ($bibentry->type eq "techreport") {
