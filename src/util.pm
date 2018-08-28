@@ -148,9 +148,11 @@ sub keyword_display_str {
 
   # build tree of keywords
   for (my $i = 0; $i < @keywords; ++$i) {
+    my $parent = 0;
     for (my $j = $i + 1; $j < @keywords; ++$j) {
-      $keywords[$j] =~ s/$keywords[$i]\s+/   /;
+      $parent = 1 if $keywords[$j] =~ s/$keywords[$i]\s+/   /;
     }
+    $keywords[$i] .= ":" if $parent;
   }
 
   # format keyword display string
