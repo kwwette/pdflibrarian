@@ -1,7 +1,3 @@
-EXTRA_DIST = \
-	$(DATA) \
-	$(END_OF_LINE)
-
 bin_SCRIPTS = \
 	pre-inst/pdf-lbr-edit-bib \
 	pre-inst/pdf-lbr-import-pdf \
@@ -22,4 +18,11 @@ pkgperllib_DATA = \
 xslt_DATA = \
 	src/bibtex.xsl \
 	src/dublincore.xsl \
+	$(END_OF_LINE)
+
+EXTRA_DIST = \
+	$(DATA) \
+	$(END_OF_LINE)
+
+BUILT_SOURCES = \
 	$(END_OF_LINE)

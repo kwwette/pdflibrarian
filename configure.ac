@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([PDFLibrarian],[0.2])
+AC_INIT([PDFLibrarian],[0.2.1])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.14 foreign])
@@ -91,7 +91,6 @@ AC_SUBST([xsltdir],['${datadir}/'"${PACKAGE}/xslt_stylesheets"])
 # output files
 AC_CONFIG_FILES([
   Makefile
-  debian/control
   pre-inst/config.pm:src/config.pm
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
   pre-inst/pdf-lbr-import-pdf:src/pdf-lbr-import-pdf.pl
