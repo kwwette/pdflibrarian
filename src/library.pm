@@ -112,6 +112,12 @@ sub make_pdf_links {
     # list of symbolic links to make
     my @links;
 
+    # make links by DOI
+    if ($bibentry->exists('doi')) {
+      my @doidirs = grep(/./, File::Spec->splitdir($bibentry->get('doi')));
+      push @links, ["DOIs", @doidirs];
+    }
+
     # make links by first author and collaboration
     if (@authors > 0) {
       push @links, ["Authors", $authors[0], "$pdflinkfile"];
