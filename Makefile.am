@@ -5,6 +5,7 @@ bin_SCRIPTS = \
 	pre-inst/pdf-lbr-read-bib \
 	pre-inst/pdf-lbr-rebuild \
 	pre-inst/pdf-lbr-remove-pdf \
+	pre-inst/pdf-lbr-replace-pdf \
 	$(END_OF_LINE)
 
 pkgperllib_DATA = \
