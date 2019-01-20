@@ -30,10 +30,9 @@ use Getopt::Long;
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_pdf);
 use pdflibrarian::config;
-use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::util qw(is_in_dir find_pdf_files);
+use pdflibrarian::library qw(cleanup_links);
+use pdflibrarian::util qw(is_in_dir);
 
 =pod
 
