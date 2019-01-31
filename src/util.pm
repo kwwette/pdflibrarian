@@ -136,6 +136,7 @@ sub keyword_display_str {
 
   # build list of keyword directories in PDF library
   my $pdfkeyworddir = File::Spec->catdir($pdflinkdir, 'Keywords');
+  return "" unless -d $pdfkeyworddir;
   my @keywords;
   my $wanted = sub {
     return unless -d $_ && $_ ne $pdfkeyworddir;
