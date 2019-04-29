@@ -198,6 +198,25 @@ sub write_bib_to_fh {
     # remove checksum before printing
     $bibentry->delete('checksum');
 
+    # regularise BibTeX 'month' field
+    my $month = $bibentry->get('month');
+    if (defined($month)) {
+      $month =~ s/\s//g;
+      $month =~ s/^jan.*$/January/i;
+      $month =~ s/^feb.*$/February/i;
+      $month =~ s/^mar.*$/March/i;
+      $month =~ s/^apr.*$/April/i;
+      $month =~ s/^may.*$/May/i;
+      $month =~ s/^jun.*$/June/i;
+      $month =~ s/^jul.*$/July/i;
+      $month =~ s/^aug.*$/August/i;
+      $month =~ s/^sep.*$/September/i;
+      $month =~ s/^oct.*$/October/i;
+      $month =~ s/^nov.*$/November/i;
+      $month =~ s/^dec.*$/December/i;
+      $bibentry->set('month', $month);
+    }
+
     # arrange BibTeX fields in the following order
     my %order;
     my $orderidx;
