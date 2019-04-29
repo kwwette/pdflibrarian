@@ -24,7 +24,7 @@ use warnings;
 use Capture::Tiny;
 use Carp;
 use FindBin qw($Script);
-use Getopt::Long;
+use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
