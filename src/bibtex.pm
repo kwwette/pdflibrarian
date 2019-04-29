@@ -205,7 +205,7 @@ sub write_bib_to_fh {
                           qw(keyword),
                           $structure->required_fields($bibentry->type),
                           $structure->optional_fields($bibentry->type),
-                          qw(eid doi archiveprefix primaryclass eprint oai2identifier url adsurl adsnote),
+                          qw(eid doi archiveprefix primaryclass eprint),
                           sort { $a cmp $b } $bibentry->fieldlist()
                          ) {
       $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield) && !defined($order{$bibfield});
