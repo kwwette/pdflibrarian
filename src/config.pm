@@ -67,6 +67,9 @@ our $pref_query_database;
 push @EXPORT, '%query_databases';
 our %query_databases;
 
+push @EXPORT, '@default_exclude';
+our @default_exclude;
+
 1;
 
 INIT {
@@ -89,6 +92,7 @@ INIT {
   my %config = (
                 'general.pdflinkdir' => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
                 'general.prefquery' => 'Astrophysics Data System using Digital Object Identifier',
+                'general.default_exclude' => 'keyword abstract',
                 'query-ads-doi.name' => 'Astrophysics Data System using Digital Object Identifier',
                 'query-ads-doi.cmd' => "pdf-lbr-query-ads --query doi:%s",
                 'query-ads-arxiv.name' => 'Astrophysics Data System using arXiv Article Identifier',
@@ -131,5 +135,8 @@ INIT {
 
   # create directory for PDF links
   File::Path::make_path($pdflinkdir);
+
+  # create default list of fields to exclude from printed BibTeX output
+  @default_exclude = split/\s+/, $config{'general.default_exclude'};
 
 }
