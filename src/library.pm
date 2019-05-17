@@ -95,17 +95,22 @@ sub make_pdf_links {
     $title = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $title)));
 
     # make PDF link name; should be unique within library
-    my $pdflinkfile = "@collaborations";
-    $pdflinkfile = "@authors" unless length($pdflinkfile) > 0;
-    $pdflinkfile = "@editors" unless length($pdflinkfile) > 0;
-    $pdflinkfile .= " $title";
+    my $pdflinkfile;
     {
 
-      # append report number (if any) for technical reports
-      $pdflinkfile .= " no" . $bibentry->get("number") if $bibentry->type eq "techreport" && $bibentry->exists("number");
+      # start with first non-empty of authoring collaborations, individual authors, and/or editors
+      $pdflinkfile = "@collaborations";
+      $pdflinkfile = "@authors" unless length($pdflinkfile) > 0;
+      $pdflinkfile = "@editors" unless length($pdflinkfile) > 0;
+
+      # append title
+      $pdflinkfile .= " $title";
 
       # append volume number (if any) for books and proceedings
       $pdflinkfile .= " vol" . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
+
+      # append year
+      $pdflinkfile .= " " . $bibentry->get("year");
 
     }
 
