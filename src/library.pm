@@ -183,7 +183,15 @@ sub make_pdf_links {
 
       # make links to technical reports by institution
       my $institution = $bibentry->get("institution") // "NO-INSTITUTION";
-      push @links, ["Tech Reports", $institution, "$pdflinkfile"];
+      my $number = "NO-NUMBER";
+      my $numberprefix = $number;
+      if ($bibentry->exists('number')) {
+        $number = $bibentry->get('number');
+        $numberprefix = $number;
+        $numberprefix =~ s/[^\d]//g;
+        $numberprefix = substr($numberprefix, 0, 2);
+      }
+      push @links, ["Tech Reports", "$institution", "$numberprefix", "$number $pdflinkfile"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) {
 
