@@ -161,10 +161,17 @@ sub make_pdf_links {
       my $pages = $bibentry->get("pages") // "NO-PAGES";
       if ($bibentry->exists('archiveprefix')) {
         my $archiveprefix = $bibentry->get('archiveprefix');
-        my $eprint = $bibentry->get("eprint") // "NO-EPRINT";
-        push @links, ["Pre Prints", "$archiveprefix", "$year", "$eprint $pdflinkfile"];
+        my $eprint = "NO-EPRINT";
+        my $eprintprefix = $eprint;
+        if ($bibentry->exists('eprint')) {
+          $eprint = $bibentry->get('eprint');
+          $eprintprefix = $eprint;
+          $eprintprefix =~ s/[^\d]//g;
+          $eprintprefix = substr($eprintprefix, 0, 2);
+        }
+        push @links, ["Pre Prints", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
         if ($journal eq $archiveprefix) {
-          push @links, ["Journals", "$archiveprefix", "$year", "$eprint $pdflinkfile"];
+          push @links, ["Journals", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
         } else {
           push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
         }
