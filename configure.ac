@@ -24,24 +24,24 @@ AC_CACHE_CHECK([for perl version >= ${PERLVERSION}],[ac_cv_path_PERL],[
 AC_SUBST([PERL],[${ac_cv_path_PERL}])
 
 # determine Perl installation directories
-AC_MSG_CHECKING([for ${PERL} vendor install prefix])
-eval vendorprefix=`eval ${PERL} -V::vendorprefix 2>/dev/null`
-AC_MSG_RESULT([${vendorprefix}])
-AS_CASE(["${vendorprefix}"],
-  [''|'UNKNOWN'],[AC_MSG_ERROR([could not determine ${PERL} vendor install prefix])],
+AC_MSG_CHECKING([for ${PERL} install prefix])
+eval installprefix=`eval ${PERL} -V::installprefix 2>/dev/null`
+AC_MSG_RESULT([${installprefix}])
+AS_CASE(["${installprefix}"],
+  [''|'UNKNOWN'],[AC_MSG_ERROR([could not determine ${PERL} install prefix])],
 )
-AC_MSG_CHECKING([for ${PERL} vendor install location])
-eval vendorlib=`eval ${PERL} -V::vendorlib 2>/dev/null`
-AC_MSG_RESULT([${vendorlib}])
-AS_CASE(["${vendorlib}"],
-  [''|'UNKNOWN'],[AC_MSG_ERROR([could not determine ${PERL} vendor install location])],
+AC_MSG_CHECKING([for ${PERL} install location])
+eval installlib=`eval ${PERL} -V::installvendorlib 2>/dev/null`
+AC_MSG_RESULT([${installlib}])
+AS_CASE(["${installlib}"],
+  [''|'UNKNOWN'],[AC_MSG_ERROR([could not determine ${PERL} install location])],
 )
 AC_CONFIG_COMMANDS_PRE([
-  AC_SUBST([perllibdir],[`echo ${vendorlib} | ${SED} "s|^${vendorprefix}/|${prefix}/|"`])
+  AC_SUBST([perllibdir],[`echo ${installlib} | ${SED} "s|^${installprefix}/|${prefix}/|"`])
   AC_SUBST([pkgperllibdir],['$(perllibdir)/$(PACKAGE)'])
   AC_SUBST([perl_use_lib],['1'])
   AM_SUBST_NOTMAKE([perl_use_lib])
-  AS_IF([test "x${prefix}" != "x${vendorprefix}"],[
+  AS_IF([test "x${prefix}" != "x${installprefix}"],[
     perl_use_lib="use lib '${perllibdir}'"
   ])
 ])
