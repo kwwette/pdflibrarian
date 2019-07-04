@@ -230,10 +230,10 @@ sub make_pdf_links {
       foreach (@linkpath) {
         die unless defined($_) && $_ ne "";
         $_ = unidecode($_);
-        s/[^\w\d]/-/g;
-        s/--+/-/g;
-        s/^-+//;
-        s/-+$//;
+        s/[^-+.A-Za-z0-9]/_/g;
+        s/__+/_/g;
+        s/^_+//;
+        s/_+$//;
       }
 
       # make symbolic link path directories
