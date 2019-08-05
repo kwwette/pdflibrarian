@@ -217,6 +217,16 @@ sub write_bib_to_fh {
       $bibentry->set('month', $month);
     }
 
+    # double-quote BibTeX 'title' fields
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      if ($bibfield =~ /title$/) {
+        my $title = $bibentry->get($bibfield);
+        $title =~ s/^{*/{/;
+        $title =~ s/}*$/}/;
+        $bibentry->set($bibfield, $title);
+      }
+    }
+
     # arrange BibTeX fields in the following order
     my %order;
     my $orderidx;
