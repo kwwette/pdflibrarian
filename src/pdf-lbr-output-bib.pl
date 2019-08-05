@@ -35,17 +35,17 @@ use pdflibrarian::util qw(find_pdf_files);
 
 =head1 NAME
 
-B<pdf-lbr-read-bib> - Read BibTeX bibliographic metadata from PDF files.
+B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 =head1 SYNOPSIS
 
-B<pdf-lbr-read-bib> B<--help>|B<-h>
+B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-read-bib> [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-read-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
+B<pdf-lbr-output-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
 
 The BibTeX metadata is then printed to standard output.
 

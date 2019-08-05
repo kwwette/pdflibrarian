@@ -36,17 +36,17 @@ use pdflibrarian::util qw(find_pdf_files);
 
 =head1 NAME
 
-B<pdf-lbr-rebuild> - Rebuild the PDF links directory.
+B<pdf-lbr-rebuild-links> - Rebuild the PDF links directory.
 
 =head1 SYNOPSIS
 
-B<pdf-lbr-rebuild> B<--help>|B<-h>
+B<pdf-lbr-rebuild-links> B<--help>|B<-h>
 
-B<pdf-lbr-rebuild>
+B<pdf-lbr-rebuild-links>
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-rebuild> rebuilds the PDF links directory.
+B<pdf-lbr-rebuild-links> rebuilds the PDF links directory.
 
 =head1 PART OF
 
