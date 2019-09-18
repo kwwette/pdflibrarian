@@ -7,7 +7,7 @@ dist: bionic
 
 install:
 - travis_retry sudo apt-get update -q
-- travis_retry sudo apt-get install -y autoconf sed libgtk2.0-dev
+- travis_retry sudo apt-get install -y autoconf sed
 - travis_retry sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2'`
 
 before_script:
