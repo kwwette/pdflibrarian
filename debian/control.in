@@ -1,0 +1,15 @@
+Source: pdflibrarian
+Section: tex
+Priority: optional
+Maintainer: Karl Wette <karl.wette@gmail.com>
+Build-Depends: debhelper (>= 10), autoconf, sed, @DEPENDS@
+Standards-Version: 4.1.2
+Homepage: https://github.com/kwwette/pdflibrarian
+
+Package: pdflibrarian
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, @DEPENDS@
+Description: Manage academic paper PDFs with embedded BibTeX.
+ PDF Librarian manages a library of academic papers in PDF format with
+ embedded BibTeX metadata.
+
