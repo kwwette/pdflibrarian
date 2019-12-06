@@ -150,6 +150,7 @@ sub read_bib_from_pdf {
     # open PDF file and read XMP metadata
     my $pdf = open_pdf_file($pdffile);
     my $xmp = $pdf->xmpMetadata() // "";
+    $xmp = "" unless $xmp =~ /<\?xpacket /;
     $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
     $pdf->end();
 
