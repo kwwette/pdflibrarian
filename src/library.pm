@@ -88,7 +88,7 @@ sub make_pdf_links {
     # format authors, editors, and collaborations
     my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
     my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
-    my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
+    my @collaborations = format_bib_authors("vl", 3, "", $bibentry->names("collaboration"));
 
     # format and abbreviate title
     my $title = remove_tex_markup($bibentry->get("title") // "NO-TITLE");

@@ -527,7 +527,7 @@ sub generate_bib_keys {
 
     # add formatted authors, editors, or collaborations
     {
-      my @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("collaboration"));
+      my @authors = format_bib_authors("l", 3, "", $bibentry->names("collaboration"));
       @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("author")) unless @authors > 0;
       @authors = format_bib_authors("l", 2, "EtAl", $bibentry->names("editor")) unless @authors > 0;
       $key .= join('', map { $_ =~ s/\s//g; substr($_, 0, 4) } @authors);
