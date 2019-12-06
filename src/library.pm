@@ -123,15 +123,10 @@ sub make_pdf_links {
       push @links, ["DOIs", @doidirs];
     }
 
-    # make links by first author and collaboration
-    if (@authors > 0) {
-      push @links, ["Authors", $authors[0], "$pdflinkfile"];
-    }
-    if (@editors > 0) {
-      push @links, ["Authors", $editors[0], "$pdflinkfile"];
-    }
-    if (@collaborations > 0) {
-      push @links, ["Authors", $collaborations[0], "$pdflinkfile"];
+    # make links by listed authors, editors, and collaborations
+    for my $author (@authors, @editors, @collaborations) {
+      next if $author eq "" || $author eq "et al";
+      push @links, ["Authors", $author, "$pdflinkfile"];
     }
 
     # make links by first word of title
