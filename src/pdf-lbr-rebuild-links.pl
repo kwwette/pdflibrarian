@@ -27,7 +27,7 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys);
+use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_pdf);
 use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::util qw(find_pdf_files);
@@ -69,6 +69,9 @@ my @bibentries = read_bib_from_pdf(@pdffiles);
 
 # regenerate keys for BibTeX entries
 generate_bib_keys(@bibentries);
+
+# write BibTeX entries to PDF metadata
+write_bib_to_pdf(@bibentries);
 
 # ensure all PDF files are part of library
 update_pdf_lib(@bibentries);
