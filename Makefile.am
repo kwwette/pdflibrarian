@@ -23,7 +23,6 @@ xslt_DATA = \
 
 EXTRA_DIST = \
 	$(DATA) \
-	debian \
 	$(END_OF_LINE)
 
 BUILT_SOURCES = \
