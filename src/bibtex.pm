@@ -288,7 +288,7 @@ sub write_bib_to_pdf {
     my $pdffile = $bibentry->get('file');
 
     # check for existence of PDF file
-    croak "$Script: BibTeX entry @{[$bibentry->key]} cannot be written to missing PDF file '$pdffile'" unless -f $pdffile;
+    croak "$Script: BibTeX entry '@{[$bibentry->key]}' cannot be written to missing PDF file '$pdffile'" unless -f $pdffile;
 
     # create XML document
     my $xml = XML::LibXML::Document->new('1.0', 'utf-8');
@@ -480,7 +480,7 @@ EOF
     foreach my $bibentry (@bibentries) {
       foreach my $bibfield ($bibentry->fieldlist()) {
         if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
-          push @errors, { msg => "entry @{[$bibentry->key]} contains possibly duplicate fields '${bibfield}' and '${bibfield}s'" };
+          push @errors, { msg => "entry '@{[$bibentry->key]}' contains possibly duplicate fields '${bibfield}' and '${bibfield}s'" };
         }
       }
     }
