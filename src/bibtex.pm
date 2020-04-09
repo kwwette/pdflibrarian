@@ -357,11 +357,18 @@ sub write_bib_to_pdf {
     $pdf->xmpMetadata($newxmp);
 
     # write PDF file
-    $pdf->update();
-    $pdf->end();
+    eval {
+      $pdf->update();
+      $pdf->end();
+    } or do {
+      my $error = $@;
+      print STDERR "$Script: could not save PDF file '$pdffile': $error\n";
+      $bibentry = undef;
+    };
 
+    return $bibentry;
   };
-  parallel_loop("writing BibTeX entries to %i/%i PDF files", \@modbibentries, $body);
+  @modbibentries = parallel_loop("writing BibTeX entries to %i/%i PDF files", \@modbibentries, $body);
 
   return @modbibentries;
 }
