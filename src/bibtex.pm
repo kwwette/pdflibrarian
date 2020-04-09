@@ -38,14 +38,16 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(unique_list open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
 foreach my $type ($structure->types()) {
-  $structure->add_fields($type, [qw(keyword file title year)], [qw(collaboration)]);
+  my @required_fields = sort(unique_list($structure->required_fields($type), qw(keyword file title year)));
+  my @optional_fields = sort(unique_list($structure->optional_fields($type), qw(collaboration)));
+  $structure->set_fields($type, \@required_fields, \@optional_fields);
 }
 
 1;
