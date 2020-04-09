@@ -106,7 +106,7 @@ sub open_pdf_file {
 
     # do we have ghostscript?
     if (!defined($ghostscript)) {
-      die $error;
+      croak "$Script: could not open PDF file '$pdffile': $error";
     }
 
     # try to run ghostscript conversion on PDF file
@@ -115,7 +115,7 @@ sub open_pdf_file {
     eval {
       $pdf = PDF::API2->open($fh->filename);
     } or do {
-      croak "$Script: $error";
+      croak "$Script: could not open PDF file '$pdffile': $error";
     };
 
     # use converted PDF file
@@ -129,8 +129,6 @@ sub open_pdf_file {
 
   return $pdf;
 }
-
-use Data::Dumper;
 
 sub keyword_display_str {
 
