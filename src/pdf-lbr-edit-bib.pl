@@ -91,13 +91,13 @@ write_bib_to_fh($fh, @bibentries);
 generate_bib_keys(@bibentries);
 
 # write BibTeX entries to PDF metadata; return modified BibTeX entries
-my @modbibentries = write_bib_to_pdf(@bibentries);
+@bibentries = write_bib_to_pdf(@bibentries);
 
 # ensure all PDF files are part of library; return PDF files which have been added
-my @newbibentries = update_pdf_lib(@bibentries);
+@bibentries = update_pdf_lib(@bibentries);
 
 # update links in PDF links directory to real PDF files
-make_pdf_links(unique_list(@newbibentries, @modbibentries));
+make_pdf_links(@bibentries);
 
 # cleanup PDF links directory
 cleanup_links();
