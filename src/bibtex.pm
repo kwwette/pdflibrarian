@@ -361,7 +361,7 @@ sub write_bib_to_pdf {
       $pdf->update();
       $pdf->end();
     } or do {
-      my $error = $@;
+      chomp(my $error = $@);
       print STDERR "$Script: could not save PDF file '$pdffile': $error\n";
       $bibentry = undef;
     };

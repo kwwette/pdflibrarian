@@ -102,7 +102,7 @@ sub open_pdf_file {
   eval {
     $pdf = PDF::API2->open($pdffile);
   } or do {
-    my $error = $@;
+    chomp(my $error = $@);
 
     # do we have ghostscript?
     if (!defined($ghostscript)) {
