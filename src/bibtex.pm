@@ -149,7 +149,10 @@ sub read_bib_from_pdf {
 
     # open PDF file and read XMP metadata
     my $pdf = open_pdf_file($pdffile);
-    my $xmp = $pdf->xmpMetadata() // "";
+    my $xmp = "";
+    eval {
+      $xmp = $pdf->xmpMetadata() // "";
+    };
     $xmp = "" unless $xmp =~ /<\?xpacket /;
     $xmp =~ s/\s*<\?xpacket .*\?>\s*//g;
     $pdf->end();
@@ -321,7 +324,10 @@ sub write_bib_to_pdf {
     my $pdf = open_pdf_file($pdffile);
 
     # write document information to PDF file
-    my %pdfinfo = $pdf->info();
+    my %pdfinfo;
+    eval {
+      %pdfinfo = $pdf->info();
+    };
     $pdfinfo{Author} = $bibentry->get("author") // $bibentry->get("editor") // "";
     $pdfinfo{Author} =~ s/[{}\\]//g;
     $pdfinfo{Author} =~ s/~/ /g;
@@ -334,7 +340,10 @@ sub write_bib_to_pdf {
     $pdf->preferences(-displaytitle => 1);
 
     # write XMP metadata to PDF file
-    my $xmp = $pdf->xmpMetadata() // "";
+    my $xmp = "";
+    eval {
+      $xmp = $pdf->xmpMetadata() // "";
+    };
     my $xmphead = "<?xpacket begin='﻿' id='W5M0MpCehiHzreSzNTczkc9d'?>\n";
     my $xmpdata = encode('utf-8', $xml->documentElement()->toString(0), Encode::FB_CROAK);
     my $xmptail = "\n<?xpacket end='w'?>";
