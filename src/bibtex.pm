@@ -360,6 +360,7 @@ sub write_bib_to_pdf {
     eval {
       $pdf->update();
       $pdf->end();
+      1;
     } or do {
       chomp(my $error = $@);
       print STDERR "$Script: could not save PDF file '$pdffile': $error\n";
