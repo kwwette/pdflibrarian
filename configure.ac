@@ -94,8 +94,11 @@ AC_PATH_PROGS([fallback_editor],[editor emacs gedit nano vim],[editor])
 # check for external PDF viewer
 AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf],[xdg-open])
 
-# check for optional programs
-AC_PATH_PROGS([ghostscript],[gs])
+# check for ghostscript
+AC_PATH_PROGS([ghostscript],[gs],[])
+AS_IF([test "x${ghostscript}" = x],[
+  AC_MSG_ERROR([could not find ghostscript in PATH])
+])
 
 # set data installation directories
 AC_SUBST([xsltdir],['${datadir}/'"${PACKAGE}/xslt_stylesheets"])

@@ -3,7 +3,7 @@ dist: bionic
 
 install:
 - travis_retry sudo apt-get update -q
-- travis_retry sudo apt-get install -y autoconf sed perl-base
+- travis_retry sudo apt-get install -y autoconf sed ghostscript perl-base
 - travis_retry sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'`
 
 before_script:

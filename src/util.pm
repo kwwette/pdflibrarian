@@ -97,24 +97,19 @@ sub find_pdf_files {
 sub open_pdf_file {
   my ($pdffile) = @_;
 
-  # try to open PDF file
-  my $pdf;
-  eval {
-    $pdf = PDF::API2->open($pdffile);
-  } or do {
-    chomp(my $error = $@);
-
-    # do we have ghostscript?
-    if (!defined($ghostscript)) {
-      croak "$Script: could not open PDF file '$pdffile': $error";
-    }
+  if (!is_in_dir($pdffiledir, $pdffile)) {
 
     # try to run ghostscript conversion on PDF file
     my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
     system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$Script: could not run ghostscript on '$pdffile'";
+
+    # try to open ghostscript-converted PDF file
     eval {
-      $pdf = PDF::API2->open($fh->filename);
+      my $pdf = PDF::API2->open($fh->filename);
+      $pdf->end();
+      1;
     } or do {
+      chomp(my $error = $@);
       croak "$Script: could not open PDF file '$pdffile': $error";
     };
 
@@ -123,9 +118,11 @@ sub open_pdf_file {
     link($pdffile, "$pdffile.bak") or croak "$Script: could not link '$pdffile' to '$pdffile.bak': $!";
     rename($fh->filename, $pdffile) or croak "$Script: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
     unlink("$pdffile.bak") or croak "$Script: could not unlink '$pdffile.bak': $!";
-    $pdf = PDF::API2->open($pdffile);
 
-  };
+  }
+
+  # open PDF file
+  my $pdf = PDF::API2->open($pdffile);
 
   return $pdf;
 }
