@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+if [ "x$1" = x ]; then
+    echo "usage: $0 <new-version-number>" >&2
+    exit 1
+fi
+version="$1"
+
+if ! git diff --quiet; then
+    git status
+    exit 1
+fi
+
+rm -f ./pdflibrarian-*.tar.*
+
+sed -i 's|^AC_INIT.*|AC_INIT([PDFLibrarian],['"${version}"'])|' ./configure.ac
+
+if ! grep -q "^pdflibrarian (${version}-1)" debian/changelog; then
+    debchange --newversion "${version}-1" --urgency low --distribution stable "${version} release"
+fi
+
+git add ./configure.ac ./debian/changelog
+git commit -m "${version} release"
+git tag -m "${version} release" "v${version}"
+
+./bootstrap
+./configure --prefix=/tmp/pdflibrarian
+make dist
