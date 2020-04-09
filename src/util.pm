@@ -195,7 +195,8 @@ sub parallel_loop {
     return $out;
   };
   my @outarray = Parallel::Iterator::iterate_as_array( { workers => $ncpus, batch => 1 }, \&$worker, $inarray );
-  printf STDERR "$Script: $progfmt\n", $total, $total;
+  @outarray = grep { defined($_) } @outarray;
+  printf STDERR "$Script: $progfmt\n", scalar(@outarray), $total;
   flush STDERR;
 
   return @outarray;
