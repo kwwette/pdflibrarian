@@ -476,8 +476,18 @@ EOF
       push @errors, { msg => "duplicated key '$dupkey'" };
     }
 
-    # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
     foreach my $bibentry (@bibentries) {
+
+      # error if required fields are empty
+      foreach my $bibfield ($structure->required_fields($bibentry->type)) {
+        my $bibfieldvalue = $bibentry->get($bibfield) // "";
+        $bibfieldvalue =~ s/[{}]//g;
+        if ($bibfieldvalue eq "") {
+          push @errors, { msg => "entry '@{[$bibentry->key]}' is missing required field '${bibfield}'" };
+        }
+      }
+
+      # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
       foreach my $bibfield ($bibentry->fieldlist()) {
         if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
           push @errors, { msg => "entry '@{[$bibentry->key]}' contains possibly duplicate fields '${bibfield}' and '${bibfield}s'" };
