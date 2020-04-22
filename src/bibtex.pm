@@ -161,8 +161,13 @@ sub read_bib_from_pdf {
 
     # convert BibTeX XML (if any) to parsed BibTeX entry
     my $bibstr = '@article{key,}';
+    my $xml = "";
     if (length($xmp) > 0) {
-      my $xml = XML::LibXML->load_xml(string => $xmp);
+      eval {
+        $xml = XML::LibXML->load_xml(string => $xmp);
+      };
+    }
+    if (length($xml) > 0) {
       my $xslt = XML::LibXSLT->new();
       my $xsltstylesrc = XML::LibXML->load_xml(location => $xsltbibtex);
       my $xsltstyle = $xslt->parse_stylesheet($xsltstylesrc);
