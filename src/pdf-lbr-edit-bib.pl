@@ -93,8 +93,8 @@ generate_bib_keys(@bibentries);
 # write BibTeX entries to PDF metadata; return modified BibTeX entries
 @bibentries = write_bib_to_pdf(@bibentries);
 
-# ensure all PDF files are part of library; return PDF files which have been added
-@bibentries = update_pdf_lib(@bibentries);
+# ensure all PDF files are part of library
+update_pdf_lib(@bibentries);
 
 # update links in PDF links directory to real PDF files
 make_pdf_links(@bibentries);

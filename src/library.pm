@@ -43,14 +43,14 @@ sub update_pdf_lib {
   return unless @bibentries > 0;
 
   # add PDF files in BibTeX entries to PDF library
-  my @newbibentries;
+  my $newbibentries = 0;
   foreach my $bibentry (@bibentries) {
 
     # get name of PDF file
     my $pdffile = $bibentry->get('file');
 
     # record which PDF files are new to the library
-    push @newbibentries, $bibentry unless is_in_dir($pdffiledir, $pdffile);
+    ++$newbibentries unless is_in_dir($pdffiledir, $pdffile);
 
     # compute checksum of BibTeX entry (except from PDF filename)
     my $checksum = bib_checksum($bibentry, 'file');
@@ -70,9 +70,8 @@ sub update_pdf_lib {
     $bibentry->set('file', $pdflibfile);
 
   }
-  printf STDERR "$Script: added %i PDF files to '$pdffiledir'\n", scalar(@newbibentries) if @newbibentries > 0;
+  printf STDERR "$Script: added %i PDF files to '$pdffiledir'\n", $newbibentries if $newbibentries > 0;
 
-  return @newbibentries;
 }
 
 sub make_pdf_links {
