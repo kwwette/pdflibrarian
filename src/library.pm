@@ -225,7 +225,7 @@ sub make_pdf_links {
         die unless defined($_) && $_ ne "";
         $_ = unidecode($_);
         s/[^-+.A-Za-z0-9]/_/g;
-        s/__+/_/g;
+        s/[-_][-_]+/_/g;
         s/^_+//;
         s/_+$//;
       }
