@@ -215,12 +215,26 @@ sub parallel_loop {
 sub remove_tex_markup {
   my (@words) = @_;
 
+  # save some TeX commands
+  my %saveTeX = (
+                 alpha  => "alpha",  beta   => "beta", gamma => "gamma", delta => "delta", epsilon => "epsilon",
+                 zeta   => "zeta",   eta    => "eta",  theta => "theta", iota  => "iota",  kappa   => "kappa",
+                 lambda => "lambda", mu     => "mu",   nu    => "nu",    xi    => "xi",    omicron => "omicron",
+                 pi     => "pi",     rho    => "rho",  sigma => "sigma", tau   => "tau",   upsilon => "upsilon",
+                 phi    => "phi",    chi    => "chi",  psi   => "psi",   omega => "omega",
+                 lt     => "<=",     gt     => ">=",   ll    => "<<",    gg    => ">>",
+                 sim    => "~",      approx => "~=",
+                );
+
   # remove TeX markup
   foreach (@words) {
     if (!defined($_)) {
       $_ = "";
     } else {
       s/~/ /g;
+      foreach my $t (keys %saveTeX) {
+        s/\\$t/$saveTeX{$t}/ig;
+      }
       s/\\\w+//g;
       s/\\.//g;
       s/[{}]//g;
