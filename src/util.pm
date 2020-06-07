@@ -99,18 +99,31 @@ sub open_pdf_file {
 
   if (!is_in_dir($pdffiledir, $pdffile)) {
 
-    # try to run ghostscript conversion on PDF file
-    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-    system($ghostscript, '-q', '-dSAFER', '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.4', '-o', $fh->filename, $pdffile) == 0 or croak "$Script: could not run ghostscript on '$pdffile'";
-
-    # try to open ghostscript-converted PDF file
+    # save XMP metadata
+    my $xmp = "";
     eval {
-      my $pdf = PDF::API2->open($fh->filename);
-      $pdf->end();
+      my $pdf = PDF::API2->open($pdffile);
+      $xmp = $pdf->xmpMetadata() // "";
       1;
     } or do {
       chomp(my $error = $@);
       croak "$Script: could not open PDF file '$pdffile': $error";
+    };
+
+    # try to run ghostscript conversion on PDF file
+    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
+    system("$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1") == 0 or croak "$Script: could not run ghostscript on '$pdffile'";
+
+    # try to open ghostscript-converted PDF file, and restore XMP metadaata
+    eval {
+      my $pdf = PDF::API2->open($fh->filename);
+      $pdf->xmpMetadata($xmp);
+      $pdf->update();
+      $pdf->end();
+      1;
+    } or do {
+      chomp(my $error = $@);
+      croak "$Script: could not open PDF file '@{[$fh->filename]}': $error";
     };
 
     # use converted PDF file
