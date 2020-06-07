@@ -217,13 +217,18 @@ sub remove_tex_markup {
 
   # save some TeX commands
   my %saveTeX = (
-                 alpha  => "alpha",  beta   => "beta", gamma => "gamma", delta => "delta", epsilon => "epsilon",
-                 zeta   => "zeta",   eta    => "eta",  theta => "theta", iota  => "iota",  kappa   => "kappa",
-                 lambda => "lambda", mu     => "mu",   nu    => "nu",    xi    => "xi",    omicron => "omicron",
-                 pi     => "pi",     rho    => "rho",  sigma => "sigma", tau   => "tau",   upsilon => "upsilon",
-                 phi    => "phi",    chi    => "chi",  psi   => "psi",   omega => "omega",
-                 lt     => "<=",     gt     => ">=",   ll    => "<<",    gg    => ">>",
-                 sim    => "~",      approx => "~=",
+                 Gamma      => "Gamma",      Delta  => "Delta", Theta   => "Theta",   Lambda  => "Lambda",
+                 Xi         => "Xi",         Pi     => "Pi",    Sigma   => "Sigma",   Upsilon => "Upsilon",
+                 Phi        => "Phi",        Psi    => "Psi",   Omega   => "Omega",   alpha   => "alpha",
+                 beta       => "beta",       gamma  => "gamma", delta   => "delta",   epsilon => "epsilon",
+                 varepsilon => "varepsilon", zeta   => "zeta",  eta     => "eta",     theta   => "theta",
+                 vartheta   => "vartheta",   iota   => "iota",  kappa   => "kappa",   lambda  => "lambda",
+                 mu         => "mu",         nu     => "nu",    xi      => "xi",      pi      => "pi",
+                 varpi      => "varpi",      rho    => "rho",   varrho  => "varrho",  sigma   => "sigma",
+                 varsigma   => "varsigma",   tau    => "tau",   upsilon => "upsilon", phi     => "phi",
+                 varphi     => "varphi",     chi    => "chi",   psi     => "psi",     omega   => "omega",
+                 lt         => "<=",         gt     => ">=",    ll      => "<<",      gg      => ">>",
+                 sim        => "~",          approx => "~=",
                 );
 
   # remove TeX markup
@@ -233,7 +238,7 @@ sub remove_tex_markup {
     } else {
       s/~/ /g;
       foreach my $t (keys %saveTeX) {
-        s/\\$t/$saveTeX{$t}/ig;
+        s/\\$t/$saveTeX{$t}/g;
       }
       s/\\\w+//g;
       s/\\.//g;
