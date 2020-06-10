@@ -233,9 +233,10 @@ sub write_bib_to_fh {
     foreach my $bibfield ($bibentry->fieldlist()) {
       if ($bibfield =~ /title$/) {
         my $title = $bibentry->get($bibfield);
-        $title =~ s/^{*/{/;
-        $title =~ s/}*$/}/;
-        $bibentry->set($bibfield, $title);
+        while ($title =~ s{^\{(.*?(\{(?:(?>[^{}]+)|(?2))*\}.*?)*)\}$}{$1}) {
+          next;
+        }
+        $bibentry->set($bibfield, "{$title}");
       }
     }
 
