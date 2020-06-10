@@ -104,6 +104,7 @@ sub read_bib_from_file {
   # parse the BibTeX file, capturing any error messages
   my $errmsgs;
   {
+    croak "$Script: file '$filename' does not exist" unless -r $filename;
     my $bib = new Text::BibTeX::File $filename or croak "$Script: could not open file '$filename'";
     $bib->{structure} = $structure;
     $errmsgs = Capture::Tiny::capture_merged {
