@@ -240,6 +240,21 @@ sub write_bib_to_fh {
       }
     }
 
+    # merge BibTeX field names which differ by 's', e.g. 'keyword' and 'keywords'
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
+        my $bibfieldvalue = $bibentry->get($bibfield);
+        my $bibfieldsvalue = $bibentry->get($bibfield . "s");
+        if ($bibfieldvalue eq "") {
+          $bibfieldvalue = $bibfieldsvalue;
+        } else if ($bibfieldsvalue ne "") {
+          $bibfieldvalue .= ", " . $bibfieldsvalue;
+        }
+        $bibentry->set($bibfield, $bibfieldvalue);
+        $bibentry->delete($bibfield . "s");
+      }
+    }
+
     # arrange BibTeX fields in the following order
     my %order;
     my $orderidx;
@@ -497,7 +512,7 @@ EOF
       # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
       foreach my $bibfield ($bibentry->fieldlist()) {
         if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
-          push @errors, { msg => "entry '@{[$bibentry->key]}' contains possibly duplicate fields '${bibfield}' and '${bibfield}s'" };
+          push @errors, { msg => "entry '@{[$bibentry->key]}' contains duplicate fields '${bibfield}' and '${bibfield}s'" };
         }
       }
     }
