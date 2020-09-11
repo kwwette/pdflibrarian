@@ -247,7 +247,7 @@ sub write_bib_to_fh {
         my $bibfieldsvalue = $bibentry->get($bibfield . "s");
         if ($bibfieldvalue eq "") {
           $bibfieldvalue = $bibfieldsvalue;
-        } else if ($bibfieldsvalue ne "") {
+        } elsif ($bibfieldsvalue ne "") {
           $bibfieldvalue .= ", " . $bibfieldsvalue;
         }
         $bibentry->set($bibfield, $bibfieldvalue);
