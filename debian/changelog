@@ -1,3 +1,9 @@
+pdflibrarian (1.8.1-1) stable; urgency=low
+
+  * 1.8.1 release
+
+ -- Karl Wette <karl.wette@gmail.com>  Sat, 12 Sep 2020 02:08:14 +1000
+
 pdflibrarian (1.8-1) stable; urgency=low
 
   * 1.8 release
