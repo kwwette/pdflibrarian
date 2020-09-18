@@ -96,30 +96,46 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
   do {
 
     # ask user for query database and query text
-    ($query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
-    if (!defined($query_db_name)) {
+    my $query_action = '';
+    ($query_action, $query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
+
+    # take action
+    if ($query_action eq 'cancel') {
+
+      # cancel import of PDF
       kill_async $pid;
       print STDERR "$Script: import of PDF file '$pdffile' has been cancelled\n";
       next PDFFILE;
-    }
 
-    # run query command
-    my $query_cmd = File::Spec->catfile($bindir, sprintf("$query_databases{$query_db_name}", $query_value));
-    my $exit_status;
-    ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
-      system($query_cmd);
-      if ($? == -1) {
-        print STDERR "\n'$query_cmd' failed to execute: $!\n";
-      } elsif ($? & 127) {
-        printf STDERR "\n'$query_cmd' died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
-      } elsif ($? != 0) {
-        printf STDERR "\n'$query_cmd' exited with value %d\n", $? >> 8;
-      }
-    };
-    $bibstr =~ s/^\s+//;
-    $bibstr =~ s/\s+$//;
-    $error_message =~ s/^\s+//;
-    $error_message =~ s/\s+$//;
+    } elsif ($query_action eq 'manual') {
+
+      # manually enter BibTeX record
+      $bibstr = '@article{key,}';
+      $error_message = '';
+
+    } elsif ($query_action eq 'query') {
+
+      # run query of database with given query value
+      my $query_cmd = File::Spec->catfile($bindir, sprintf("$query_databases{$query_db_name}", $query_value));
+      my $exit_status;
+      ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
+        system($query_cmd);
+        if ($? == -1) {
+          print STDERR "\n'$query_cmd' failed to execute: $!\n";
+        } elsif ($? & 127) {
+          printf STDERR "\n'$query_cmd' died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
+        } elsif ($? != 0) {
+          printf STDERR "\n'$query_cmd' exited with value %d\n", $? >> 8;
+        }
+      };
+      $bibstr =~ s/^\s+//;
+      $bibstr =~ s/\s+$//;
+      $error_message =~ s/^\s+//;
+      $error_message =~ s/\s+$//;
+
+    } else {
+      croak "$Script: invalid action '$query_action'";
+    }
 
   } while ($error_message ne '');
 

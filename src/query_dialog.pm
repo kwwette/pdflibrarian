@@ -23,7 +23,7 @@ use warnings;
 package pdflibrarian::query_dialog::dialog;
 
 use Wx qw(:dialog :statictext :combobox :textctrl :sizer :panel :window :id);
-use Wx::Event qw(EVT_TEXT EVT_TEXT_ENTER);
+use Wx::Event qw(EVT_BUTTON EVT_TEXT EVT_TEXT_ENTER);
 
 use base qw(Wx::Dialog);
 
@@ -54,8 +54,6 @@ $error_message
 
 Please correct the query value and/or select a different online database, and try again.
 
-Please press the 'Run Query' button (or the Enter key) when ready to run the query, or else the 'Cancel Query' button (or the Esc key) to cancel the import of the PDF paper.
-
 EOM
   } else {
     $message = <<"EOM";
@@ -67,10 +65,12 @@ in order to import the file into the PDF library.
 
 Please select the online database below, and supply a query value which uniquely identified the paper. By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper for use in the query, but this may well be incorrect and therefore should be double-checked.
 
-Please press the 'Run Query' button (or the Enter key) when ready to run the query, or else the 'Cancel Query' button (or the Esc key) to cancel the import of the PDF paper.
-
 EOM
   }
+  $message .= <<"EOM";
+Please press the 'Run Query' button (or the Enter key) when ready to run the query; press the 'Manual Entry' button to manually enter the BibTeX record; or press the 'Cancel Import' button (or the Esc key) to cancel the import of the PDF paper.
+
+EOM
   $topsizer->Add(Wx::StaticText->new($panel, -1, $message, [-1, -1], [500, 300]), 1, wxEXPAND | wxALL, 10);
 
   # add read-only combo box for query database
@@ -86,7 +86,9 @@ EOM
   my $buttonsizer = Wx::BoxSizer->new(wxHORIZONTAL);
   $buttonok = Wx::Button->new($panel, wxID_OK, 'Run Query');
   $buttonsizer->Add($buttonok, 0, wxALL, 10);
-  my $buttoncancel = Wx::Button->new($panel, wxID_CANCEL, 'Cancel Query');
+  my $buttonmanual = Wx::Button->new($panel, wxID_EDIT, 'Manual Entry');
+  $buttonsizer->Add($buttonmanual, 0, wxALL, 10);
+  my $buttoncancel = Wx::Button->new($panel, wxID_CANCEL, 'Cancel Import');
   $buttonsizer->Add($buttoncancel, 0, wxALL, 10);
 
   # add buttons to sizer
@@ -98,6 +100,7 @@ EOM
   $self->SetSizerAndFit($mainsizer);
 
   # register events
+  EVT_BUTTON($self, $buttonmanual, \&on_manual);
   EVT_TEXT($self, $query_db_name_combo, \&on_text);
   EVT_TEXT($self, $query_value_combo, \&on_text);
   EVT_TEXT_ENTER($self, $query_db_name_combo, \&on_enter);
@@ -137,6 +140,13 @@ sub on_enter {
   my ($self, $event) = @_;
 
   $self->EndModal(wxID_OK);
+
+}
+
+sub on_manual {
+  my ($self, $event) = @_;
+
+  $self->EndModal(wxID_EDIT);
 
 }
 
@@ -214,12 +224,16 @@ sub do_query_dialog {
 
   # show dialog
   my $dialog = pdflibrarian::query_dialog::dialog->new($pdffile, $query_db_name, $query_value, $query_values, $error_message);
-  if ($dialog->ShowModal() == wxID_OK) {
+  my $ui = $dialog->ShowModal();
 
-    # query database and query value
-    ($ui_query_db_name, $ui_query_value) = $dialog->get_data();
+  # cancel import of PDF
+  return ('cancel', undef, undef) if $ui == wxID_CANCEL;
 
-  }
+  # manually enter BibTeX record
+  return ('manual', undef, undef) if $ui == wxID_EDIT;
 
-  return ($ui_query_db_name, $ui_query_value);
+  # run query of database with given query value
+  ($ui_query_db_name, $ui_query_value) = $dialog->get_data();
+  return ('query', $ui_query_db_name, $ui_query_value);
+
 }
