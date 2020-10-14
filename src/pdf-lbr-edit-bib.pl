@@ -65,15 +65,15 @@ GetOptions(
           ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
-# get list of PDF links
-my @pdflinks = find_pdf_files(@ARGV);
-croak "$Script: no PDF files to edit" unless @pdflinks > 0;
-for my $pdflink (@pdflinks) {
-  croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdflinkdir, $pdflink);
+# get list of PDF files
+my @pdffiles = find_pdf_files(@ARGV);
+croak "$Script: no PDF files to edit" unless @pdffiles > 0;
+for my $pdffile (@pdffiles) {
+  croak "$Script: '$pdffile' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
 }
 
 # read BibTeX entries from PDF metadata
-my @bibentries = read_bib_from_pdf(@pdflinks);
+my @bibentries = read_bib_from_pdf(@pdffiles);
 
 # generate initial keys for BibTeX entries
 generate_bib_keys(@bibentries);
