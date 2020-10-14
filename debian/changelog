@@ -1,3 +1,9 @@
+pdflibrarian (2.1-1) stable; urgency=low
+
+  * 2.1 release
+
+ -- Karl Wette <karl.wette@gmail.com>  Wed, 14 Oct 2020 17:09:04 +1100
+
 pdflibrarian (2.0-1) stable; urgency=low
 
   * 2.0 release
