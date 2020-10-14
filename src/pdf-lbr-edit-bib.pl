@@ -27,9 +27,10 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
+use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::util qw(unique_list find_pdf_files);
+use pdflibrarian::util qw(is_in_dir unique_list find_pdf_files);
 
 =pod
 
@@ -41,11 +42,11 @@ B<pdf-lbr-edit-bib> - Edit BibTeX bibliographic metadata in PDF files.
 
 B<pdf-lbr-edit-bib> B<--help>|B<-h>
 
-B<pdf-lbr-edit-bib> I<files>|I<directories> ...
+B<pdf-lbr-edit-bib> I<links>|I<link-directories> ...
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-edit-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
+B<pdf-lbr-edit-bib> reads BibTeX bibliographic metadata embedded in PDF files given by I<links> and/or within I<link-directories> in the PDF links directory.
 
 The BibTeX metadata is written to a temporary file, which is then opened in an editing program, given either by the B<$VISUAL> or B<$EDITOR> environment variables, or else the program B<@fallback_editor@>.
 
@@ -64,12 +65,15 @@ GetOptions(
           ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
-# get list of PDF files
-my @pdffiles = find_pdf_files(@ARGV);
-croak "$Script: no PDF files to edit" unless @pdffiles > 0;
+# get list of PDF links
+my @pdflinks = find_pdf_files(@ARGV);
+croak "$Script: no PDF files to edit" unless @pdflinks > 0;
+for my $pdflink (@pdflinks) {
+  croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdflinkdir, $pdflink);
+}
 
 # read BibTeX entries from PDF metadata
-my @bibentries = read_bib_from_pdf(@pdffiles);
+my @bibentries = read_bib_from_pdf(@pdflinks);
 
 # generate initial keys for BibTeX entries
 generate_bib_keys(@bibentries);
