@@ -45,13 +45,13 @@ B<pdf-lbr-replace-pdf> - Replace a PDF file in the PDF library with a new PDF fi
 
 B<pdf-lbr-replace-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-replace-pdf> I<old-link> I<new-file>
+B<pdf-lbr-replace-pdf> [-o I<output-directory>] I<old-link> I<new-file>
 
 =head1 DESCRIPTION
 
 B<pdf-lbr-replace-pdf> replaces a PDF file, given by a I<old-link> in the PDF links directory, with a new PDF I<file>.
 
-The replaced PDF file is moved to the current directory.
+The replaced PDF file is moved to the directory I<output-directory>, or else to the user's home directory.
 
 =head1 PART OF
 
@@ -60,13 +60,16 @@ PDF Librarian, version @VERSION@.
 =cut
 
 # handle help options
-my ($help);
+my ($help, $outdir);
 GetOptions(
            "help|h" => \$help,
+           "output-directory|o=s" => \$outdir,
           ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
+$outdir = $ENV{HOME} unless defined($outdir);
 
 # check input
+croak "$Script: '$outdir' is not a directory" unless -d $outdir;
 croak "$Script: requires two arguments" unless @ARGV == 2;
 my $linkpath = $ARGV[0];
 croak "$Script: '$linkpath' is not in the PDF library" unless is_in_dir($pdflinkdir, $linkpath);
@@ -81,9 +84,9 @@ croak "$Script: '$linkpath' is not in the PDF library" unless is_in_dir($pdffile
 # read BibTeX entry from PDF metadata
 my @bibentry = read_bib_from_pdf($pdffile);
 
-# move old PDF file to current directory, with same name as link
+# move old PDF file to output directory, with same name as link
 my ($linkvol, $linkdir, $linkfile) = File::Spec->splitpath($linkpath);
-my $removedpdffile = File::Spec->catfile(File::Spec->curdir(), $linkfile);
+my $removedpdffile = File::Spec->catfile($outdir, $linkfile);
 move($pdffile, $removedpdffile) or croak "$Script: could not move '$pdffile' to '$removedpdffile': $!";
 print STDERR "$Script: removed PDF file to '$removedpdffile'\n";
 
