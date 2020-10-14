@@ -28,7 +28,7 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys read_bib_from_pdf write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
@@ -109,8 +109,12 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
 
     } elsif ($query_action eq 'manual') {
 
-      # manually enter BibTeX record
+      # try to read existing BibTeX entry from PDF metadata, or else return a blank entry
       $bibstr = '@article{key,}';
+      eval {
+        my @bibentries = read_bib_from_pdf($pdffile);
+        $bibstr = $bibentries[0]->print_s();
+      };
       $error_message = '';
 
     } elsif ($query_action eq 'query') {
