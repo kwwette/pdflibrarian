@@ -203,6 +203,10 @@ sub write_bib_to_fh {
   die unless defined($opts->{fh});
   my $fh = $opts->{fh};
 
+  # check options
+  $opts->{max_authors} = 0 unless defined($opts->{max_authors});
+  $opts->{only_first_author} = 0 unless defined($opts->{only_first_author});
+
   # print and format BibTeX entries
   for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
 
@@ -272,6 +276,16 @@ sub write_bib_to_fh {
             $author = join(",", @parts);
 
           }
+        }
+
+        # truncate author list
+        if ($opts->{max_authors} > 0 && @authors > $opts->{max_authors}) {
+          if ($opts->{only_first_author}) {
+            @authors = ($authors[0]);
+          } else {
+            @authors = @authors[0 .. ($opts->{max_authors} - 1)];
+          }
+          push @authors, "others";
         }
 
         # set BibTeX field to concatenated authors

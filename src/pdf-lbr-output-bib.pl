@@ -41,7 +41,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
@@ -52,6 +52,18 @@ The BibTeX metadata is then printed to standard output.
 =head1 OPTIONS
 
 =over 4
+
+=item B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ]
+
+If the number of authors is greater than I<count>, and
+
+=over 4
+
+=item * If B<--only-first-author> is given, output only the first author, followed by "and others".
+
+=item * Otherwise, output the first I<count> authors, followed by "and others".
+
+=back
 
 =item B<--exclude>|B<-e> I<field>
 
@@ -74,14 +86,18 @@ PDF Librarian, version @VERSION@.
 =cut
 
 # handle help options
-my ($help, @exclude, $no_exclude, %set);
+my ($help, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
+$max_authors = 0;
 GetOptions(
            "help|h" => \$help,
+           "max-authors|m=i" => \$max_authors,
+           "only-first-author|f" => \$only_first_author,
            "exclude|e=s" => \@exclude,
            "no-exclude|E" => \$no_exclude,
            "set|s=s" => \%set,
           ) or croak "$Script: could not parse options";
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
+croak "$Script: --max-authors must be positive" if $max_authors < 0;
 croak "$Script: --exclude and --no-exclude are mutually exclusive" if (@exclude > 0 and $no_exclude);
 
 # get list of PDF files
@@ -118,6 +134,6 @@ my @dupkeys = find_dup_bib_keys(@bibentries);
 croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
 
 # print BibTeX entries
-write_bib_to_fh(\*STDOUT, @bibentries);
+write_bib_to_fh { fh => \*STDOUT, max_authors => $max_authors, only_first_author => $only_first_author }, @bibentries;
 
 exit 0;
