@@ -29,9 +29,9 @@ use File::Temp;
 use FindBin qw($Script);
 use List::Util qw(max);
 use Scalar::Util qw(blessed);
+use Text::BibTeX qw(:nameparts :joinmethods);
 use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
-use Text::BibTeX;
 use Text::Unidecode;
 use Text::Wrap;
 use XML::LibXML;
@@ -222,6 +222,59 @@ sub write_bib_to_fh {
         }
         $bibentry->set($bibfield, $bibfieldvalue);
         $bibentry->delete($bibfield . "s");
+      }
+    }
+
+    # uniformly format authors, editors, and collaborations
+    foreach my $bibfield (qw(author editor collaboration)) {
+      if ($bibentry->exists($bibfield)) {
+
+        # determine author format
+        my $authorformat;
+        if ($bibfield eq "collaboration") {
+          $authorformat = new Text::BibTeX::NameFormat("l");
+          $authorformat->set_text(BTN_LAST, "{", "}", undef, undef);
+        } else {
+          $authorformat = new Text::BibTeX::NameFormat("vljf");
+          $authorformat->set_text(BTN_LAST, "{", "}", undef, undef);
+          $authorformat->set_text(BTN_FIRST, undef, undef, undef, ".");
+          $authorformat->set_options(BTN_FIRST, 1, BTJ_FORCETIE, BTJ_SPACE);
+        }
+
+        # iterate over authors
+        my @authors = $bibentry->split($bibfield);
+        foreach my $author (@authors) {
+
+          # sanitise author string
+          $author =~ s/~/ /g;
+          $author =~ s/\.\s-/.-/g;
+          $author =~ s/\bet\sal\.?/others/;
+
+          if ($author ne "others") {
+
+            # format author
+            $author = Text::BibTeX::Name->new($author);
+            $author = $authorformat->apply($author);
+
+            # use braces around special character commands
+            $author =~ s/\\(\W)(\w)/\{\\$1$2\}/g;
+            $author =~ s/\\(\w+)\s+(\w)/\\$1\{$2\}/g;
+
+            # remove duplicate braces
+            my @parts = split(",", $author);
+            foreach my $part (@parts) {
+              while ($part =~ s{\{\{(.*?(\{(?:(?>[^{}]+)|(?2))*\}.*?)*)\}\}}{\{$1\}}) {
+                next;
+              }
+            }
+            $author = join(",", @parts);
+
+          }
+        }
+
+        # set BibTeX field to concatenated authors
+        $bibentry->set($bibfield, join(" and ", @authors));
+
       }
     }
 
