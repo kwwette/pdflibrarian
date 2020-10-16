@@ -87,7 +87,7 @@ sub read_bib_from_file {
   @$errors = ();
   @$bibentries = ();
 
-  # check that the file contains non-comment, non-enpty lines
+  # check that the file contains non-comment, non-empty lines
   {
     my $nonempty = 1;
     open(my $fh, $filename) or croak "$Script: could not open file '$filename': $!";
