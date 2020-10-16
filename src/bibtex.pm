@@ -201,7 +201,7 @@ sub read_bib_from_pdf {
 sub write_bib_to_fh {
   my ($fh, @bibentries) = @_;
 
-  # print BibTeX entries
+  # print and format BibTeX entries
   for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
 
     # create a copy of BibTeX entry
@@ -472,6 +472,8 @@ sub edit_bib_in_fh {
   my @errors;
   while (1) {
 
+  while (1) {
+
     # open new temporary file for editing BibTeX entries
     my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
     binmode($fh, ":encoding(iso-8859-1)");
@@ -579,6 +581,27 @@ EOF
 
     # BibTeX entries have been successfully read
     last if @errors == 0;
+
+  }
+
+  {
+    # open new temporary file for editing BibTeX entries
+    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
+    binmode($fh, ":encoding(iso-8859-1)");
+
+    # print and format BibTeX entries with write_bib_to_fh()
+    write_bib_to_fh $fh, @bibentries;
+    $fh->flush();
+
+    # save handle to new temporary file; old temporary file is deleted
+    $oldfh = $fh;
+
+    # try to re-read BibTeX entries
+    read_bib_from_file(\@errors, \@bibentries, $fh->filename);
+  }
+
+  # BibTeX entries have been successfully read
+  last if @errors == 0;
 
   }
 
