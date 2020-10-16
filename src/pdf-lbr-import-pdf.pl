@@ -163,7 +163,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     $bibentry->silently_coerce();
 
     # write BibTeX entry
-    write_bib_to_fh($fh, ($bibentry));
+    write_bib_to_fh { fh => $fh }, $bibentry;
     $havebibstr = 1;
 
   } else {

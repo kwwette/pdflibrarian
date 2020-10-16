@@ -86,7 +86,7 @@ foreach my $bibentry (@bibentries) {
 # write BibTeX entries to a temporary file for editing
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
-write_bib_to_fh($fh, @bibentries);
+write_bib_to_fh { fh => $fh }, @bibentries;
 
 # edit BibTeX entries in PDF files
 @bibentries = edit_bib_in_fh($fh, @bibentries);

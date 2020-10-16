@@ -199,7 +199,9 @@ sub read_bib_from_pdf {
 }
 
 sub write_bib_to_fh {
-  my ($fh, @bibentries) = @_;
+  my ($opts, @bibentries) = @_;
+  die unless defined($opts->{fh});
+  my $fh = $opts->{fh};
 
   # print and format BibTeX entries
   for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
@@ -590,7 +592,7 @@ EOF
       binmode($fh, ":encoding(iso-8859-1)");
 
       # print and format BibTeX entries with write_bib_to_fh()
-      write_bib_to_fh $fh, @bibentries;
+      write_bib_to_fh { fh => $fh }, @bibentries;
       $fh->flush();
 
       # save handle to new temporary file; old temporary file is deleted
