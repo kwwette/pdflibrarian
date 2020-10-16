@@ -472,136 +472,136 @@ sub edit_bib_in_fh {
   my @errors;
   while (1) {
 
-  while (1) {
+    while (1) {
 
-    # open new temporary file for editing BibTeX entries
-    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
-    binmode($fh, ":encoding(iso-8859-1)");
+      # open new temporary file for editing BibTeX entries
+      my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
+      binmode($fh, ":encoding(iso-8859-1)");
 
-    # write header message
-    if (@errors > 0) {
-      print $fh wrap("% ", "% ", <<"EOF");
+      # write header message
+      if (@errors > 0) {
+        print $fh wrap("% ", "% ", <<"EOF");
 $PACKAGE_NAME has encountered several errors in parsing the following BibTeX records. These errors are indicated with comments next to the line where the errors occurred.
 
 All errors MUST be corrected before the BibTeX records can be written back to the PDF file given by the 'file' field in each record.
 
 To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
-    } else {
-      print $fh wrap("% ", "% ", <<"EOF");
+      } else {
+        print $fh wrap("% ", "% ", <<"EOF");
 $PACKAGE_NAME has extracted the following BibTeX records for editing. Any changes to the records will be written back to the PDF file given by the 'file' field in each record.
 
 To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
-    }
-    print $fh "\n";
-
-    # build hash of errors by line number
-    my %errorsbyline;
-    foreach (@errors) {
-      if (defined($_->{from})) {
-        push @{$errorsbyline{$_->{from}}}, $_->{msg};
-      } else {
-        push @{$errorsbyline{0}}, $_->{msg};
       }
-    }
-
-    # write any error messages without line numbers
-    if (defined($errorsbyline{0})) {
-      foreach (@{$errorsbyline{0}}) {
-        print $fh "% ERROR: $_\n";
-      }
-      delete $errorsbyline{0};
       print $fh "\n";
-    }
 
-    # write contents of old temporary file, with any error messages inline
-    $oldfh->flush();
-    $oldfh->seek(0, SEEK_SET);
-    while (<$oldfh>) {
-      chomp;
-      my $line = sprintf("%i", $oldfh->input_line_number);
-      foreach (@{$errorsbyline{$line}}) {
-        print $fh "% ERROR: $_\n";
+      # build hash of errors by line number
+      my %errorsbyline;
+      foreach (@errors) {
+        if (defined($_->{from})) {
+          push @{$errorsbyline{$_->{from}}}, $_->{msg};
+        } else {
+          push @{$errorsbyline{0}}, $_->{msg};
+        }
       }
-      delete $errorsbyline{$line};
-      s/\s+$//;
-      next if /^%/;
-      next if /^$/;
-      print $fh "$_\n";
-      if (/^}$/) {
+
+      # write any error messages without line numbers
+      if (defined($errorsbyline{0})) {
+        foreach (@{$errorsbyline{0}}) {
+          print $fh "% ERROR: $_\n";
+        }
+        delete $errorsbyline{0};
         print $fh "\n";
       }
-    }
-    $fh->flush();
 
-    # write any remaining error messages
-    foreach (keys %errorsbyline) {
-      foreach (@{$errorsbyline{$_}}) {
-        print $fh "% ERROR: $_\n";
+      # write contents of old temporary file, with any error messages inline
+      $oldfh->flush();
+      $oldfh->seek(0, SEEK_SET);
+      while (<$oldfh>) {
+        chomp;
+        my $line = sprintf("%i", $oldfh->input_line_number);
+        foreach (@{$errorsbyline{$line}}) {
+          print $fh "% ERROR: $_\n";
+        }
+        delete $errorsbyline{$line};
+        s/\s+$//;
+        next if /^%/;
+        next if /^$/;
+        print $fh "$_\n";
+        if (/^}$/) {
+          print $fh "\n";
+        }
       }
-    }
+      $fh->flush();
 
-    # print index of all currently-defined keywords
-    print $fh keyword_display_str();
-
-    # save handle to new temporary file; old temporary file is deleted
-    $oldfh = $fh;
-
-    # edit BibTeX entries
-    my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
-    system($editor, $fh->filename) == 0 or croak "$Script: could not edit file '$fh->filename' with editing program '$editor'";
-
-    # try to re-read BibTeX entries
-    read_bib_from_file(\@errors, \@bibentries, $fh->filename);
-
-    # error if duplicate BibTeX keys are found
-    foreach my $dupkey (find_dup_bib_keys(@bibentries)) {
-      push @errors, { msg => "duplicated key '$dupkey'" };
-    }
-
-    foreach my $bibentry (@bibentries) {
-
-      # error if required fields are empty
-      foreach my $bibfield ($structure->required_fields($bibentry->type)) {
-        my $bibfieldvalue = $bibentry->get($bibfield) // "";
-        $bibfieldvalue =~ s/[{}]//g;
-        if ($bibfieldvalue eq "") {
-          push @errors, { msg => "entry '@{[$bibentry->key]}' is missing required field '${bibfield}'" };
+      # write any remaining error messages
+      foreach (keys %errorsbyline) {
+        foreach (@{$errorsbyline{$_}}) {
+          print $fh "% ERROR: $_\n";
         }
       }
 
-      # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
-      foreach my $bibfield ($bibentry->fieldlist()) {
-        if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
-          push @errors, { msg => "entry '@{[$bibentry->key]}' contains duplicate fields '${bibfield}' and '${bibfield}s'" };
+      # print index of all currently-defined keywords
+      print $fh keyword_display_str();
+
+      # save handle to new temporary file; old temporary file is deleted
+      $oldfh = $fh;
+
+      # edit BibTeX entries
+      my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
+      system($editor, $fh->filename) == 0 or croak "$Script: could not edit file '$fh->filename' with editing program '$editor'";
+
+      # try to re-read BibTeX entries
+      read_bib_from_file(\@errors, \@bibentries, $fh->filename);
+
+      # error if duplicate BibTeX keys are found
+      foreach my $dupkey (find_dup_bib_keys(@bibentries)) {
+        push @errors, { msg => "duplicated key '$dupkey'" };
+      }
+
+      foreach my $bibentry (@bibentries) {
+
+        # error if required fields are empty
+        foreach my $bibfield ($structure->required_fields($bibentry->type)) {
+          my $bibfieldvalue = $bibentry->get($bibfield) // "";
+          $bibfieldvalue =~ s/[{}]//g;
+          if ($bibfieldvalue eq "") {
+            push @errors, { msg => "entry '@{[$bibentry->key]}' is missing required field '${bibfield}'" };
+          }
+        }
+
+        # error if BibTeX entries contain field names which differ by 's', e.g. 'keyword' and 'keywords'
+        foreach my $bibfield ($bibentry->fieldlist()) {
+          if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
+            push @errors, { msg => "entry '@{[$bibentry->key]}' contains duplicate fields '${bibfield}' and '${bibfield}s'" };
+          }
         }
       }
+
+      # BibTeX entries have been successfully read
+      last if @errors == 0;
+
+    }
+
+    {
+      # open new temporary file for editing BibTeX entries
+      my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
+      binmode($fh, ":encoding(iso-8859-1)");
+
+      # print and format BibTeX entries with write_bib_to_fh()
+      write_bib_to_fh $fh, @bibentries;
+      $fh->flush();
+
+      # save handle to new temporary file; old temporary file is deleted
+      $oldfh = $fh;
+
+      # try to re-read BibTeX entries
+      read_bib_from_file(\@errors, \@bibentries, $fh->filename);
     }
 
     # BibTeX entries have been successfully read
     last if @errors == 0;
-
-  }
-
-  {
-    # open new temporary file for editing BibTeX entries
-    my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
-    binmode($fh, ":encoding(iso-8859-1)");
-
-    # print and format BibTeX entries with write_bib_to_fh()
-    write_bib_to_fh $fh, @bibentries;
-    $fh->flush();
-
-    # save handle to new temporary file; old temporary file is deleted
-    $oldfh = $fh;
-
-    # try to re-read BibTeX entries
-    read_bib_from_file(\@errors, \@bibentries, $fh->filename);
-  }
-
-  # BibTeX entries have been successfully read
-  last if @errors == 0;
 
   }
 
