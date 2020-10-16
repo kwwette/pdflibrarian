@@ -210,6 +210,21 @@ sub write_bib_to_fh {
     # remove checksum before printing
     $bibentry->delete('checksum');
 
+    # merge BibTeX field names which differ by 's', e.g. 'keyword' and 'keywords'
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
+        my $bibfieldvalue = $bibentry->get($bibfield);
+        my $bibfieldsvalue = $bibentry->get($bibfield . "s");
+        if ($bibfieldvalue eq "") {
+          $bibfieldvalue = $bibfieldsvalue;
+        } elsif ($bibfieldsvalue ne "") {
+          $bibfieldvalue .= ", " . $bibfieldsvalue;
+        }
+        $bibentry->set($bibfield, $bibfieldvalue);
+        $bibentry->delete($bibfield . "s");
+      }
+    }
+
     # regularise BibTeX 'month' field
     my $month = $bibentry->get('month');
     if (defined($month)) {
@@ -237,21 +252,6 @@ sub write_bib_to_fh {
           next;
         }
         $bibentry->set($bibfield, "{$title}");
-      }
-    }
-
-    # merge BibTeX field names which differ by 's', e.g. 'keyword' and 'keywords'
-    foreach my $bibfield ($bibentry->fieldlist()) {
-      if ($bibentry->exists($bibfield) && $bibentry->exists($bibfield . "s")) {
-        my $bibfieldvalue = $bibentry->get($bibfield);
-        my $bibfieldsvalue = $bibentry->get($bibfield . "s");
-        if ($bibfieldvalue eq "") {
-          $bibfieldvalue = $bibfieldsvalue;
-        } elsif ($bibfieldsvalue ne "") {
-          $bibfieldvalue .= ", " . $bibfieldsvalue;
-        }
-        $bibentry->set($bibfield, $bibfieldvalue);
-        $bibentry->delete($bibfield . "s");
       }
     }
 
