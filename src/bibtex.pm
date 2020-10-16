@@ -255,6 +255,13 @@ sub write_bib_to_fh {
       }
     }
 
+    # escape some special characters
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      my $bibfieldvalue = $bibentry->get($bibfield);
+      $bibfieldvalue =~ s{\\*&}{\\&}g;
+      $bibentry->set($bibfield, $bibfieldvalue);
+    }
+
     # arrange BibTeX fields in the following order
     my %order;
     my $orderidx;
