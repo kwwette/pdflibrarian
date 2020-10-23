@@ -50,6 +50,24 @@ foreach my $type ($structure->types()) {
   $structure->set_fields($type, \@required_fields, \@optional_fields);
 }
 
+# BibTeX field order
+my @fieldorder = qw (
+                      keyword
+                      title
+                      key author collaboration
+                      journal school institution type
+                      editor booktitle edition series
+                      volume number issue chapter pages eid numpages
+                      month year
+                      publisher organization address isbn issn
+                      howpublished
+                      doi
+                      archiveprefix primaryclass eprint
+                      url adsurl
+                      note annote comments
+                      abstract
+                   );
+
 1;
 
 sub bib_checksum {
@@ -348,20 +366,10 @@ sub write_bib_to_fh {
     # arrange BibTeX fields in the following order
     my %order;
     my $orderidx;
-    foreach my $bibfield (
-                          qw(keyword),
-                          $structure->required_fields($bibentry->type),
-                          $structure->optional_fields($bibentry->type),
-                          qw(eid doi archiveprefix primaryclass eprint),
-                          sort { $a cmp $b } $bibentry->fieldlist()
-                         ) {
+    foreach my $bibfield (@fieldorder, sort { $a cmp $b } $bibentry->fieldlist()) {
       $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield) && !defined($order{$bibfield});
     }
-    foreach my $bibfield (
-                          qw(abstract comments file)
-                         ) {
-      $order{$bibfield} = ++$orderidx if $bibentry->exists($bibfield);
-    }
+    $order{'file'} = ++$orderidx if $bibentry->exists('file');
     my @fieldlist = sort { $order{$a} <=> $order{$b} } keys(%order);
     $bibentry->set_fieldlist(\@fieldlist);
 
