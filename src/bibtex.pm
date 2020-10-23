@@ -45,7 +45,7 @@ our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_f
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
 foreach my $type ($structure->types()) {
-  my @required_fields = sort(unique_list($structure->required_fields($type), qw(keyword file title year)));
+  my @required_fields = sort(unique_list($structure->required_fields($type), qw(keyword title year file)));
   my @optional_fields = sort(unique_list($structure->optional_fields($type), qw(collaboration)));
   $structure->set_fields($type, \@required_fields, \@optional_fields);
 }
