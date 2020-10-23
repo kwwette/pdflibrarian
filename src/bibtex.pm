@@ -324,6 +324,20 @@ sub write_bib_to_fh {
       }
     }
 
+    # set BibTeX 'url' field
+    if ($bibentry->exists('doi')) {
+      my $doi = $bibentry->get('doi');
+      my $url = "https://doi.org/$doi";
+      $bibentry->set('url', $url);
+    } elsif ($bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
+      my $archiveprefix = $bibentry->get('archiveprefix');
+      my $eprint = $bibentry->get('eprint');
+      if ($archiveprefix =~ /arxiv/i) {
+        my $url = "https://arxiv.org/abs/$eprint";
+        $bibentry->set('url', $url);
+      }
+    }
+
     # escape some special characters
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = $bibentry->get($bibfield);
