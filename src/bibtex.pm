@@ -34,6 +34,7 @@ use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
 use Text::Unidecode;
 use Text::Wrap;
+use URI::Encode qw(uri_encode uri_decode);
 use XML::LibXML;
 use XML::LibXSLT;
 
@@ -356,10 +357,21 @@ sub write_bib_to_fh {
       }
     }
 
-    # escape some special characters
+    # escape special characters
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = $bibentry->get($bibfield);
-      $bibfieldvalue =~ s{\\*&}{\\&}g;
+      if ($bibfield =~ /url$/) {
+
+        # encode special URL characters
+        $bibfieldvalue = uri_decode($bibfieldvalue);
+        $bibfieldvalue = uri_encode($bibfieldvalue, {encode_reserved => 0, double_encode => 0});
+
+      } else {
+
+        # escape special TeX characters
+        $bibfieldvalue =~ s{\\*&}{\\&}g;
+
+      }
       $bibentry->set($bibfield, $bibfieldvalue);
     }
 
