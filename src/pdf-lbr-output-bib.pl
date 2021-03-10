@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Clipboard;
 use FindBin qw($Script);
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
@@ -41,13 +42,13 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
 B<pdf-lbr-output-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
 
-The BibTeX metadata is then printed to standard output.
+The BibTeX metadata is then printed to standard output; if B<--clipboard> or B<-c> is given, it is instead copied to the clipboard.
 
 =head1 OPTIONS
 
@@ -67,11 +68,11 @@ If the number of authors is greater than I<count>, and
 
 =item B<--exclude>|B<-e> I<field>
 
-Exclude the BibTeX I<field> from the printed output. If not set, a default list of fields given in the configuration file is excluded.
+Exclude the BibTeX I<field> from the output. If not set, a default list of fields given in the configuration file is excluded.
 
 =item B<--no-exclude>|B<-E>
 
-Do not exclude any the BibTeX fields from the printed output.
+Do not exclude any the BibTeX fields from the output.
 
 =item B<--set>|B<-s> I<field>B<=>I<value> ...
 
@@ -86,10 +87,11 @@ PDF Librarian, version @VERSION@.
 =cut
 
 # handle help options
-my ($help, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
+my ($help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
 $max_authors = 0;
 GetOptions(
            "help|h" => \$help,
+           "clipboard|c" => \$clipboard,
            "max-authors|m=i" => \$max_authors,
            "only-first-author|f" => \$only_first_author,
            "exclude|e=s" => \@exclude,
@@ -112,7 +114,7 @@ if (!$no_exclude && @exclude == 0) {
   @exclude = @default_exclude;
 }
 if (@exclude > 0) {
-  printf STDERR "$Script: excluding BibTeX fields '%s' from printed output\n", join("', '", @exclude);
+  printf STDERR "$Script: excluding BibTeX fields '%s' from output\n", join("', '", @exclude);
 }
 
 foreach my $bibentry (@bibentries) {
@@ -133,7 +135,20 @@ foreach my $bibentry (@bibentries) {
 my @dupkeys = find_dup_bib_keys(@bibentries);
 croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
 
-# print BibTeX entries
-write_bib_to_fh { fh => \*STDOUT, max_authors => $max_authors, only_first_author => $only_first_author }, @bibentries;
+# write BibTeX entries to string
+my $bibstring = "";
+{
+  open(my $fh, "+<", \$bibstring);
+  write_bib_to_fh { fh => $fh, max_authors => $max_authors, only_first_author => $only_first_author }, @bibentries;
+  close($fh);
+}
+
+# output BibTeX entries
+if ($clipboard) {
+  Clipboard->copy_to_all_selections($bibstring);
+  printf STDERR "$Script: BibTeX metadata has been copied to the clipboard\n";
+} else {
+  print "$bibstring";
+}
 
 exit 0;

@@ -74,6 +74,7 @@ AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
 PDFLBR_CHECK_PERL_MODULE([CAM::PDF],[libcam-pdf-perl])
 PDFLBR_CHECK_PERL_MODULE([Capture::Tiny],[libcapture-tiny-perl])
 PDFLBR_CHECK_PERL_MODULE([Config::Simple],[libconfig-simple-perl])
+PDFLBR_CHECK_PERL_MODULE([Clipboard],[libclipboard-perl])
 PDFLBR_CHECK_PERL_MODULE([File::BaseDir],[libfile-basedir-perl])
 PDFLBR_CHECK_PERL_MODULE([File::MimeInfo],[libfile-mimeinfo-perl])
 PDFLBR_CHECK_PERL_MODULE([JSON],[libjson-perl])
