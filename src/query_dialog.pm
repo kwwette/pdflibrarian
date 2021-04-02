@@ -196,9 +196,10 @@ sub extract_query_values_from_pdf {
   if (@query_values == 0 ) {
 
     # try to use pdftotext to extract PDF text
-    printf STDERR "$Script: parsing text of PDF file '$pdffile'\n";
+    my $cmd = "$pdftotext '$pdffile' - 2>/dev/null";
+    printf STDERR "$Script: running $cmd ...\n";
     flush STDERR;
-    open PDFTOTEXT, "$pdftotext '$pdffile' - 2>/dev/null |" or croak "$Script: could not run $pdftotext on '$pdffile'";
+    open PDFTOTEXT, "$cmd |" or croak "$Script: could not run $cmd";
     foreach my $text (<PDFTOTEXT>) {
 
       # try to extract a DOI from PDF text
