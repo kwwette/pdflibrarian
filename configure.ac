@@ -99,7 +99,7 @@ AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf],[xdg-open])
 # check for ghostscript
 AC_PATH_PROGS([ghostscript],[gs],[])
 AS_IF([test "x${ghostscript}" = x],[
-  AC_MSG_ERROR([could not find ghostscript in PATH])
+  AC_MSG_ERROR([could not find 'gs' in PATH])
 ])
 
 # set data installation directories

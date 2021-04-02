@@ -112,7 +112,7 @@ sub open_pdf_file {
 
     # try to run ghostscript conversion on PDF file
     my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-    system("$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1") == 0 or croak "$Script: could not run ghostscript on '$pdffile'";
+    system("$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1") == 0 or croak "$Script: could not run $ghostscript on '$pdffile'";
 
     # try to open ghostscript-converted PDF file, and restore XMP metadata
     eval {
