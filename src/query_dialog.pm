@@ -155,10 +155,11 @@ sub on_manual {
 package pdflibrarian::query_dialog;
 use Exporter 'import';
 
-use CAM::PDF;
+use Carp;
 use FindBin qw($Script);
 use Wx qw(:id);
 
+use pdflibrarian::config;
 use pdflibrarian::util qw(unique_list open_pdf_file);
 
 our @EXPORT_OK = qw(extract_query_values_from_pdf do_query_dialog);
@@ -170,7 +171,7 @@ sub extract_query_values_from_pdf {
   my @query_values;
 
   {
-    # open PDF file (with PDF::AP2)
+    # open PDF file
     my $pdf = open_pdf_file($pdffile);
 
     # try to extract a DOI from PDF info structure
@@ -194,24 +195,20 @@ sub extract_query_values_from_pdf {
 
   if (@query_values == 0 ) {
 
-    # open PDF file with CAM::PDF
-    my $pdf = CAM::PDF->new($pdffile);
-
-    # try to extract a DOI from PDF text
-    my $pages = $pdf->numPages();
-    for (my $page = 1; $page <= $pages; ++$page) {
-      printf STDERR "$Script: parsing page %i/%i of PDF file '$pdffile'\r", $page, $pages;
-      flush STDERR;
-      my $text = $pdf->getPageText($page);
-      if (defined($text)) {
-        $text =~ s/\s+/ /g;
-        while ($text =~ m{(?:doi[:]? *|https?[:]//[\w.]*doi\.org/)([^ ]+)}ig) {
-          push @query_values, $1;
-        }
-      }
-    }
-    printf STDERR "$Script: parsed pages %i/%i of PDF file '$pdffile'\n", $pages, $pages;
+    # try to use pdftotext to extract PDF text
+    printf STDERR "$Script: parsing text of PDF file '$pdffile'\n";
     flush STDERR;
+    open PDFTOTEXT, "$pdftotext '$pdffile' - 2>/dev/null |" or croak "$Script: could not run $pdftotext on '$pdffile'";
+    foreach my $text (<PDFTOTEXT>) {
+
+      # try to extract a DOI from PDF text
+      $text =~ s/\s+/ /g;
+      while ($text =~ m{(?:doi[:]? *|https?[:]//[\w.]*doi\.org/)([^ ]+)}ig) {
+        push @query_values, $1;
+      }
+
+    }
+    close PDFTOTEXT;
 
   }
 

@@ -54,6 +54,8 @@ push @EXPORT, '$external_pdf_viewer';
 our $external_pdf_viewer = "@external_pdf_viewer@";
 push @EXPORT, '$ghostscript';
 our $ghostscript = "@ghostscript@";
+push @EXPORT, '$pdftotext';
+our $pdftotext = "@pdftotext@";
 
 push @EXPORT, '$cfgdir';
 our $cfgdir;

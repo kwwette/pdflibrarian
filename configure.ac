@@ -71,7 +71,6 @@ AC_DEFUN([PDFLBR_CHECK_PERL_MODULE],[
   ])
   DEPENDS="${DEPENDS}, $2"
 ])
-PDFLBR_CHECK_PERL_MODULE([CAM::PDF],[libcam-pdf-perl])
 PDFLBR_CHECK_PERL_MODULE([Capture::Tiny],[libcapture-tiny-perl])
 PDFLBR_CHECK_PERL_MODULE([Config::Simple],[libconfig-simple-perl])
 PDFLBR_CHECK_PERL_MODULE([Clipboard],[libclipboard-perl])
@@ -100,6 +99,12 @@ AC_PATH_PROGS([external_pdf_viewer],[xdg-open evince okular xpdf],[xdg-open])
 AC_PATH_PROGS([ghostscript],[gs],[])
 AS_IF([test "x${ghostscript}" = x],[
   AC_MSG_ERROR([could not find 'gs' in PATH])
+])
+
+# check for pdftotext
+AC_PATH_PROGS([pdftotext],[pdftotext],[])
+AS_IF([test "x${pdftotext}" = x],[
+  AC_MSG_ERROR([could not find 'pdftotext' in PATH])
 ])
 
 # set data installation directories
