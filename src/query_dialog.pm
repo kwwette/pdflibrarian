@@ -160,7 +160,7 @@ use FindBin qw($Script);
 use Wx qw(:id);
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(unique_list open_pdf_file);
+use pdflibrarian::util qw(unique_list);
 
 our @EXPORT_OK = qw(extract_query_values_from_pdf do_query_dialog);
 
@@ -172,7 +172,7 @@ sub extract_query_values_from_pdf {
 
   {
     # open PDF file
-    my $pdf = open_pdf_file($pdffile);
+    my $pdf = PDF::API2->open($pdffile);
 
     # try to extract a DOI from PDF info structure
     my @pdfinfotags = $pdf->infoMetaAttributes();

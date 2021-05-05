@@ -39,7 +39,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use pdflibrarian::config;
-use pdflibrarian::util qw(unique_list open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -170,7 +170,7 @@ sub read_bib_from_pdf {
     my ($pdffile) = @_;
 
     # open PDF file and read XMP metadata
-    my $pdf = open_pdf_file($pdffile);
+    my $pdf = PDF::API2->open($pdffile);
     my $xmp = "";
     eval {
       $xmp = $pdf->xmpMetadata() // "";
@@ -455,7 +455,7 @@ sub write_bib_to_pdf {
     $xmlmeta->insertBefore($xmldcentry, $xmlbibentry);
 
     # open PDF file
-    my $pdf = open_pdf_file($pdffile);
+    my $pdf = PDF::API2->open($pdffile);
 
     # write document information to PDF file
     my %pdfinfo;

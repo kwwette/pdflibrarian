@@ -33,7 +33,7 @@ use Text::Wrap;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files open_pdf_file keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
+our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
 
 1;
 
@@ -92,55 +92,6 @@ sub find_pdf_files {
   }
 
   return keys %pdffiles;
-}
-
-sub open_pdf_file {
-  my ($pdffile) = @_;
-
-  if (!is_in_dir($pdffiledir, $pdffile)) {
-
-    # save XMP metadata
-    my $xmp = "";
-    eval {
-      my $pdf = PDF::API2->open($pdffile);
-      $xmp = $pdf->xmpMetadata() // "";
-      1;
-    } or do {
-      chomp(my $error = $@);
-      croak "$Script: could not open PDF file '$pdffile': $error";
-    };
-
-    # try to run ghostscript conversion on PDF file
-    my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-    my $cmd = "$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
-    printf STDERR "$Script: running $cmd ...\n";
-    flush STDERR;
-    system($cmd) == 0 or croak "$Script: could not run $cmd";
-
-    # try to open ghostscript-converted PDF file, and restore XMP metadata
-    eval {
-      my $pdf = PDF::API2->open($fh->filename);
-      $pdf->xmpMetadata($xmp);
-      $pdf->update();
-      $pdf->end();
-      1;
-    } or do {
-      chomp(my $error = $@);
-      croak "$Script: could not open PDF file '@{[$fh->filename]}': $error";
-    };
-
-    # use converted PDF file
-    $fh->unlink_on_destroy(0);
-    link($pdffile, "$pdffile.bak") or croak "$Script: could not link '$pdffile' to '$pdffile.bak': $!";
-    rename($fh->filename, $pdffile) or croak "$Script: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
-    unlink("$pdffile.bak") or croak "$Script: could not unlink '$pdffile.bak': $!";
-
-  }
-
-  # open PDF file
-  my $pdf = PDF::API2->open($pdffile);
-
-  return $pdf;
 }
 
 sub keyword_display_str {
