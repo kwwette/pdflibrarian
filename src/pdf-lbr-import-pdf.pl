@@ -73,6 +73,49 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 my @pdffiles = find_pdf_files(@ARGV);
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
 
+# add PDF files with existing BibTeX entries to library
+{
+  # read BibTeX entries (if any) from PDF metadata
+  my @allbibentries = read_bib_from_pdf(@pdffiles);
+
+  # separate valid BibTeX entries, save PDF files without valid BibTeX entries
+  my @bibentries;
+  @pdffiles = ();
+  foreach my $bibentry (@allbibentries) {
+    if ($bibentry->key ne ":") {
+      push @bibentries, $bibentry;
+    } else {
+      push @pdffiles, $bibentry->get("file");
+    }
+  }
+  undef @allbibentries;
+
+  if (@bibentries > 0) {
+
+    # regenerate keys for BibTeX entry
+    generate_bib_keys(@bibentries);
+
+    # write BibTeX entry to PDF metadata
+    write_bib_to_pdf(@bibentries);
+
+    # add PDF file to library
+    update_pdf_lib(@bibentries);
+
+    # add links in PDF links directory to real PDF file
+    make_pdf_links(@bibentries);
+
+    # cleanup PDF links directory
+    cleanup_links();
+
+  }
+
+  # return if there are no PDF files remaining
+  if (@pdffiles == 0) {
+    exit 0;
+  }
+
+}
+
 # process IDs of PDF files opened in external viewer
 my @pids;
 

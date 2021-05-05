@@ -180,7 +180,7 @@ sub read_bib_from_pdf {
     $pdf->end();
 
     # convert BibTeX XML (if any) to parsed BibTeX entry
-    my $bibstr = '@article{key,}';
+    my $bibstr = '@article{:,}';
     my $xml = "";
     if (length($xmp) > 0) {
       eval {
