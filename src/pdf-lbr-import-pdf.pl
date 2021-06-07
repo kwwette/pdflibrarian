@@ -73,6 +73,43 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 my @pdffiles = find_pdf_files(@ARGV);
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
 
+# pass PDF files through ghostscript to fix any issues
+foreach my $pdffile (@pdffiles) {
+
+  # save XMP metadata
+  my $xmp = "";
+  eval {
+    my $pdf = PDF::API2->open($pdffile);
+    $xmp = $pdf->xmpMetadata() // "";
+  };
+
+  # try to run ghostscript conversion on PDF file
+  my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
+  my $cmd = "$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
+  printf STDERR "$Script: running $cmd ...\n";
+  flush STDERR;
+  system($cmd) == 0 or croak "$Script: could not run $cmd";
+
+  # try to open ghostscript-converted PDF file, and restore XMP metadata
+  eval {
+    my $pdf = PDF::API2->open($fh->filename);
+    $pdf->xmpMetadata($xmp);
+    $pdf->update();
+    $pdf->end();
+    1;
+  } or do {
+    chomp(my $error = $@);
+    croak "$Script: could not open PDF file '@{[$fh->filename]}': $error";
+  };
+
+  # use converted PDF file
+  $fh->unlink_on_destroy(0);
+  link($pdffile, "$pdffile.bak") or croak "$Script: could not link '$pdffile' to '$pdffile.bak': $!";
+  rename($fh->filename, $pdffile) or croak "$Script: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
+  unlink("$pdffile.bak") or croak "$Script: could not unlink '$pdffile.bak': $!";
+
+}
+
 # add PDF files with existing BibTeX entries to library
 {
   # read BibTeX entries (if any) from PDF metadata
@@ -113,36 +150,6 @@ croak "$Script: no PDF files to import" unless @pdffiles > 0;
   if (@pdffiles == 0) {
     exit 0;
   }
-
-}
-
-# pass PDF files through ghostscript to fix any issues
-foreach my $pdffile (@pdffiles) {
-
-  # try to run ghostscript on PDF file
-  my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-  my $cmd = "$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
-  printf STDERR "$Script: running $cmd ...\n";
-  flush STDERR;
-  system($cmd) == 0 or croak "$Script: could not run $cmd";
-
-  # try to open ghostscript-converted PDF file, and set XMP metadata
-  eval {
-    my $pdf = PDF::API2->open($fh->filename);
-    $pdf->xmpMetadata("");
-    $pdf->update();
-    $pdf->end();
-    1;
-  } or do {
-    chomp(my $error = $@);
-    croak "$Script: could not open PDF file '@{[$fh->filename]}': $error";
-  };
-
-  # use converted PDF file
-  $fh->unlink_on_destroy(0);
-  link($pdffile, "$pdffile.bak") or croak "$Script: could not link '$pdffile' to '$pdffile.bak': $!";
-  rename($fh->filename, $pdffile) or croak "$Script: could not rename '@{[$fh->filename]}' to '$pdffile': $!";
-  unlink("$pdffile.bak") or croak "$Script: could not unlink '$pdffile.bak': $!";
 
 }
 
