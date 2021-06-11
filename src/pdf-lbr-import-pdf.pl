@@ -76,7 +76,10 @@ my @pdffiles = find_pdf_files(@ARGV);
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
 
 # pass PDF files through ghostscript to fix any issues
+my $npdffile = 0;
 foreach my $pdffile (@pdffiles) {
+  printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", $npdffile++, scalar(@pdffiles);
+  flush STDERR;
 
   # save XMP metadata
   my $xmp = "";
