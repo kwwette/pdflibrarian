@@ -92,7 +92,7 @@ INIT {
 
   # ensure default configuration values are set
   my %config = (
-                'general.pdflinkdir' => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
+                'general.pdflibrarydir' => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
                 'general.prefquery' => 'Astrophysics Data System using Digital Object Identifier',
                 'general.default_exclude' => 'keyword abstract',
                 'query-ads-doi.name' => 'Astrophysics Data System using Digital Object Identifier',
@@ -110,8 +110,11 @@ INIT {
   # import configuration
   %config = $cfg->vars();
 
+  # set PDF files directory
+  $pdffiledir = File::Spec->catdir($config{'general.pdflibrarydir'}, 'PDFs');
+
   # set PDF links directory
-  $pdflinkdir = $config{'general.pdflinkdir'};
+  $pdflinkdir = File::Spec->catdir($config{'general.pdflibrarydir'}, 'Links');
 
   # set query database
   $pref_query_database = $config{'general.prefquery'};
@@ -129,7 +132,6 @@ INIT {
   }
 
   # create directories for PDF files
-  $pdffiledir = File::BaseDir->data_home('pdflibrarian', 'pdf_library_files');
   for (my $i = 0; $i < 16; ++$i) {
     my $dir = File::Spec->catdir($pdffiledir, sprintf("%x", $i));
     File::Path::make_path($dir);
