@@ -68,7 +68,7 @@ Please select the online database below, and supply a query value which uniquely
 EOM
   }
   $message .= <<"EOM";
-Please press the 'Run Query' button (or the Enter key) when ready to run the query; press the 'Manual Entry' button to manually enter the BibTeX record; or press the 'Cancel Import' button (or the Esc key) to cancel the import of the PDF paper.
+Please press the 'Run Query' button (or the Enter key) when ready to run the query; press the 'Manual Entry' button to manually enter the BibTeX record; press the 'Skip Import' button (or the Esc key) to skip the import of the PDF paper; or the 'Quit' button to cancel all imports and exit.
 
 EOM
   $topsizer->Add(Wx::StaticText->new($panel, -1, $message, [-1, -1], [500, 300]), 1, wxEXPAND | wxALL, 10);
@@ -88,8 +88,10 @@ EOM
   $buttonsizer->Add($buttonok, 0, wxALL, 10);
   my $buttonmanual = Wx::Button->new($panel, wxID_EDIT, 'Manual Entry');
   $buttonsizer->Add($buttonmanual, 0, wxALL, 10);
-  my $buttoncancel = Wx::Button->new($panel, wxID_CANCEL, 'Cancel Import');
-  $buttonsizer->Add($buttoncancel, 0, wxALL, 10);
+  my $buttonskip = Wx::Button->new($panel, wxID_CANCEL, 'Skip Import');
+  $buttonsizer->Add($buttonskip, 0, wxALL, 10);
+  my $buttonexit = Wx::Button->new($panel, wxID_EXIT, 'Quit');
+  $buttonsizer->Add($buttonexit, 0, wxALL, 10);
 
   # add buttons to sizer
   $topsizer->Add($buttonsizer, 0, wxALIGN_CENTER);
@@ -101,6 +103,7 @@ EOM
 
   # register events
   EVT_BUTTON($self, $buttonmanual, \&on_manual);
+  EVT_BUTTON($self, $buttonexit, \&on_exit);
   EVT_TEXT($self, $query_db_name_combo, \&on_text);
   EVT_TEXT($self, $query_value_combo, \&on_text);
   EVT_TEXT_ENTER($self, $query_db_name_combo, \&on_enter);
@@ -147,6 +150,13 @@ sub on_manual {
   my ($self, $event) = @_;
 
   $self->EndModal(wxID_EDIT);
+
+}
+
+sub on_exit {
+  my ($self, $event) = @_;
+
+  $self->EndModal(wxID_EXIT);
 
 }
 
@@ -224,7 +234,10 @@ sub do_query_dialog {
   my $dialog = pdflibrarian::query_dialog::dialog->new($pdffile, $query_db_name, $query_value, $query_values, $error_message);
   my $ui = $dialog->ShowModal();
 
-  # cancel import of PDF
+  # cancel all imports and exit
+  return ('exit', undef, undef) if $ui == wxID_EXIT;
+
+  # skip import of PDF
   return ('cancel', undef, undef) if $ui == wxID_CANCEL;
 
   # manually enter BibTeX record

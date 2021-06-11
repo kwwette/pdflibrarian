@@ -180,11 +180,18 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     ($query_action, $query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
 
     # take action
-    if ($query_action eq 'cancel') {
+    if ($query_action eq 'exit') {
 
-      # cancel import of PDF
+      # cancel all imports and exit
+      kill_async $pid, @pids;
+      print STDERR "$Script: all imports have been cancelled\n";
+      exit 0;
+
+    } elsif ($query_action eq 'cancel') {
+
+      # skip import of PDF
       kill_async $pid;
-      print STDERR "$Script: import of PDF file '$pdffile' has been cancelled\n";
+      print STDERR "$Script: import of PDF file '$pdffile' has been skipped\n";
       next PDFFILE;
 
     } elsif ($query_action eq 'manual') {
