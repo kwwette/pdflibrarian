@@ -159,7 +159,7 @@ sub make_pdf_links {
     if ($bibentry->type eq "article") {
 
       # make links to articles by journal and/or pre-print server
-      my $journal = $bibentry->get("journal") // "NO-JOURNAL";
+      my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
       my $volume = $bibentry->get("volume") // "NO-VOLUME";
       my $pages = $bibentry->get("pages") // "NO-PAGES";
       if ($bibentry->exists('archiveprefix')) {
@@ -185,7 +185,7 @@ sub make_pdf_links {
     } elsif ($bibentry->type eq "techreport") {
 
       # make links to technical reports by institution
-      my $institution = $bibentry->get("institution") // "NO-INSTITUTION";
+      my $institution = remove_tex_markup($bibentry->get("institution")) // "NO-INSTITUTION";
       my $number = "NO-NUMBER";
       my $numberprefix = $number;
       if ($bibentry->exists('number')) {
@@ -204,7 +204,7 @@ sub make_pdf_links {
     } elsif (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
 
       # make links to articles in collections and proceedings
-      my $booktitle = remove_tex_markup($bibentry->get("booktitle") // "NO-BOOKTITLE");
+      my $booktitle = remove_tex_markup($bibentry->get("booktitle")) // "NO-BOOKTITLE";
       $booktitle = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $booktitle)));
       push @links, ["In", $booktitle, "$pdflinkfile"];
 
