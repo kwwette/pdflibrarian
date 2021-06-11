@@ -231,6 +231,9 @@ sub run_async {
     exit 1;
   }
 
+  # sleep for a while to allow process to start
+  sleep(1.5);
+
   return $pid;
 }
 
