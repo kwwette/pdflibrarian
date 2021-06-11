@@ -27,4 +27,5 @@ git tag -m "${version} release" "v${version}"
 
 ./bootstrap
 ./configure --prefix=/tmp/pdflibrarian
+make install
 make dist
