@@ -375,7 +375,7 @@ sub write_bib_to_fh {
       $bibentry->set($bibfield, $bibfieldvalue);
     }
 
-    # arrange BibTeX fields in the following order
+    # arrange BibTeX fields in the order given by @fieldorder
     my %order;
     my $orderidx;
     foreach my $bibfield (@fieldorder, sort { $a cmp $b } $bibentry->fieldlist()) {
