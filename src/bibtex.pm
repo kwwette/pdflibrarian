@@ -343,6 +343,13 @@ sub write_bib_to_fh {
       }
     }
 
+    # regularise BibTeX 'doi' field
+    if ($bibentry->exists('doi')) {
+      my $doi = $bibentry->get('doi');
+      $doi =~ s|https?[:]//[\w.]*doi\.org/||g;
+      $bibentry->set('doi', $doi);
+    }
+
     # set BibTeX 'url' field
     if ($bibentry->exists('doi')) {
       my $doi = $bibentry->get('doi');
