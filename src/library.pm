@@ -228,6 +228,7 @@ sub make_pdf_links {
       foreach (@linkpath) {
         die unless defined($_) && $_ ne "";
         $_ = unidecode($_);
+        s/[`'"]//g;
         s/[^-+.A-Za-z0-9]/_/g;
         s/[-_][-_]+/_/g;
         s/^_+//;
