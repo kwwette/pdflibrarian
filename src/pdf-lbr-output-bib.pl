@@ -82,14 +82,15 @@ Set each BibTeX I<field> to the given I<value> before printing.
 
 =head1 PART OF
 
-PDF Librarian, version @VERSION@.
+PDF Librarian version @VERSION@
 
 =cut
 
 # handle help options
-my ($help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
 $max_authors = 0;
 GetOptions(
+           "version|v" => \$version,
            "help|h" => \$help,
            "clipboard|c" => \$clipboard,
            "max-authors|m=i" => \$max_authors,
@@ -98,6 +99,7 @@ GetOptions(
            "no-exclude|E" => \$no_exclude,
            "set|s=s" => \%set,
           ) or croak "$Script: could not parse options";
+if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 croak "$Script: --max-authors must be positive" if $max_authors < 0;
 croak "$Script: --exclude and --no-exclude are mutually exclusive" if (@exclude > 0 and $no_exclude);

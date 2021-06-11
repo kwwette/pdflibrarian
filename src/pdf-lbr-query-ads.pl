@@ -76,17 +76,19 @@ Finally you must run B<pdf-lbr-query-ads> with this option to store the API toke
 
 =head1 PART OF
 
-PDF Librarian, version @VERSION@.
+PDF Librarian version @VERSION@
 
 =cut
 
 # handle help options
-my ($help, $query, $api_token);
+my ($version, $help, $query, $api_token);
 GetOptions(
+           "version|v" => \$version,
            "help|h" => \$help,
            "query|q=s" => \$query,
            "set-api-token|s=s" => \$api_token,
           ) or croak "$Script: could not parse options";
+if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get location of configuration file

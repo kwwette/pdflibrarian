@@ -54,16 +54,18 @@ The PDF file is moved to the directory I<output-directory>, or else to the user'
 
 =head1 PART OF
 
-PDF Librarian, version @VERSION@.
+PDF Librarian version @VERSION@
 
 =cut
 
 # handle help options
-my ($help, $outdir);
+my ($version, $help, $outdir);
 GetOptions(
+           "version|v" => \$version,
            "help|h" => \$help,
            "output-directory|o=s" => \$outdir,
           ) or croak "$Script: could not parse options";
+if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 $outdir = $ENV{HOME} unless defined($outdir);
 

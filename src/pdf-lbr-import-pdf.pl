@@ -58,15 +58,17 @@ If the query is successful, the user will have an opportunity to edit the BibTeX
 
 =head1 PART OF
 
-PDF Librarian, version @VERSION@.
+PDF Librarian version @VERSION@
 
 =cut
 
 # handle help options
-my ($help);
+my ($version, $help);
 GetOptions(
+           "version|v" => \$version,
            "help|h" => \$help,
           ) or croak "$Script: could not parse options";
+if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
