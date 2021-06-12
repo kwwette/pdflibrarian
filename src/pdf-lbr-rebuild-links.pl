@@ -27,7 +27,7 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_pdf);
+use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::util qw(find_pdf_files);
@@ -47,6 +47,8 @@ B<pdf-lbr-rebuild-links>
 =head1 DESCRIPTION
 
 B<pdf-lbr-rebuild-links> rebuilds the PDF links directory.
+
+All BibTeX metadata is written to a temporary file, which is then opened in an editing program to check for errors. The editing program is given either by the B<$VISUAL> or B<$EDITOR> environment variables, or else the program B<@fallback_editor@>.
 
 =head1 PART OF
 
@@ -68,6 +70,14 @@ my @pdffiles = find_pdf_files($pdffiledir);
 
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
+
+# write BibTeX entries to a temporary file for editing
+my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
+binmode($fh, ":encoding(iso-8859-1)");
+write_bib_to_fh { fh => $fh }, @bibentries;
+
+# edit BibTeX entries in PDF files
+edit_bib_in_fh($fh, @bibentries);
 
 # regenerate keys for BibTeX entries
 generate_bib_keys(@bibentries);
