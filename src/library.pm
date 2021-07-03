@@ -174,9 +174,12 @@ sub make_pdf_links {
 
       # make links to articles by journal and/or pre-print server
       my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
-      my $volume = $bibentry->get("volume") // "NO-VOLUME";
-      my $pages = $bibentry->get("pages") // "NO-PAGES";
-      push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
+      my $archiveprefix = $bibentry->get('archiveprefix') // "";
+      if ($journal ne $archiveprefix) {
+        my $volume = $bibentry->get("volume") // "NO-VOLUME";
+        my $pages = $bibentry->get("pages") // "NO-PAGES";
+        push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
+      }
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
