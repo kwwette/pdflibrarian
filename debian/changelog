@@ -1,3 +1,9 @@
+pdflibrarian (3.0.5-1) stable; urgency=low
+
+  * 3.0.5 release
+
+ -- Karl Wette <karl.wette@gmail.com>  Sat, 03 Jul 2021 11:31:18 +1000
+
 pdflibrarian (3.0.4-1) stable; urgency=low
 
   * 3.0.4 release
