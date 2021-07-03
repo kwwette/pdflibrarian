@@ -201,8 +201,14 @@ sub make_pdf_links {
 
       # make links to articles in collections and proceedings
       my $booktitle = remove_tex_markup($bibentry->get("booktitle")) // "NO-BOOKTITLE";
+      my $pages = $bibentry->get("pages") // "NO-PAGES";
       $booktitle = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $booktitle)));
-      push @links, ["In", $booktitle, "$pdflinkfile"];
+      push @links, ["In", $booktitle, "p$pages $pdflinkfile"];
+      if ($bibentry->exists("series")) {
+        my $series = remove_tex_markup($bibentry->get("series"));
+        my $volume = $bibentry->get("volume") // "NO-VOLUME";
+        push @links, ["In", "$series", "v$volume", "p$pages $pdflinkfile"];
+      }
 
     } elsif (grep { $bibentry->type eq $_ } qw(mastersthesis phdthesis)) {
 
