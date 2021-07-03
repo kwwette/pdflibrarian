@@ -156,7 +156,7 @@ sub make_pdf_links {
       push @links, ["Keywords", @subkeywords, "$pdflinkfile"];
     }
 
-    if ($bibentry->type eq "article") {
+    if (grep { $bibentry->type eq $_ } qw(article)) {
 
       # make links to articles by journal and/or pre-print server
       my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
@@ -182,7 +182,7 @@ sub make_pdf_links {
         push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
       }
 
-    } elsif ($bibentry->type eq "techreport") {
+    } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
       # make links to technical reports by institution
       my $institution = remove_tex_markup($bibentry->get("institution")) // "NO-INSTITUTION";
