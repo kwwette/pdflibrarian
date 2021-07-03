@@ -156,31 +156,27 @@ sub make_pdf_links {
       push @links, ["Keywords", @subkeywords, "$pdflinkfile"];
     }
 
+    # make links by pre-print server
+    if ($bibentry->exists('archiveprefix')) {
+      my $archiveprefix = $bibentry->get('archiveprefix');
+      my $eprint = "NO-EPRINT";
+      my $eprintprefix = $eprint;
+      if ($bibentry->exists('eprint')) {
+        $eprint = $bibentry->get('eprint');
+        $eprintprefix = $eprint;
+        $eprintprefix =~ s/[^\d]//g;
+        $eprintprefix = substr($eprintprefix, 0, 2);
+      }
+      push @links, ["Pre Prints", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
+    }
+
     if (grep { $bibentry->type eq $_ } qw(article)) {
 
       # make links to articles by journal and/or pre-print server
       my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
       my $volume = $bibentry->get("volume") // "NO-VOLUME";
       my $pages = $bibentry->get("pages") // "NO-PAGES";
-      if ($bibentry->exists('archiveprefix')) {
-        my $archiveprefix = $bibentry->get('archiveprefix');
-        my $eprint = "NO-EPRINT";
-        my $eprintprefix = $eprint;
-        if ($bibentry->exists('eprint')) {
-          $eprint = $bibentry->get('eprint');
-          $eprintprefix = $eprint;
-          $eprintprefix =~ s/[^\d]//g;
-          $eprintprefix = substr($eprintprefix, 0, 2);
-        }
-        push @links, ["Pre Prints", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
-        if ($journal eq $archiveprefix) {
-          push @links, ["Journals", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
-        } else {
-          push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
-        }
-      } else {
-        push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
-      }
+      push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
