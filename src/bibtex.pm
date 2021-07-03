@@ -362,6 +362,11 @@ sub write_bib_to_fh {
         my $url = "https://arxiv.org/abs/$eprint";
         $bibentry->set('url', $url);
       }
+    } else {
+      my @urlbibfields = grep { $_ =~ /.url$/ } $bibentry->fieldlist();
+      if (@urlbibfields == 1) {
+        $bibentry->set('url', $bibentry->get($urlbibfields[0]));
+      }
     }
 
     # escape special characters
