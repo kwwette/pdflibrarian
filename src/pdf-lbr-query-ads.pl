@@ -117,8 +117,9 @@ croak "$Script: missing personal ADS API token" unless defined($api_token);
 my $useragent = LWP::UserAgent->new;
 $useragent->agent("$PACKAGE/$VERSION");
 
-# escape any colons in query value
+# escape any colons and parentheses in query value
 $query =~ s{^([^:]*):(.*)$}{ my $k = $1; my $v = $2; $v =~ s|:|\\:|g; "$k:$v" }e;
+$query =~ s/([()])/\\$1/g;
 
 # send query to ADS
 my $querycontent;
