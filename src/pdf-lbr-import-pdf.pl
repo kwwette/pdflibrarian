@@ -90,7 +90,7 @@ foreach my $pdffile (@pdffiles) {
 
   # try to run ghostscript conversion on PDF file
   my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-  my $cmd = "$ghostscript -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
+  my $cmd = "'$ghostscript' -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
   printf STDERR "$Script: running $cmd ...\n";
   flush STDERR;
   system($cmd) == 0 or croak "$Script: could not run $cmd";
