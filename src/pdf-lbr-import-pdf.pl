@@ -212,16 +212,19 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     } elsif ($query_action eq 'query') {
 
       # run query of database with given query value
-      my $query_cmd = File::Spec->catfile($bindir, sprintf("$query_databases{$query_db_name}", $query_value));
+      my $query_cmd = $query_databases{$query_db_name};
+      $query_cmd =~ s/\s+/' '/g;
+      $query_cmd = sprintf($query_cmd, $query_value);
+      $query_cmd = "'" . File::Spec->catfile($bindir, $query_cmd) . "'";
       my $exit_status;
       ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
         system($query_cmd);
         if ($? == -1) {
-          print STDERR "\n'$query_cmd' failed to execute: $!\n";
+          print STDERR "\n$query_cmd failed to execute: $!\n";
         } elsif ($? & 127) {
-          printf STDERR "\n'$query_cmd' died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
+          printf STDERR "\n$query_cmd died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without';
         } elsif ($? != 0) {
-          printf STDERR "\n'$query_cmd' exited with value %d\n", $? >> 8;
+          printf STDERR "\n$query_cmd exited with value %d\n", $? >> 8;
         }
       };
       $bibstr =~ s/^\s+//;
