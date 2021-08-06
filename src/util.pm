@@ -194,6 +194,8 @@ sub remove_tex_markup {
       foreach my $t (keys %saveTeX) {
         s/\\$t/$saveTeX{$t}/g;
       }
+      s/{\s*\\(\w)\s*}/$1/g;
+      s/\\(\w)\s+/$1/g;
       s/\\\w+//g;
       s/\\.//g;
       s/[{}]//g;
