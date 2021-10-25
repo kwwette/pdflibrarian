@@ -474,13 +474,9 @@ sub write_bib_to_pdf {
     eval {
       %pdfinfo = $pdf->info();
     };
-    $pdfinfo{Author} = $bibentry->get("author") // $bibentry->get("editor") // "";
-    $pdfinfo{Author} =~ s/[{}\\]//g;
-    $pdfinfo{Author} =~ s/~/ /g;
-    $pdfinfo{Title} = $bibentry->get("title") // "";
-    $pdfinfo{Title} =~ s/[{}\\]//g;
-    $pdfinfo{Title} =~ s/\$.*?\$//g;
-    $pdfinfo{Subject} = $bibentry->get("abstract") // "";
+    $pdfinfo{Author} = remove_tex_markup($bibentry->get("author") // $bibentry->get("editor") . " ed.");
+    $pdfinfo{Title} = remove_tex_markup($bibentry->get("title"));
+    $pdfinfo{Subject} = remove_tex_markup($bibentry->get("abstract"));
     $pdf->infoMetaAttributes(keys(%pdfinfo));
     $pdf->info(%pdfinfo);
     $pdf->preferences(-displaytitle => 1);
