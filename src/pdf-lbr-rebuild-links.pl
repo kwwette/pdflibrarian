@@ -93,7 +93,10 @@ exit 0 unless @bibentries > 0;
 # regenerate keys for BibTeX entries
 generate_bib_keys(@bibentries);
 
-# write BibTeX entries to PDF metadata
+# rewrite all BibTeX entries to PDF metadata
+foreach my $bibentry (@bibentries) {
+  $bibentry->delete('checksum');
+}
 write_bib_to_pdf(@bibentries);
 
 # ensure all PDF files are part of library
