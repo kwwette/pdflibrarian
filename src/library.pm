@@ -84,11 +84,6 @@ sub make_pdf_links {
     # get name of PDF file
     my $pdffile = $bibentry->get('file');
 
-    # format authors, editors, and collaborations
-    my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
-    my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
-    my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
-
     # format and abbreviate title
     my $title = remove_tex_markup($bibentry->get("title") // "NO-TITLE");
     $title = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $title)));
@@ -96,6 +91,11 @@ sub make_pdf_links {
     # make PDF link name; should be unique within library
     my $pdflinkfile;
     {
+
+      # format authors, editors, and collaborations
+      my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
+      my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
+      my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
       # start with first non-empty of authoring collaborations, individual authors, and/or editors
       $pdflinkfile = "@collaborations";
@@ -122,14 +122,24 @@ sub make_pdf_links {
       push @links, ["DOIs", @doidirs];
     }
 
-    # make links by listed collaborations, authors, and editors
-    for my $author (@collaborations, @authors) {
-      next if $author eq "" || $author eq "et al";
-      push @links, ["Authors", $author, "$pdflinkfile"];
-    }
-    for my $editor (@editors) {
-      next if $editor eq "" || $editor eq "et al";
-      push @links, ["Authors", "$editor ed", "$pdflinkfile"];
+    # make links by all listed collaborations, authors, and editors
+    {
+
+      # format authors, editors, and collaborations
+      my @authors = format_bib_authors("vl", undef, "", $bibentry->names("author"));
+      my @editors = format_bib_authors("vl", undef, "", $bibentry->names("editor"));
+      my @collaborations = format_bib_authors("vl", undef, "", $bibentry->names("collaboration"));
+
+      # make links
+      for my $author (@collaborations, @authors) {
+        next if $author eq "";
+        push @links, ["Authors", $author, "$pdflinkfile"];
+      }
+      for my $editor (@editors) {
+        next if $editor eq "";
+        push @links, ["Authors", "$editor ed", "$pdflinkfile"];
+      }
+
     }
 
     # make links by first word of title
