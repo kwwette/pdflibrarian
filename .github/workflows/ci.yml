@@ -1,0 +1,25 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base
+          sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'`
+      - name: Show Perl configuration
+        run: |
+          perl '-V:.*'
+      - name: Configure
+        run: |
+          ./bootstrap
+          if ! ./configure; then
+            cat ./config.log
+            exit 1
+          fi
+      - name: Build
+        run: |
+          make
