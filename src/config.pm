@@ -80,11 +80,11 @@ INIT {
   croak "$Script: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
 
   # create configuration directory
-  $cfgdir = File::BaseDir->config_home('pdflibrarian');
+  $cfgdir = File::BaseDir->config_home("$PACKAGE");
   File::Path::make_path($cfgdir);
 
   # read configuration file
-  my $cfgfile = File::Spec->catfile($cfgdir, 'pdflibrarian.ini');
+  my $cfgfile = File::Spec->catfile($cfgdir, "$PACKAGE.ini");
   my $cfg = new Config::Simple(syntax => 'ini');
   if (-f $cfgfile) {
     $cfg->read($cfgfile);
