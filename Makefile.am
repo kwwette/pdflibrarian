@@ -21,6 +21,7 @@ pkgdata_DATA = \
 	src/bibtex.xsl \
 	src/dublincore.xsl \
 	src/title_abbr_aas.csv \
+	src/title_abbr_iso4.csv \
 	$(END_OF_LINE)
 
 EXTRA_DIST = \

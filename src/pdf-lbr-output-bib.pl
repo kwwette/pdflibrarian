@@ -30,7 +30,7 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys write_bib_to_fh);
-use pdflibrarian::title_abbr qw(%aas_macros);
+use pdflibrarian::title_abbr qw(%aas_macros abbr_iso4_title);
 use pdflibrarian::util qw(find_pdf_files);
 
 =pod
@@ -88,6 +88,14 @@ Abbreviate journal/series titles according to the given I<scheme>, applied in th
 =item I<aas>
 
 AAS macros for astronomy journals, used by the NASA Astrophysics Data System.
+
+=item I<iso4>
+
+ISO4 abbreviations using the ISSN List of Title Word Abbreviations.
+
+=item I<iso4~>
+
+Same as I<iso4> but separate words with tildes instead of spaces.
 
 =back
 
@@ -164,6 +172,16 @@ foreach my $bibentry (@bibentries) {
         while (my ($key, $value) = each %aas_macros) {
           last if $journal =~ s/^\s*$value\s*$/\\$key/i;
         }
+        $bibentry->set($bibfield, $journal);
+
+      } elsif ($scheme =~ /^iso4([~])?$/) {
+
+        # parse ISO4 options
+        my $separator = $1 // ' ';
+
+        # abbreviate journal title
+        my $journal = $bibentry->get($bibfield);
+        $journal = abbr_iso4_title($separator, $journal);
         $bibentry->set($bibfield, $journal);
 
       } else {
