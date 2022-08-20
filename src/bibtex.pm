@@ -162,7 +162,7 @@ sub read_bib_from_pdf {
   my (@pdffiles) = @_;
 
   # get location of BibTeX XSLT style file
-  my $xsltbibtex = File::Spec->catfile($xsltdir, 'bibtex.xsl');
+  my $xsltbibtex = File::Spec->catfile($pkgdatadir, 'bibtex.xsl');
   croak "$Script: missing XSLT style file '$xsltbibtex'" unless -f $xsltbibtex;
 
   # read BibTeX entries from PDF files
@@ -411,7 +411,7 @@ sub write_bib_to_pdf {
   my (@bibentries) = @_;
 
   # get location of DublinCore XSLT style file
-  my $xsltdublincore = File::Spec->catfile($xsltdir, 'dublincore.xsl');
+  my $xsltdublincore = File::Spec->catfile($pkgdatadir, 'dublincore.xsl');
   croak "$Script: missing XSLT style file '$xsltdublincore'" unless -f $xsltdublincore;
 
   # filter out unmodified BibTeX entries

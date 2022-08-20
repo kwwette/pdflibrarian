@@ -107,8 +107,8 @@ AS_IF([test "x${pdftotext}" = x],[
   AC_MSG_ERROR([could not find 'pdftotext' in PATH])
 ])
 
-# set data installation directories
-AC_SUBST([xsltdir],['${datadir}/'"${PACKAGE}/xslt_stylesheets"])
+# set data installation directory
+AC_SUBST([pkgdatadir],['${datadir}/'"${PACKAGE}"])
 
 # output files
 AC_CONFIG_FILES([

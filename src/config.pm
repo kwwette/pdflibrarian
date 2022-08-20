@@ -45,8 +45,8 @@ push @EXPORT, '$bindir';
 our $bindir = "@bindir@";
 push @EXPORT, '$datadir';
 our $datadir = "@datadir@";
-push @EXPORT, '$xsltdir';
-our $xsltdir = "@xsltdir@";
+push @EXPORT, '$pkgdatadir';
+our $pkgdatadir = "@pkgdatadir@";
 
 push @EXPORT, '$fallback_editor';
 our $fallback_editor = "@fallback_editor@";

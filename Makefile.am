@@ -16,7 +16,7 @@ pkgperllib_DATA = \
 	src/util.pm \
 	$(END_OF_LINE)
 
-xslt_DATA = \
+pkgdata_DATA = \
 	src/bibtex.xsl \
 	src/dublincore.xsl \
 	$(END_OF_LINE)
