@@ -76,6 +76,9 @@ our @default_exclude;
 
 INIT {
 
+  # allow printing of UTF-8 characters
+  binmode(STDOUT, "encoding(utf-8)");
+
   # check for user home directory
   croak "$Script: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
 
