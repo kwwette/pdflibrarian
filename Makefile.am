@@ -13,12 +13,14 @@ pkgperllib_DATA = \
 	src/bibtex.pm \
 	src/library.pm \
 	src/query_dialog.pm \
+	src/title_abbr.pm \
 	src/util.pm \
 	$(END_OF_LINE)
 
 pkgdata_DATA = \
 	src/bibtex.xsl \
 	src/dublincore.xsl \
+	src/title_abbr_aas.csv \
 	$(END_OF_LINE)
 
 EXTRA_DIST = \

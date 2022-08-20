@@ -33,6 +33,7 @@ use URI;
 
 @perl_use_lib@;
 use pdflibrarian::config;
+use pdflibrarian::title_abbr qw(%aas_macros);
 
 =pod
 
@@ -190,64 +191,6 @@ $bibstr =~ s/^\s+//;
 $bibstr =~ s/\s+$//;
 
 # replace journal abbreviations in exported ADS BibTeX
-my %aas_macros = (
-                  aj         => 'Astronomical Journal',
-                  actaa      => 'Acta Astronomica',
-                  araa       => 'Annual Review of Astronomy and Astrophys',
-                  apj        => 'Astrophysical Journal',
-                  apjl       => 'Astrophysical Journal Letters',
-                  apjs       => 'Astrophysical Journal Supplement',
-                  ao         => 'Applied Optics',
-                  apss       => 'Astrophysics and Space Science',
-                  aap        => 'Astronomy and Astrophysics',
-                  aapr       => 'Astronomy and Astrophysics Reviews',
-                  aaps       => 'Astronomy and Astrophysics Supplement',
-                  azh        => 'Astronomicheskii Zhurnal',
-                  baas       => 'Bulletin of the AAS',
-                  bac        => 'Bulletin of the Astronomical Institutes of Czechoslovakia',
-                  caa        => 'Chinese Astronomy and Astrophysics',
-                  cjaa       => 'Chinese Journal of Astronomy and Astrophysics',
-                  icarus     => 'Icarus',
-                  jcap       => 'Journal of Cosmology and Astroparticle Physics',
-                  jrasc      => 'Journal of the Royal Astronomical Society of Canada',
-                  memras     => 'Memoirs of the Royal Astronomical Society',
-                  mnras      => 'Monthly Notices of the Royal Astronomical Society',
-                  na         => 'New Astronomy',
-                  nar        => 'New Astronomy Review',
-                  pra        => 'Physical Review A',
-                  prb        => 'Physical Review B',
-                  prc        => 'Physical Review C',
-                  prd        => 'Physical Review D',
-                  pre        => 'Physical Review E',
-                  prl        => 'Physical Review Letters',
-                  pasa       => 'Publications of the Astronomical Society of Australia',
-                  pasp       => 'Publications of the Astronomical Society of the Pacific',
-                  pasj       => 'Publications of the Astronomical Society of Japan',
-                  rmxaa      => 'Revista Mexicana de Astronomia y Astrofisica',
-                  qjras      => 'Quarterly Journal of the Royal Astronomical Society',
-                  skytel     => 'Sky and Telescope',
-                  solphys    => 'Solar Physics',
-                  sovast     => 'Soviet Astronomy',
-                  ssr        => 'Space Science Reviews',
-                  zap        => 'Zeitschrift fuer Astrophysik',
-                  nat        => 'Nature',
-                  iaucirc    => 'IAU Cirulars',
-                  aplett     => 'Astrophysics Letters',
-                  apspr      => 'Astrophysics Space Physics Research',
-                  bain       => 'Bulletin Astronomical Institute of the Netherlands',
-                  fcp        => 'Fundamental Cosmic Physics',
-                  gca        => 'Geochimica Cosmochimica Acta',
-                  grl        => 'Geophysics Research Letters',
-                  jcp        => 'Journal of Chemical Physics',
-                  jgr        => 'Journal of Geophysics Research',
-                  jqsrt      => 'Journal of Quantitiative Spectroscopy and Radiative Transfer',
-                  memsai     => 'Memorie della Societ\`a Astronomica Italiana',
-                  nphysa     => 'Nuclear Physics A',
-                  physrep    => 'Physics Reports',
-                  physscr    => 'Physica Scripta',
-                  planss     => 'Planetary Space Science',
-                  procspie   => 'Proceedings of the SPIE',
-                 );
 while (my ($key, $value) = each %aas_macros) {
   $bibstr =~ s/{\\$key}/{$value}/;
 }
