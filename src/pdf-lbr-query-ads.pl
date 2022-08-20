@@ -38,7 +38,7 @@ use pdflibrarian::config;
 
 =head1 NAME
 
-B<pdf-lbr-query-ads> - Query the Astrophysics Data System for BibTeX bibliographic record.
+B<pdf-lbr-query-ads> - Query the NASA Astrophysics Data System for BibTeX bibliographic record.
 
 =head1 SYNOPSIS
 
