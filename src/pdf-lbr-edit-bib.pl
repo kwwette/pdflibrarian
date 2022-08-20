@@ -70,7 +70,7 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 # get list of PDF files
 my @pdffiles = find_pdf_files(@ARGV);
 croak "$Script: no PDF files to edit" unless @pdffiles > 0;
-for my $pdffile (@pdffiles) {
+foreach my $pdffile (@pdffiles) {
   croak "$Script: '$pdffile' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
 }
 

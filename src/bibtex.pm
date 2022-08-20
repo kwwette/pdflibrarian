@@ -227,7 +227,7 @@ sub write_bib_to_fh {
   $opts->{only_first_author} = 0 unless defined($opts->{only_first_author});
 
   # print and format BibTeX entries
-  for my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+  foreach my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
 
     # create a copy of BibTeX entry
     $bibentry = $bibentry->clone();

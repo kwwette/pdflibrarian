@@ -131,11 +131,11 @@ sub make_pdf_links {
       my @collaborations = format_bib_authors("vl", undef, "", $bibentry->names("collaboration"));
 
       # make links
-      for my $author (@collaborations, @authors) {
+      foreach my $author (@collaborations, @authors) {
         next if $author eq "";
         push @links, ["Authors", $author, "$pdflinkfile"];
       }
-      for my $editor (@editors) {
+      foreach my $editor (@editors) {
         next if $editor eq "";
         push @links, ["Authors", "$editor ed", "$pdflinkfile"];
       }
