@@ -30,6 +30,7 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys write_bib_to_fh);
+use pdflibrarian::title_abbr qw(%aas_macros);
 use pdflibrarian::util qw(find_pdf_files);
 
 =pod
@@ -42,7 +43,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] [ B<--abbreviate>|B<-a> I<scheme> ... ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
@@ -78,6 +79,18 @@ Do not exclude any the BibTeX fields from the output.
 
 Set each BibTeX I<field> to the given I<value> before printing.
 
+=item B<--abbreviate>|B<-a> I<scheme> ...
+
+Abbreviate journal/series titles according to the given I<scheme>, applied in the order given on the command line. Available I<scheme>s:
+
+=over 4
+
+=item I<aas>
+
+AAS macros for astronomy journals, used by the NASA Astrophysics Data System.
+
+=back
+
 =back
 
 =head1 PART OF
@@ -87,7 +100,7 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set, @abbreviate_schemes);
 $max_authors = 0;
 GetOptions(
            "version|v" => \$version,
@@ -98,6 +111,7 @@ GetOptions(
            "exclude|e=s" => \@exclude,
            "no-exclude|E" => \$no_exclude,
            "set|s=s" => \%set,
+           "abbreviate|a=s" => \@abbreviate_schemes,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
@@ -136,6 +150,29 @@ foreach my $bibentry (@bibentries) {
 # error if duplicate BibTeX keys are found
 my @dupkeys = find_dup_bib_keys(@bibentries);
 croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
+
+# abbreviate journal/series titles
+foreach my $bibentry (@bibentries) {
+  foreach my $bibfield (qw(journal series)) {
+    next unless $bibentry->exists($bibfield);
+    foreach my $scheme (@abbreviate_schemes) {
+
+      if ($scheme =~ /^aas$/) {
+
+        # abbreviate journal title
+        my $journal = $bibentry->get($bibfield);
+        while (my ($key, $value) = each %aas_macros) {
+          last if $journal =~ s/^\s*$value\s*$/\\$key/i;
+        }
+        $bibentry->set($bibfield, $journal);
+
+      } else {
+        croak "$Script: unrecognised abbreviation scheme '$scheme'";
+      }
+
+    }
+  }
+}
 
 # write BibTeX entries to string
 my $bibstring = "";
