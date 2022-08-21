@@ -161,35 +161,41 @@ croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0
 
 # abbreviate journal/series titles
 foreach my $bibentry (@bibentries) {
-  foreach my $bibfield (qw(journal series)) {
-    next unless $bibentry->exists($bibfield);
+  foreach my $titlefield (qw(journal series)) {
+
+    # skip missing fields
+    next unless $bibentry->exists($titlefield);
+
+    # abbreviate title by applying schemes
+    my $title = $bibentry->get($titlefield);
     foreach my $scheme (@abbreviate_schemes) {
 
       if ($scheme =~ /^aas$/) {
 
-        # abbreviate journal title
-        my $journal = $bibentry->get($bibfield);
+        # abbreviate title
         my %aas_macros = get_aas_macros();
         while (my ($key, $value) = each %aas_macros) {
-          last if $journal =~ s/^\s*$value\s*$/\\$key/i;
+          last if $title =~ s/^\s*$value\s*$/\\$key/i;
         }
-        $bibentry->set($bibfield, $journal);
 
       } elsif ($scheme =~ /^iso4([~])?$/) {
 
         # parse ISO4 options
         my $separator = $1 // ' ';
 
-        # abbreviate journal title
-        my $journal = $bibentry->get($bibfield);
-        $journal = abbr_iso4_title($separator, $journal);
-        $bibentry->set($bibfield, $journal);
+        # abbreviate title
+        $title = abbr_iso4_title($separator, $title);
 
       } else {
         croak "$Script: unrecognised abbreviation scheme '$scheme'";
       }
 
+      # stop if scheme has renamed title
+      last if $title ne $bibentry->get($titlefield);
+
     }
+    $bibentry->set($titlefield, $title);
+
   }
 }
 
