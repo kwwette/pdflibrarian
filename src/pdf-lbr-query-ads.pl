@@ -33,7 +33,7 @@ use URI;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::title_abbr qw(%aas_macros);
+use pdflibrarian::title_abbr qw(get_aas_macros);
 
 =pod
 
@@ -191,6 +191,7 @@ $bibstr =~ s/^\s+//;
 $bibstr =~ s/\s+$//;
 
 # replace journal abbreviations in exported ADS BibTeX
+my %aas_macros = get_aas_macros();
 while (my ($key, $value) = each %aas_macros) {
   $bibstr =~ s/{\\$key}/{$value}/;
 }

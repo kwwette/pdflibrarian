@@ -29,7 +29,7 @@ use Text::CSV::Encoded;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(%aas_macros abbr_iso4_title);
+our @EXPORT_OK = qw(get_aas_macros abbr_iso4_title);
 
 my %aas_macros;
 
@@ -124,6 +124,10 @@ END {
     printf STDERR "$Script: cached $iso4_title_abbr_cache_new new ISO4 title abbreviations in '$iso4_title_abbr_cachefile'\n";
   }
 
+}
+
+sub get_aas_macros {
+  return %aas_macros;
 }
 
 sub abbr_iso4_title {

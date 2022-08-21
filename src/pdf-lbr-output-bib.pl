@@ -30,7 +30,7 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys write_bib_to_fh);
-use pdflibrarian::title_abbr qw(%aas_macros abbr_iso4_title);
+use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
 use pdflibrarian::util qw(find_pdf_files);
 
 =pod
@@ -169,6 +169,7 @@ foreach my $bibentry (@bibentries) {
 
         # abbreviate journal title
         my $journal = $bibentry->get($bibfield);
+        my %aas_macros = get_aas_macros();
         while (my ($key, $value) = each %aas_macros) {
           last if $journal =~ s/^\s*$value\s*$/\\$key/i;
         }
