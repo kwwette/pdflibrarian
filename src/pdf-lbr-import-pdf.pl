@@ -44,11 +44,11 @@ B<pdf-lbr-import-pdf> - Import PDF files into the PDF library.
 
 B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-import-pdf> I<files>|I<directories> ...
+B<pdf-lbr-import-pdf> [B<--no-pdf-bib>] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
-B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library.
+B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library. If B<--no-pdf-bib> is specified, any BibTeX metadata embedded in the PDF files will be ignored.
 
 The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s).
 
@@ -63,10 +63,11 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help);
+my ($version, $help, $no_pdf_bib);
 GetOptions(
            "version|v" => \$version,
            "help|h" => \$help,
+           "no-pdf-bib" => \$no_pdf_bib,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
@@ -115,8 +116,9 @@ foreach my $pdffile (@pdffiles) {
 
 }
 
-# add PDF files with existing BibTeX entries to library
-{
+# add PDF files with existing BibTeX entries to library (unless --no-pdf-bib was specified)
+if (!$no_pdf_bib) {
+
   # read BibTeX entries (if any) from PDF metadata
   my @allbibentries = read_bib_from_pdf(@pdffiles);
 
