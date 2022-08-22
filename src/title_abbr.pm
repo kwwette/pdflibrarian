@@ -152,7 +152,7 @@ sub abbr_iso4_title {
       # delete lowercase words
       next if $word =~ /^\p{Ll}/;
 
-      # skip non-alphabetic words
+      # delete non-alphabetic words
       next if $word =~ /^\W+$/;
 
       # keep single uppercase letters as last word
