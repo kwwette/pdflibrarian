@@ -397,11 +397,21 @@ sub write_bib_to_fh {
     my @fieldlist = sort { $order{$a} <=> $order{$b} } keys(%order);
     $bibentry->set_fieldlist(\@fieldlist);
 
+    # decide if/how to output PDF filename
+    my $pdf_file_comment = "";
+    if (defined($opts->{pdf_file})) {
+      if ($opts->{pdf_file} eq "comment") {
+        my $pdf_file = $bibentry->get("file");
+        $pdf_file_comment = "% file: $pdf_file\n";
+      }
+      $bibentry->delete("file");
+    }
+
     # print entry
     my $bibstr = $bibentry->print_s();
     $bibstr =~ s/^\s+//g;
     $bibstr =~ s/\s+$//g;
-    print $fh "\n", encode('iso-8859-1', $bibstr, Encode::FB_CROAK), "\n";
+    print $fh "\n", $pdf_file_comment, encode('iso-8859-1', $bibstr, Encode::FB_CROAK), "\n";
 
   }
 

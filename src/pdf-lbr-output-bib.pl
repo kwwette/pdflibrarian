@@ -43,7 +43,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] [ B<--abbreviate>|B<-a> I<scheme> ... ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--exclude>|B<-e> I<field> | B<--no-exclude>|B<-E> ] [ B<--set>|B<-s> I<field>B<=>I<value> ... ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
@@ -99,6 +99,10 @@ Same as I<iso4> but separate words with tildes instead of spaces.
 
 =back
 
+=item B<--pdf-file-comment>|B<-P>
+
+If true, output the PDF filename as a comment before each BibTeX entry. Default is false. (The PDF filename is never included in the BibTeX entry itself.)
+
 =back
 
 =head1 PART OF
@@ -108,8 +112,9 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set, @abbreviate_schemes);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, @exclude, $no_exclude, %set, @abbreviate_schemes, $pdf_file_comment);
 $max_authors = 0;
+$pdf_file_comment = 0;
 GetOptions(
            "version|v" => \$version,
            "help|h" => \$help,
@@ -120,6 +125,7 @@ GetOptions(
            "no-exclude|E" => \$no_exclude,
            "set|s=s" => \%set,
            "abbreviate|a=s" => \@abbreviate_schemes,
+           "pdf-file-comment|P" => \$pdf_file_comment,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
@@ -143,8 +149,8 @@ if (@exclude > 0) {
 
 foreach my $bibentry (@bibentries) {
 
-  # exclude BibTeX fields ('file' is always excluded)
-  foreach my $bibfield (('file', @exclude)) {
+  # exclude BibTeX fields
+  foreach my $bibfield (@exclude) {
     $bibentry->delete($bibfield);
   }
 
@@ -203,7 +209,14 @@ foreach my $bibentry (@bibentries) {
 my $bibstring = "";
 {
   open(my $fh, "+<", \$bibstring);
-  write_bib_to_fh { fh => $fh, max_authors => $max_authors, only_first_author => $only_first_author }, @bibentries;
+  write_bib_to_fh( {
+                    fh => $fh,
+                    max_authors => $max_authors,
+                    only_first_author => $only_first_author,
+                    pdf_file => $pdf_file_comment ? "comment" : "none"
+                   },
+                   @bibentries
+                 );
   close($fh);
 }
 
