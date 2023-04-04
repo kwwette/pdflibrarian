@@ -31,8 +31,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::library qw(cleanup_links);
-use pdflibrarian::util qw(is_in_dir);
+use pdflibrarian::library qw(pdf_is_in_library cleanup_links);
 
 =pod
 
@@ -73,12 +72,12 @@ $outdir = $ENV{HOME} unless defined($outdir);
 croak "$Script: '$outdir' is not a directory" unless -d $outdir;
 croak "$Script: requires a single argument" unless @ARGV == 1;
 my $pdflink = $ARGV[0];
-croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdflinkdir, $pdflink);
+croak "$Script: '$pdflink' is not in the PDF library" unless pdf_is_in_library($pdflink);
 croak "$Script: '$pdflink' is not a symbolic link" unless -l $pdflink;
 
 # try to resolve symbolic link
 my $pdffile = readlink($pdflink) or croak "$Script: could not resolve '$pdflink': %!";
-croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
+croak "$Script: '$pdflink' is not in the PDF library" unless pdf_is_in_library($pdffile);
 
 # move PDF file to output directory, with same name as link
 my ($linkvol, $linkdir, $linkfile) = File::Spec->splitpath($pdflink);

@@ -752,7 +752,7 @@ sub generate_bib_keys {
 
         # add any Roman numeral to suffix, and stop processing title
         if (grep { $word eq $_ } qw(II III IV V VI VII VIII IX)) {
-          $suffix .= ":$word";
+          $suffix .= "-$word";
           last;
         }
 
@@ -771,23 +771,25 @@ sub generate_bib_keys {
       unless (length($suffix) > 0) {
 
         # add volume number (if any) to suffix for books and proceedings
-        $suffix .= ':v' . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
+        $suffix .= '-v' . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
 
       }
 
       # add abbreviated title and suffix to key
-      $key .= ':' . join('', @words);
+      $key .= '-' . join('', @words);
       $key .= $suffix if length($suffix) > 0;
 
     }
 
     # sanitise key
     $key = unidecode($key);
-    $key =~ s/[^\w\d:]//g;
+    $key =~ s/[^\w\d-]//g;
+    $key =~ s/^-//;
+    $key =~ s/^--+/-/g;
 
     # set key to generated key, unless start of key matches generated key
     # - this is so user can further customise key by appending characters
-    unless ($bibentry->key =~ /^$key($|:)/) {
+    unless ($bibentry->key =~ /^$key($|-)/) {
       $bibentry->set_key($key);
       ++$keys;
     }

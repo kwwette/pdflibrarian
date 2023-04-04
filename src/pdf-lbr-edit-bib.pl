@@ -29,8 +29,8 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
-use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::util qw(is_in_dir unique_list find_pdf_files);
+use pdflibrarian::library qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::util qw(unique_list find_pdf_files);
 
 =pod
 
@@ -71,7 +71,7 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 my @pdffiles = find_pdf_files(@ARGV);
 croak "$Script: no PDF files to edit" unless @pdffiles > 0;
 foreach my $pdffile (@pdffiles) {
-  croak "$Script: '$pdffile' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
+  croak "$Script: '$pdffile' is not in the PDF library" unless pdf_is_in_library($pdffile);
 }
 
 # read BibTeX entries from PDF metadata

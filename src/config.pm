@@ -59,10 +59,8 @@ our $pdftotext = "@pdftotext@";
 
 push @EXPORT, '$cfgdir';
 our $cfgdir;
-push @EXPORT, '$pdffiledir';
-our $pdffiledir;
-push @EXPORT, '$pdflinkdir';
-our $pdflinkdir;
+push @EXPORT, '$pdflibrarydir';
+our $pdflibrarydir;
 
 push @EXPORT, '$pref_query_database';
 our $pref_query_database;
@@ -113,11 +111,9 @@ INIT {
   # import configuration
   %config = $cfg->vars();
 
-  # set PDF files directory
-  $pdffiledir = File::Spec->catdir($config{'general.pdflibrarydir'}, 'PDFs');
-
-  # set PDF links directory
-  $pdflinkdir = File::Spec->catdir($config{'general.pdflibrarydir'}, 'Links');
+  # set PDF library directory
+  $pdflibrarydir = $config{'general.pdflibrarydir'};
+  File::Path::make_path($pdflibrarydir);
 
   # set query database
   $pref_query_database = $config{'general.prefquery'};
@@ -133,15 +129,6 @@ INIT {
       }
     }
   }
-
-  # create directories for PDF files
-  for (my $i = 0; $i < 16; ++$i) {
-    my $dir = File::Spec->catdir($pdffiledir, sprintf("%x", $i));
-    File::Path::make_path($dir);
-  }
-
-  # create directory for PDF links
-  File::Path::make_path($pdflinkdir);
 
   # create default list of fields to exclude from printed BibTeX output
   @default_exclude = split/\s+/, $config{'general.default_exclude'};

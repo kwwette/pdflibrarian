@@ -82,12 +82,12 @@ sub find_pdf_files {
       find({wanted => \&$wanted, no_chdir => 1}, $_);
     } elsif (-r $_) {
       &$wanted($_);
-    } elsif (!File::Spec->file_name_is_absolute($_) && -d File::Spec->catdir($pdflinkdir, $_)) {
-      find({wanted => \&$wanted, no_chdir => 1}, File::Spec->catdir($pdflinkdir, $_));
-    } elsif (!File::Spec->file_name_is_absolute($_) && -r File::Spec->catfile($pdflinkdir, $_)) {
-      &$wanted(File::Spec->catfile($pdflinkdir, $_));
+    } elsif (!File::Spec->file_name_is_absolute($_) && -d File::Spec->catdir($pdflibrarydir, $_)) {
+      find({wanted => \&$wanted, no_chdir => 1}, File::Spec->catdir($pdflibrarydir, $_));
+    } elsif (!File::Spec->file_name_is_absolute($_) && -r File::Spec->catfile($pdflibrarydir, $_)) {
+      &$wanted(File::Spec->catfile($pdflibrarydir, $_));
     } else {
-      croak "$Script: '$_' is neither a file nor a directory, either by itself or within '$pdflinkdir'";
+      croak "$Script: '$_' is neither a file nor a directory, either by itself or within '$pdflibrarydir'";
     }
   }
 
@@ -97,7 +97,7 @@ sub find_pdf_files {
 sub keyword_display_str {
 
   # build list of keyword directories in PDF library
-  my $pdfkeyworddir = File::Spec->catdir($pdflinkdir, 'Keywords');
+  my $pdfkeyworddir = File::Spec->catdir($pdflibrarydir, 'Keywords');
   return "" unless -d $pdfkeyworddir;
   my @keywords;
   my $wanted = sub {

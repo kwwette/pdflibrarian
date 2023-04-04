@@ -34,9 +34,17 @@ use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
 use pdflibrarian::config;
 use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_short_words);
 
-our @EXPORT_OK = qw(update_pdf_lib make_pdf_links cleanup_links);
+our @EXPORT_OK = qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
 
 1;
+
+sub pdf_is_in_library {
+  my ($pdffile) = @_;
+
+  # return whether PDF file is already in library
+  return is_in_dir("$pdflibrarydir/Files", $pdffile);
+
+}
 
 sub update_pdf_lib {
   my (@bibentries) = @_;
@@ -50,15 +58,17 @@ sub update_pdf_lib {
     my $pdffile = $bibentry->get('file');
 
     # record which PDF files are new to the library
-    ++$newbibentries unless is_in_dir($pdffiledir, $pdffile);
-
-    # compute checksum of BibTeX entry (except from PDF filename)
-    my $checksum = bib_checksum($bibentry, 'file');
+    ++$newbibentries unless pdf_is_in_library($pdffile);
 
     # create name of PDF file in library:
-    # - organise PDF files under '$pdffiledir' directory, then directory which is first character of checksum
-    # - name PDF files after checksum with '.pdf' extension
-    my $pdflibfile = File::Spec->catfile($pdffiledir, substr($checksum, 0, 1), "$checksum.pdf");
+    # - organise PDF files under '$pdflibrarydir/Files', then first uppercase character of key
+    # - name PDF files after key with '.pdf' extension
+    my $key = $bibentry->key;
+    my $pdflibdir = File::Spec->catdir($pdflibrarydir, "Files", uc(substr($key, 0, 1)));
+    my $pdflibfile = File::Spec->catfile($pdflibdir, "$key.pdf");
+
+    # ensure directory for PDF file exists
+    File::Path::make_path($pdflibdir);
 
     # move PDF file into library, including if library PDF filename has changed
     if ($pdffile ne $pdflibfile) {
@@ -70,7 +80,7 @@ sub update_pdf_lib {
     $bibentry->set('file', $pdflibfile);
 
   }
-  printf STDERR "$Script: added %i PDF files to '$pdffiledir'\n", $newbibentries if $newbibentries > 0;
+  printf STDERR "$Script: added %i PDF files to '$pdflibrarydir/Files'\n", $newbibentries if $newbibentries > 0;
 
 }
 
@@ -252,7 +262,7 @@ sub make_pdf_links {
 
       # make symbolic link path directories
       my $linkfilebase = pop @linkpath;
-      my $linkdir = File::Spec->catdir($pdflinkdir, @linkpath);
+      my $linkdir = File::Spec->catdir($pdflibrarydir, @linkpath);
       File::Path::make_path($linkdir);
 
       # make symbolic link file
@@ -265,7 +275,7 @@ sub make_pdf_links {
     }
 
   }
-  printf STDERR "$Script: made links to %i PDF files in '$pdflinkdir'\n", scalar(@bibentries);
+  printf STDERR "$Script: made links to %i PDF files in '$pdflibrarydir'\n", scalar(@bibentries);
 
 }
 
@@ -286,7 +296,7 @@ sub cleanup_links {
       }
     }
   };
-  find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflinkdir);
-  printf STDERR "$Script: cleaned up PDF file links in '$pdflinkdir'\n" unless $all;
+  find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflibrarydir);
+  printf STDERR "$Script: cleaned up PDF file links in '$pdflibrarydir'\n" unless $all;
 
 }

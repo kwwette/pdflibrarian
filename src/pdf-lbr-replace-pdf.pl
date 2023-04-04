@@ -32,8 +32,8 @@ use Pod::Usage;
 @perl_use_lib@;
 use pdflibrarian::bibtex qw(read_bib_from_pdf write_bib_to_pdf);
 use pdflibrarian::config;
-use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::util qw(is_in_dir find_pdf_files);
+use pdflibrarian::library qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
+use pdflibrarian::util qw(find_pdf_files);
 
 =pod
 
@@ -74,14 +74,14 @@ $outdir = $ENV{HOME} unless defined($outdir);
 croak "$Script: '$outdir' is not a directory" unless -d $outdir;
 croak "$Script: requires two arguments" unless @ARGV == 2;
 my $pdflink = $ARGV[0];
-croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdflinkdir, $pdflink);
+croak "$Script: '$pdflink' is not in the PDF library" unless pdf_is_in_library($pdflink);
 croak "$Script: '$pdflink' is not a symbolic link" unless -l $pdflink;
 my @newpdffile = find_pdf_files($ARGV[1]);
 croak "$Script: '$ARGV[1]' is not a PDF file" unless @newpdffile == 1;
 
 # try to resolve symbolic link
 my $pdffile = readlink($pdflink) or croak "$Script: could not resolve '$pdflink': %!";
-croak "$Script: '$pdflink' is not in the PDF library" unless is_in_dir($pdffiledir, $pdffile);
+croak "$Script: '$pdflink' is not in the PDF library" unless pdf_is_in_library($pdffile);
 
 # read BibTeX entry from PDF metadata
 my @bibentry = read_bib_from_pdf($pdffile);
