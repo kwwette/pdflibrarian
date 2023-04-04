@@ -90,6 +90,20 @@ write_bib_to_fh { fh => $fh }, @bibentries;
 @bibentries = edit_bib_in_fh($fh, @bibentries);
 exit 0 unless @bibentries > 0;
 
+# find any PDF files without a BibTeX entry
+my %bibentryfiles;
+foreach my $bibentry (@bibentries) {
+  $bibentryfiles{$bibentry->get('file')} = 1;
+}
+foreach my $pdffile (@pdffiles) {
+  if (!defined($bibentryfiles{$pdffile})) {
+    my ($vol, $dir, $file) = File::Spec->splitpath($pdffile);
+    my $removedpdffile = File::Spec->catfile($outdir, $file);
+    move($pdffile, $removedpdffile) or croak "$Script: could not move '$pdffile' to '$removedpdffile': $!";
+    print STDERR "$Script: removed PDF file '$file' to '$outdir'\n";
+  }
+}
+
 # regenerate keys for BibTeX entries
 generate_bib_keys(@bibentries);
 
@@ -110,19 +124,5 @@ make_pdf_links(@bibentries);
 
 # cleanup PDF links directory
 cleanup_links();
-
-# find any PDF files without a BibTeX entry
-my %bibentryfiles;
-foreach my $bibentry (@bibentries) {
-  $bibentryfiles{$bibentry->get('file')} = 1;
-}
-foreach my $pdffile (@pdffiles) {
-  if (!defined($bibentryfiles{$pdffile})) {
-    my ($vol, $dir, $file) = File::Spec->splitpath($pdffile);
-    my $removedpdffile = File::Spec->catfile($outdir, $file);
-    move($pdffile, $removedpdffile) or croak "$Script: could not move '$pdffile' to '$removedpdffile': $!";
-    print STDERR "$Script: removed PDF file '$file' to '$outdir'\n";
-  }
-}
 
 exit 0;
