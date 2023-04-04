@@ -32,6 +32,3 @@ man1_MANS = $(bin_SCRIPTS:%=%.man)
 EXTRA_DIST = \
 	$(DATA) \
 	$(END_OF_LINE)
-
-BUILT_SOURCES = \
-	$(END_OF_LINE)
