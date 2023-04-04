@@ -618,6 +618,7 @@ EOF
 
       # edit BibTeX entries
       my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
+      printf STDERR "$Script: opening %i BibTeX entries in editing program '$editor' ...\n", scalar(@bibentries);
       system($editor, $fh->filename) == 0 or croak "$Script: could not edit file '$fh->filename' with editing program '$editor'";
 
       # try to re-read BibTeX entries

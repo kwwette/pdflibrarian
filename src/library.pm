@@ -89,6 +89,7 @@ sub make_pdf_links {
   return unless @bibentries > 0;
 
   # make symbolic links in PDF links directory to real PDF files
+  my $count = 0;
   foreach my $bibentry (@bibentries) {
 
     # get name of PDF file
@@ -274,8 +275,14 @@ sub make_pdf_links {
 
     }
 
+    # print progress
+    ++$count;
+    if ($count % 50 == 0 || $count == @bibentries) {
+      printf STDERR "$Script: making links to %i/%i PDF files in '$pdflibrarydir'\r", $count++, scalar(@bibentries);
+      flush STDERR;
+    }
   }
-  printf STDERR "$Script: made links to %i PDF files in '$pdflibrarydir'\n", scalar(@bibentries);
+  printf STDERR "\n";
 
 }
 
