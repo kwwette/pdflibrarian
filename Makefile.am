@@ -24,6 +24,11 @@ pkgdata_DATA = \
 	src/title_abbr_iso4.csv \
 	$(END_OF_LINE)
 
+man1_MANS = $(bin_SCRIPTS:%=%.man)
+
+%.man: %
+	$(AM_V_GEN)$(POD2MAN) $* > $@
+
 EXTRA_DIST = \
 	$(DATA) \
 	$(END_OF_LINE)

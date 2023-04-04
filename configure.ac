@@ -22,6 +22,10 @@ AC_CACHE_CHECK([for perl version >= ${PERLVERSION}],[ac_cv_path_PERL],[
   ])
 ])
 AC_SUBST([PERL],[${ac_cv_path_PERL}])
+AC_PATH_PROGS([POD2MAN],[pod2man],[])
+AS_IF([test "x${POD2MAN}" = x],[
+  AC_MSG_ERROR([could not find 'pod2man' in PATH])
+])
 
 # determine Perl installation directories
 AC_MSG_CHECKING([for ${PERL} install prefix])
