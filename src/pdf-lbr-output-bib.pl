@@ -49,7 +49,7 @@ B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count>
 
 B<pdf-lbr-output-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
 
-The BibTeX metadata is then printed to standard output; if B<--clipboard> or B<-c> is given, it is instead copied to the clipboard.
+The BibTeX metadata is then printed to standard output; if B<--clipboard> is given, it is instead copied to the clipboard.
 
 =head1 OPTIONS
 

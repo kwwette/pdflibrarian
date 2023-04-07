@@ -45,7 +45,7 @@ B<pdf-lbr-replace-pdf> - Replace a PDF file in the PDF library with a new PDF fi
 
 B<pdf-lbr-replace-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-replace-pdf> [-o I<output-directory>] I<old-link> I<new-file>
+B<pdf-lbr-replace-pdf> [B<-o> I<output-directory>] I<old-link> I<new-file>
 
 =head1 DESCRIPTION
 

@@ -45,7 +45,7 @@ B<pdf-lbr-rebuild-links> - Rebuild the PDF links directory.
 
 B<pdf-lbr-rebuild-links> B<--help>|B<-h>
 
-B<pdf-lbr-rebuild-links> [-o I<output-directory>]
+B<pdf-lbr-rebuild-links> [B<-o> I<output-directory>]
 
 =head1 DESCRIPTION
 

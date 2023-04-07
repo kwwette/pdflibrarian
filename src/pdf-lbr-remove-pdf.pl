@@ -43,7 +43,7 @@ B<pdf-lbr-remove-pdf> - Remove a PDF file from the PDF library.
 
 B<pdf-lbr-remove-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-remove-pdf> [-o I<output-directory>] I<link>
+B<pdf-lbr-remove-pdf> [B<-o> I<output-directory>] I<link>
 
 =head1 DESCRIPTION
 
