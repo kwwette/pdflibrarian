@@ -22,6 +22,7 @@ package pdflibrarian::util;
 use Exporter 'import';
 
 use Carp;
+use Cwd;
 use File::Find;
 use File::MimeInfo::Magic;
 use File::Spec;
@@ -50,7 +51,10 @@ sub is_in_dir {
 
   # return true if '$path' is in '$dir', false otherwise
   sub spliteverything {
-    my ($v, $d, $f) = File::Spec->splitpath(File::Spec->rel2abs($_[0]));
+    my $p = $_[0];
+    $p = File::Spec->rel2abs($p);
+    $p = Cwd::abs_path($p);
+    my ($v, $d, $f) = File::Spec->splitpath($p);
     my @d = File::Spec->splitdir(File::Spec->catdir($d));
     ($v, @d, $f)
   }
