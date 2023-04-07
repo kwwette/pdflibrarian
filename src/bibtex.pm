@@ -742,9 +742,18 @@ sub generate_bib_keys {
 
     # add abbreviated title
     {
-      my $title = remove_tex_markup($bibentry->get("title"));
-      $title =~ s/[^\w\d\s]//g;
       my $suffix = "";
+      my $erratum = "";
+
+      my $title = $bibentry->get("title");
+      $title = remove_tex_markup($title);
+      if ($title =~ /^erratum[:\s]/i) {
+        $erratum = "-ERRATUM";
+        $title =~ s/\([^()]+\)$//;
+        $title =~ s/\[[^[\]]+\]$//;
+        print "DEBUG $title\n";
+      }
+      $title =~ s/[^\w\d\s]//g;
 
       # abbreviate title words
       my @words = remove_short_words(split(/\s+/, $title));
@@ -778,7 +787,7 @@ sub generate_bib_keys {
 
       # add abbreviated title and suffix to key
       $key .= '-' . join('', @words);
-      $key .= $suffix if length($suffix) > 0;
+      $key .= $suffix . $erratum;
 
     }
 
