@@ -88,6 +88,18 @@ sub make_pdf_links {
   my (@bibentries) = @_;
   return unless @bibentries > 0;
 
+  # find existing links
+  my %existinglinks;
+  {
+    my $wanted = sub {
+      if (-l $_) {
+        my $pdffile = readlink($_);
+        $existinglinks{$pdffile}->{$_} = 1 if defined($pdffile);
+      }
+    };
+    find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflibrarydir);
+  }
+
   # make symbolic links in PDF links directory to real PDF files
   my $count = 0;
   foreach my $bibentry (@bibentries) {
@@ -246,15 +258,9 @@ sub make_pdf_links {
 
     }
 
-    # find existing links
-    my %existinglinks;
-    {
-      my $wanted = sub {
-        if (-l $_ && readlink($_) eq $pdffile) {
-          $existinglinks{$_} = 0;
-        }
-      };
-      find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflibrarydir);
+    # mark old links for removal
+    foreach my $oldlink (keys %{$existinglinks{$pdffile}}) {
+      $existinglinks{$pdffile}->{$oldlink} = 0;
     }
 
     # make symbolic links
@@ -283,15 +289,8 @@ sub make_pdf_links {
         unlink($linkfile) or croak "$Script: could not unlink '$linkfile': $!";
       }
       symlink($pdffile, $linkfile) or croak "$Script: could not link '$linkfile' to '$pdffile': $!";
-      $existinglinks{$linkfile} = 1;
+      $existinglinks{$pdffile}->{$linkfile} = 1;
 
-    }
-
-    # remove old links
-    foreach my $oldlink (keys %existinglinks) {
-      if (!$existinglinks{$oldlink}) {
-        unlink($oldlink) or croak "$Script: could not unlink '$oldlink': $!";
-      }
     }
 
     # print progress
@@ -303,26 +302,29 @@ sub make_pdf_links {
   }
   printf STDERR "\n";
 
+  # remove old links
+  foreach my $pdffile (keys %existinglinks) {
+    foreach my $oldlink (keys %{$existinglinks{$pdffile}}) {
+      if (!$existinglinks{$pdffile}->{$oldlink}) {
+        unlink($oldlink) or croak "$Script: could not unlink '$oldlink': $!";
+      }
+    }
+  }
+
 }
 
 sub cleanup_links {
-  my ($all) = @_;
-  $all = defined($all) && $all eq 'all';
 
   # remove broken links and empty directories
   my $wanted = sub {
     if (-d $_) {
       rmdir $_;
     }
-    if (-l $_) {
-      my $unlink = $all;
-      stat($_) or $unlink = 1;
-      if ($unlink) {
-        unlink($_) or croak "$Script: could not unlink '$_': $!";
-      }
+    if (-l $_ && !stat($_)) {
+      unlink($_) or croak "$Script: could not unlink '$_': $!";
     }
   };
   find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflibrarydir);
-  printf STDERR "$Script: cleaned up PDF file links in '$pdflibrarydir'\n" unless $all;
+  printf STDERR "$Script: cleaned up PDF file links in '$pdflibrarydir'\n";
 
 }

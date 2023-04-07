@@ -116,9 +116,6 @@ write_bib_to_pdf(@bibentries);
 # ensure all PDF files are part of library
 update_pdf_lib(@bibentries);
 
-# cleanup all PDF links directory
-cleanup_links('all');
-
 # make links in PDF links directory to real PDF files
 make_pdf_links(@bibentries);
 
