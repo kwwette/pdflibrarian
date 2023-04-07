@@ -24,6 +24,7 @@ package pdflibrarian::query_dialog::dialog;
 
 use Wx qw(:dialog :statictext :combobox :textctrl :sizer :panel :window :id);
 use Wx::Event qw(EVT_BUTTON EVT_TEXT EVT_TEXT_ENTER);
+use Wx::ArtProvider;
 
 use base qw(Wx::Dialog);
 
@@ -38,6 +39,10 @@ sub new {
 
   # create dialog
   my $self = $class->SUPER::new(undef, -1, "Import $pdffile - PDF Librarian", &Wx::wxDefaultPosition, &Wx::wxDefaultSize, wxDIALOG_NO_PARENT | wxDEFAULT_DIALOG_STYLE);
+
+  # set dialog icon
+  my $icon = Wx::ArtProvider::GetIcon(Wx::ArtProvider::wxART_QUESTION, Wx::ArtProvider::wxART_CMN_DIALOG);
+  $self->SetIcon($icon);
 
   # create panel and sizer
   my $topsizer = Wx::BoxSizer->new(wxVERTICAL);
