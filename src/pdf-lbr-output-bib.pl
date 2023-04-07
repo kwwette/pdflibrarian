@@ -43,7 +43,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>B<=>I<spec> ... ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>B<=>I<spec> ... | B<--no-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
 
 =head1 DESCRIPTION
 
@@ -67,7 +67,7 @@ If the number of authors is greater than I<count>, and
 
 =back
 
-=item B<--filter>|B<-F> [I<type>B<:>]I<field>B<=>I<spec> ...
+=item B<--filter>|B<-F> [I<type>B<:>]I<field>B<=>I<spec> ... | B<--no-filter>|B<-N>
 
 Apply the filter I<spec> to the BibTeX I<field>. If given, I<type> applies filter only to BibTeX entries of that type. Possible I<spec> are:
 
@@ -86,6 +86,8 @@ Set I<field> to I<value> in output.
 Replace each regular expression I<pattern> with I<replacement> in output.
 
 =back
+
+If no B<--filter> arguments are given, default filters given in the configuration file are applied. If B<--no-filter> is given, however, no filters are applied.
 
 =item B<--abbreviate>|B<-a> I<scheme> ...
 
@@ -120,7 +122,7 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, @abbreviate_schemes, $pdf_file_comment);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_filter, @abbreviate_schemes, $pdf_file_comment);
 $max_authors = 0;
 $pdf_file_comment = 0;
 GetOptions(
@@ -130,12 +132,14 @@ GetOptions(
            "max-authors|m=i" => \$max_authors,
            "only-first-author|f" => \$only_first_author,
            "filter|F=s" => \%filter,
+           "no-filter|N" => \$no_filter,
            "abbreviate|a=s" => \@abbreviate_schemes,
            "pdf-file-comment|P" => \$pdf_file_comment,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 croak "$Script: --max-authors must be positive" if $max_authors < 0;
+croak "$Script: --filter and --no-filter are mutually exclusive" if (scalar(%filter) > 0 and $no_filter);
 
 # get list of PDF files
 my @pdffiles = find_pdf_files(@ARGV);
@@ -144,9 +148,12 @@ croak "$Script: no PDF files to read from" unless @pdffiles > 0;
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
 
-# use default field filter if none given
-if (scalar(%filter) == 0) {
+# use default field filter if --no-filter is not given
+if ($no_filter) {
+  printf STDERR "$Script: using no field filters\n";
+} elsif (scalar(%filter) == 0) {
   %filter = %default_filter;
+  printf STDERR "$Script: using default field filters from configuration file\n";
 }
 
 # print field filters
