@@ -747,7 +747,7 @@ sub generate_bib_keys {
 
       my $title = $bibentry->get("title");
       $title = remove_tex_markup($title);
-      if ($title =~ /^erratum[:\s]/i) {
+      if ($title =~ s/^erratum[\p{IsPunct}\s]//i) {
         $erratum = "-ERRATUM";
         $title =~ s/\([^()]+\)$//;
         $title =~ s/\[[^[\]]+\]$//;
