@@ -156,19 +156,32 @@ if ($no_filter) {
   printf STDERR "$Script: using default field filters from configuration file\n";
 }
 
+# parse field filters
+my %filterbibtype;
+my %filterbibfield;
+foreach my $field (keys %filter) {
+  if ($field =~ /^([^:]*):(.*)$/) {
+    $filterbibtype{$field} = $1;
+    $filterbibfield{$field} = $2;
+  } else {
+    $filterbibtype{$field} = ".";
+    $filterbibfield{$field} = $field;
+  }
+}
+
 # print field filters
-foreach my $field (sort { $filter{$a} cmp $filter{$b} || $a cmp $b } keys %filter) {
-  my $bibfield = $field;
-  my $bibselect = "BibTeX field '$bibfield'";
-  if ($bibfield =~ /^([^:]*):(.*)$/) {
-    $bibfield = $2;
-    $bibselect = "BibTeX field '$2' (in entries of type '$1')";
+foreach my $field (sort { $filterbibtype{$a} cmp $filterbibtype{$b} || $filterbibfield{$a} cmp $filterbibfield{$b} } keys %filter) {
+  my $bibtype = $filterbibtype{$field};
+  my $bibfield = $filterbibfield{$field};
+  my $filterdesc = "BibTeX field '$bibfield'";
+  if ($bibtype ne ".") {
+    $filterdesc .= " (in entries of type '$bibtype')";
   }
   my $spec = $filter{$field};
   if ($spec =~ /^d/) {
-    printf STDERR "$Script: excluding $bibselect from output\n";
+    printf STDERR "$Script: excluding $filterdesc from output\n";
   } elsif ($spec =~ s/^=//) {
-    printf STDERR "$Script: setting $bibselect to value '$spec' in output\n";
+    printf STDERR "$Script: setting $filterdesc to value '$spec' in output\n";
   } elsif ($spec =~ s|^s/(.*)/$|$1|) {
     my @spec_regex = split(m|/|, $1, -1);
     if (@spec_regex == 0 || @spec_regex % 2 != 0) {
@@ -177,7 +190,7 @@ foreach my $field (sort { $filter{$a} cmp $filter{$b} || $a cmp $b } keys %filte
     while (@spec_regex) {
       my $patt = shift @spec_regex;
       my $repl = shift @spec_regex;
-      printf STDERR "$Script: replacing regular expression '$patt' with '$repl' in output $bibselect\n";
+      printf STDERR "$Script: replacing regular expression '$patt' with '$repl' in output $filterdesc\n";
     }
   } else {
     croak "$Script: invalid spec '$bibfield=$spec' passed to --filter/-F";
@@ -187,11 +200,9 @@ foreach my $field (sort { $filter{$a} cmp $filter{$b} || $a cmp $b } keys %filte
 # apply field filters
 foreach my $bibentry (@bibentries) {
   foreach my $field (keys %filter) {
-    my $bibfield = $field;
-    if ($bibfield =~ /^([^:]*):(.*)$/) {
-      $bibfield = $2;
-      next if $bibentry->type ne $1;
-    }
+    my $bibtype = $filterbibtype{$field};
+    my $bibfield = $filterbibfield{$field};
+    next if $bibentry->type !~ /$bibtype/;
     my $spec = $filter{$field};
     if ($spec =~ /^d/) {
       $bibentry->delete($bibfield);
