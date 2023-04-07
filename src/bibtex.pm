@@ -751,7 +751,6 @@ sub generate_bib_keys {
         $erratum = "-ERRATUM";
         $title =~ s/\([^()]+\)$//;
         $title =~ s/\[[^[\]]+\]$//;
-        print "DEBUG $title\n";
       }
       $title =~ s/[^\w\d\s]//g;
 
