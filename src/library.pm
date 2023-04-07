@@ -246,6 +246,17 @@ sub make_pdf_links {
 
     }
 
+    # find existing links
+    my %existinglinks;
+    {
+      my $wanted = sub {
+        if (-l $_ && readlink($_) eq $pdffile) {
+          $existinglinks{$_} = 0;
+        }
+      };
+      find({wanted => \&$wanted, bydepth => 1, no_chdir => 1}, $pdflibrarydir);
+    }
+
     # make symbolic links
     foreach (@links) {
 
@@ -271,8 +282,16 @@ sub make_pdf_links {
       if (-l $linkfile) {
         unlink($linkfile) or croak "$Script: could not unlink '$linkfile': $!";
       }
-      symlink($pdffile, $linkfile) or croak "$Script: could not link '$linkfile' to '$pdffile': $!"
+      symlink($pdffile, $linkfile) or croak "$Script: could not link '$linkfile' to '$pdffile': $!";
+      $existinglinks{$linkfile} = 1;
 
+    }
+
+    # remove old links
+    foreach my $oldlink (keys %existinglinks) {
+      if (!$existinglinks{$oldlink}) {
+        unlink($oldlink) or croak "$Script: could not unlink '$oldlink': $!";
+      }
     }
 
     # print progress
