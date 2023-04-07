@@ -191,14 +191,16 @@ foreach my $bibentry (@bibentries) {
     } elsif ($spec =~ s/^=//) {
       $bibentry->set($bibfield, $spec);
     } elsif ($spec =~ s|^s/(.*)/$|$1|) {
-      my @spec_regex = split(m|/|, $1, -1);
-      my $bibfieldvalue = $bibentry->get($bibfield);
-      while (@spec_regex) {
-        my $patt = shift @spec_regex;
-        my $repl = shift @spec_regex;
-        $bibfieldvalue =~ s/$patt/$repl/g;
+      if ($bibentry->exists($bibfield)) {
+        my @spec_regex = split(m|/|, $1, -1);
+        my $bibfieldvalue = $bibentry->get($bibfield);
+        while (@spec_regex) {
+          my $patt = shift @spec_regex;
+          my $repl = shift @spec_regex;
+          $bibfieldvalue =~ s/$patt/$repl/g;
+        }
+        $bibentry->set($bibfield, $bibfieldvalue);
       }
-      $bibentry->set($bibfield, $bibfieldvalue);
     }
   }
 }
