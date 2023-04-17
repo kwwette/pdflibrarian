@@ -76,6 +76,7 @@ $outdir = $ENV{HOME} unless defined($outdir);
 croak "$Script: '$outdir' is not a directory" unless -d $outdir;
 
 # get list of PDF files in library
+print STDERR "$Script: finding PDF files in library directory '$pdflibrarydir' ...\n";
 my @pdffiles = find_pdf_files($pdflibrarydir);
 
 # read BibTeX entries from PDF metadata
