@@ -115,24 +115,25 @@ sub make_pdf_links {
     my $pdflinkfile;
     {
 
+      # append year
+      $pdflinkfile .= " " . $bibentry->get("year");
+
       # format authors, editors, and collaborations
       my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
       my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
       my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
-      # start with first non-empty of authoring collaborations, individual authors, and/or editors
-      $pdflinkfile = "@collaborations";
-      $pdflinkfile = "@authors" unless length($pdflinkfile) > 0;
-      $pdflinkfile = "@editors ed" unless length($pdflinkfile) > 0;
+      # append first non-empty of authoring collaborations, individual authors, and/or editors
+      my $authorstr = "@collaborations";
+      $authorstr = "@authors" unless length($authorstr) > 0;
+      $authorstr = "@editors ed" unless length($authorstr) > 0;
+      $pdflinkfile .= " $authorstr";
 
       # append title
       $pdflinkfile .= " $title";
 
       # append volume number (if any) for books and proceedings
       $pdflinkfile .= " vol" . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
-
-      # append year
-      $pdflinkfile .= " " . $bibentry->get("year");
 
     }
 
