@@ -297,7 +297,7 @@ sub make_pdf_links {
     # print progress
     ++$count;
     if ($count % 50 == 0 || $count == @bibentries) {
-      printf STDERR "$Script: making links to %i/%i PDF files in '$pdflibrarydir'\r", $count++, scalar(@bibentries);
+      printf STDERR "$Script: making links to %i/%i PDF files in '$pdflibrarydir'\r", $count, scalar(@bibentries);
       flush STDERR;
     }
   }
