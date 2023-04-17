@@ -111,29 +111,35 @@ sub make_pdf_links {
     my $title = remove_tex_markup($bibentry->get("title") // "NO-TITLE");
     $title = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $title)));
 
-    # make PDF link name; should be unique within library
-    my $pdflinkfile;
+    # make PDF link names; should be unique within library
+    my %pdflinkby;
     {
-
-      # append year
-      $pdflinkfile .= " " . $bibentry->get("year");
 
       # format authors, editors, and collaborations
       my @authors = format_bib_authors("vl", 2, "et al", $bibentry->names("author"));
       my @editors = format_bib_authors("vl", 2, "et al", $bibentry->names("editor"));
       my @collaborations = format_bib_authors("vl", 2, "et al", $bibentry->names("collaboration"));
 
-      # append first non-empty of authoring collaborations, individual authors, and/or editors
+      # first non-empty of authoring collaborations, individual authors, and/or editors
       my $authorstr = "@collaborations";
       $authorstr = "@authors" unless length($authorstr) > 0;
       $authorstr = "@editors ed" unless length($authorstr) > 0;
-      $pdflinkfile .= " $authorstr";
 
-      # append title
-      $pdflinkfile .= " $title";
+      # title, plus volume number (if any) for books and proceedings
+      my $titlestr = $title;
+      $titlestr .= " vol" . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
 
-      # append volume number (if any) for books and proceedings
-      $pdflinkfile .= " vol" . $bibentry->get("volume") if (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) && $bibentry->exists("volume");
+      # year
+      my $yearstr .= " " . $bibentry->get("year");
+
+      # link name by author
+      $pdflinkby{Author} = "$authorstr $yearstr $titlestr";
+
+      # link name by title
+      $pdflinkby{Title} = "$titlestr $authorstr $yearstr";
+
+      # link name by year
+      $pdflinkby{Year} = "$yearstr $authorstr $titlestr";
 
     }
 
@@ -155,13 +161,15 @@ sub make_pdf_links {
       my @collaborations = format_bib_authors("vl", undef, "", $bibentry->names("collaboration"));
 
       # make links
-      foreach my $author (@collaborations, @authors) {
-        next if $author eq "";
-        push @links, ["Authors", $author, "$pdflinkfile"];
-      }
-      foreach my $editor (@editors) {
-        next if $editor eq "";
-        push @links, ["Authors", "$editor ed", "$pdflinkfile"];
+      foreach my $by (qw(Year Title)) {
+        foreach my $author (@collaborations, @authors) {
+          next if $author eq "";
+          push @links, ["Authors", $author, "By$by $pdflinkby{$by}"];
+        }
+        foreach my $editor (@editors) {
+          next if $editor eq "";
+          push @links, ["Authors", "$editor ed", "By$by $pdflinkby{$by}"];
+        }
       }
 
     }
@@ -169,11 +177,15 @@ sub make_pdf_links {
     # make links by first word of title
     my $firstword = ucfirst($title);
     $firstword =~ s/\s.*$//;
-    push @links, ["Titles", $firstword, "$pdflinkfile"];
+    foreach my $by (qw(Author Year)) {
+      push @links, ["Titles", $firstword, "By$by $pdflinkby{$by}"];
+    }
 
     # make links by year
-    my $year = $bibentry->get("year") // "NO-YEAR";
-    push @links, ["Years", $year, "$pdflinkfile"];
+    foreach my $by (qw(Author Title)) {
+      my $year = $bibentry->get("year") // "NO-YEAR";
+      push @links, ["Years", $year, "By$by $pdflinkby{$by}"];
+    }
 
     # make links by keyword(s)
     my %keywords;
@@ -187,7 +199,9 @@ sub make_pdf_links {
     foreach my $keyword (keys %keywords) {
       my @subkeywords = split /:|(?: - )/, $keyword;
       s/\b(\w)/\U$1\E/g for @subkeywords;
-      push @links, ["Keywords", @subkeywords, "$pdflinkfile"];
+      foreach my $by (qw(Author Title Year)) {
+        push @links, ["Keywords", @subkeywords, "By$by $pdflinkby{$by}"];
+      }
     }
 
     # make links by pre-print server
@@ -201,7 +215,7 @@ sub make_pdf_links {
         $eprintprefix =~ s/[^\d]//g;
         $eprintprefix = substr($eprintprefix, 0, 2);
       }
-      push @links, ["Pre Prints", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkfile"];
+      push @links, ["Pre Prints", "$archiveprefix", "$eprintprefix", "$eprint $pdflinkby{Author}"];
     }
 
     if (grep { $bibentry->type eq $_ } qw(article)) {
@@ -212,7 +226,7 @@ sub make_pdf_links {
       if ($journal ne $archiveprefix) {
         my $volume = $bibentry->get("volume") // "NO-VOLUME";
         my $pages = $bibentry->get("pages") // "NO-PAGES";
-        push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkfile"];
+        push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkby{Author}"];
       }
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
@@ -227,12 +241,12 @@ sub make_pdf_links {
         $numberprefix =~ s/[^\d]//g;
         $numberprefix = substr($numberprefix, 0, 2);
       }
-      push @links, ["Tech Reports", "$institution", "$numberprefix", "$number $pdflinkfile"];
+      push @links, ["Tech Reports", "$institution", "$numberprefix", "$number $pdflinkby{Author}"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(book inbook proceedings)) {
 
       # make links to books and (whole) proceedings
-      push @links, ["Books", "$pdflinkfile"];
+      push @links, ["Books", "$pdflinkby{Author}"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
 
@@ -240,22 +254,22 @@ sub make_pdf_links {
       my $booktitle = remove_tex_markup($bibentry->get("booktitle")) // "NO-BOOKTITLE";
       my $pages = $bibentry->get("pages") // "NO-PAGES";
       $booktitle = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $booktitle)));
-      push @links, ["In", $booktitle, "p$pages $pdflinkfile"];
+      push @links, ["In", $booktitle, "p$pages $pdflinkby{Author}"];
       if ($bibentry->exists("series")) {
         my $series = remove_tex_markup($bibentry->get("series"));
         my $volume = $bibentry->get("volume") // "NO-VOLUME";
-        push @links, ["In", "$series", "v$volume", "p$pages $pdflinkfile"];
+        push @links, ["In", "$series", "v$volume", "p$pages $pdflinkby{Author}"];
       }
 
     } elsif (grep { $bibentry->type eq $_ } qw(mastersthesis phdthesis)) {
 
       # make links to theses
-      push @links, ["Theses", "$pdflinkfile"];
+      push @links, ["Theses", "$pdflinkby{Author}"];
 
     } else {
 
       # make links to everything else
-      push @links, ["Misc", "$pdflinkfile"];
+      push @links, ["Misc", "$pdflinkby{Author}"];
 
     }
 
