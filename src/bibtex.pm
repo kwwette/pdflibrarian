@@ -41,7 +41,7 @@ use XML::LibXSLT;
 use pdflibrarian::config;
 use pdflibrarian::util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words);
 
-our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
+our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf format_bib write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
 # BibTeX database structure
 my $structure = new Text::BibTeX::Structure('Bib');
@@ -217,23 +217,19 @@ sub read_bib_from_pdf {
   return @bibentries;
 }
 
-sub write_bib_to_fh {
+sub format_bib {
   my ($opts, @bibentries) = @_;
-  die unless defined($opts->{fh});
-  my $fh = $opts->{fh};
 
   # check options
   $opts->{max_authors} = 0 unless defined($opts->{max_authors});
   $opts->{only_first_author} = 0 unless defined($opts->{only_first_author});
 
-  # print and format BibTeX entries
-  foreach my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+  # format BibTeX entries
+  my @fmtbibentries;
+  foreach my $bibentry (@bibentries) {
 
     # create a copy of BibTeX entry
     $bibentry = $bibentry->clone();
-
-    # remove checksum before printing
-    $bibentry->delete('checksum');
 
     # merge BibTeX field names which differ by 's', e.g. 'keyword' and 'keywords'
     foreach my $bibfield ($bibentry->fieldlist()) {
@@ -396,6 +392,30 @@ sub write_bib_to_fh {
     $order{'file'} = ++$orderidx if $bibentry->exists('file');
     my @fieldlist = sort { $order{$a} <=> $order{$b} } keys(%order);
     $bibentry->set_fieldlist(\@fieldlist);
+
+    # output formatted entry
+    push @fmtbibentries, $bibentry;
+
+  }
+
+  return @fmtbibentries;
+}
+
+sub write_bib_to_fh {
+  my ($opts, @bibentries) = @_;
+
+  # check options
+  die unless defined($opts->{fh});
+  my $fh = $opts->{fh};
+
+  # print BibTeX entries
+  foreach my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+
+    # create a copy of BibTeX entry
+    $bibentry = $bibentry->clone();
+
+    # remove checksum before printing
+    $bibentry->delete('checksum');
 
     # decide if/how to output PDF filename
     my $pdf_file_comment = "";
@@ -658,8 +678,8 @@ EOF
       my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
       binmode($fh, ":encoding(iso-8859-1)");
 
-      # print and format BibTeX entries with write_bib_to_fh()
-      write_bib_to_fh { fh => $fh }, @bibentries;
+      # format and print BibTeX entries
+      write_bib_to_fh({ fh => $fh }, format_bib({}, @bibentries));
       $fh->flush();
 
       # save handle to new temporary file; old temporary file is deleted

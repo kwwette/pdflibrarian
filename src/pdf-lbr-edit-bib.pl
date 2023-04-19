@@ -28,7 +28,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::util qw(unique_list find_pdf_files);
 
@@ -85,10 +85,10 @@ foreach my $bibentry (@bibentries) {
   $bibentry->silently_coerce();
 }
 
-# write BibTeX entries to a temporary file for editing
+# write formatted BibTeX entries to a temporary file for editing
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
-write_bib_to_fh { fh => $fh }, @bibentries;
+write_bib_to_fh({ fh => $fh }, format_bib({}, @bibentries));
 
 # edit BibTeX entries in PDF files
 @bibentries = edit_bib_in_fh($fh, @bibentries);

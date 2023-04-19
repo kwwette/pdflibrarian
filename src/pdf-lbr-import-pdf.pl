@@ -28,7 +28,7 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 @perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys read_bib_from_pdf write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys read_bib_from_pdf format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
@@ -259,8 +259,8 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     # coerse entry into BibTeX database structure
     $bibentry->silently_coerce();
 
-    # write BibTeX entry
-    write_bib_to_fh { fh => $fh }, $bibentry;
+    # write formatted BibTeX entry
+    write_bib_to_fh({ fh => $fh }, format_bib({}, $bibentry));
     $havebibstr = 1;
 
   } else {

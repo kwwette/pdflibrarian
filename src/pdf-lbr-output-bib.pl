@@ -29,7 +29,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys write_bib_to_fh);
+use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib write_bib_to_fh);
 use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
 use pdflibrarian::util qw(find_pdf_files);
 
@@ -147,6 +147,15 @@ croak "$Script: no PDF files to read from" unless @pdffiles > 0;
 
 # read BibTeX entries from PDF metadata
 my @bibentries = read_bib_from_pdf(@pdffiles);
+
+# format BibTeX entries
+@bibentries = format_bib(
+                         {
+                          max_authors => $max_authors,
+                          only_first_author => $only_first_author,
+                         },
+                         @bibentries
+                        );
 
 # use default field filter if --no-filter is not given
 if ($no_filter) {
@@ -271,14 +280,11 @@ foreach my $bibentry (@bibentries) {
 my $bibstring = "";
 {
   open(my $fh, "+<", \$bibstring);
-  write_bib_to_fh( {
-                    fh => $fh,
-                    max_authors => $max_authors,
-                    only_first_author => $only_first_author,
-                    pdf_file => $pdf_file_comment ? "comment" : "none"
-                   },
-                   @bibentries
-                 );
+  write_bib_to_fh({
+                   fh => $fh,
+                   pdf_file => $pdf_file_comment ? "comment" : "none"
+                  },
+                  @bibentries);
   close($fh);
 }
 
