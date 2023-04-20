@@ -164,11 +164,11 @@ sub make_pdf_links {
       foreach my $by (qw(Year Title)) {
         foreach my $author (@collaborations, @authors) {
           next if $author eq "";
-          push @links, ["Authors", $author, "By$by $pdflinkby{$by}"];
+          push @links, ["Authors", $author, "By $by", "$pdflinkby{$by}"];
         }
         foreach my $editor (@editors) {
           next if $editor eq "";
-          push @links, ["Authors", "$editor ed", "By$by $pdflinkby{$by}"];
+          push @links, ["Authors", "$editor ed", "By $by", "$pdflinkby{$by}"];
         }
       }
 
@@ -178,13 +178,13 @@ sub make_pdf_links {
     my $firstword = ucfirst($title);
     $firstword =~ s/\s.*$//;
     foreach my $by (qw(Author Year)) {
-      push @links, ["Titles", $firstword, "By$by $pdflinkby{$by}"];
+      push @links, ["Titles", $firstword, "By $by", "$pdflinkby{$by}"];
     }
 
     # make links by year
     foreach my $by (qw(Author Title)) {
       my $year = $bibentry->get("year") // "NO-YEAR";
-      push @links, ["Years", $year, "By$by $pdflinkby{$by}"];
+      push @links, ["Years", $year, "By $by", "$pdflinkby{$by}"];
     }
 
     # make links by keyword(s)
@@ -200,7 +200,7 @@ sub make_pdf_links {
       my @subkeywords = split /:|(?: - )/, $keyword;
       s/\b(\w)/\U$1\E/g for @subkeywords;
       foreach my $by (qw(Author Title Year)) {
-        push @links, ["Keywords", @subkeywords, "By$by $pdflinkby{$by}"];
+        push @links, ["Keywords", @subkeywords, "By $by", "$pdflinkby{$by}"];
       }
     }
 
