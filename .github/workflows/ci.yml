@@ -7,9 +7,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install build dependencies
-        run: |
-          sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base
-          sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'`
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: |
+            sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base
+            sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'`
       - name: Show Perl configuration
         run: |
           perl '-V:.*'
