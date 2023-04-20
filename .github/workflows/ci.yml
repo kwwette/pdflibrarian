@@ -13,6 +13,7 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 30
           command: |
+            sudo apt-get update -y || exit 1
             sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base || exit 1
             sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'` || exit 1
       - name: Show Perl configuration
