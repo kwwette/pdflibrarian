@@ -2,6 +2,7 @@ bin_SCRIPTS = \
 	pre-inst/pdf-lbr-edit-bib \
 	pre-inst/pdf-lbr-import-pdf \
 	pre-inst/pdf-lbr-output-bib \
+	pre-inst/pdf-lbr-output-key \
 	pre-inst/pdf-lbr-query-ads \
 	pre-inst/pdf-lbr-rebuild-links \
 	pre-inst/pdf-lbr-remove-pdf \

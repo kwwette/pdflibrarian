@@ -124,6 +124,7 @@ AC_CONFIG_FILES([
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
   pre-inst/pdf-lbr-import-pdf:src/pdf-lbr-import-pdf.pl
   pre-inst/pdf-lbr-output-bib:src/pdf-lbr-output-bib.pl
+  pre-inst/pdf-lbr-output-key:src/pdf-lbr-output-key.pl
   pre-inst/pdf-lbr-query-ads:src/pdf-lbr-query-ads.pl
   pre-inst/pdf-lbr-rebuild-links:src/pdf-lbr-rebuild-links.pl
   pre-inst/pdf-lbr-remove-pdf:src/pdf-lbr-remove-pdf.pl
