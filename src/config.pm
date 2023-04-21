@@ -1,4 +1,4 @@
-# Copyright (C) 2016--2018 Karl Wette
+# Copyright (C) 2016--2023 Karl Wette
 #
 # This file is part of PDF Librarian.
 #
