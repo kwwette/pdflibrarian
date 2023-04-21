@@ -103,40 +103,56 @@ sub keyword_display_str {
   # build list of keyword directories in PDF library
   my $pdfkeyworddir = File::Spec->catdir($pdflibrarydir, 'Keywords');
   return "" unless -d $pdfkeyworddir;
-  my @keywords;
+  my %keywords;
   my $wanted = sub {
-    return unless -d $_ && $_ ne $pdfkeyworddir;
-    my $k = join(' ', File::Spec->splitdir(File::Spec->abs2rel($_, $pdfkeyworddir)));
-    push @keywords, $k;
+
+    # only act on files, to get full keyword specification
+    return unless -f $_;
+
+    # get path relative to base keywork directory
+    my @kw = File::Spec->splitdir(File::Spec->abs2rel($_, $pdfkeyworddir));
+
+    # remove filename
+    pop @kw;
+
+    # remove any "by author/title/year" directories
+    pop @kw if $kw[-1] =~ /^By_/;
+
+    # format keywords
+    foreach (@kw) {
+      s/_/ /g;
+    }
+
+    # join all keywords apart from last one
+    my $lastkw = pop @kw;
+    my $kws = join(': ', @kw);
+
+    # add to keyword hash
+    if ($kws eq "") {
+      $keywords{$lastkw}{""} = 1;
+    } else {
+      $keywords{$kws}{$lastkw} = 1;
+    }
+
   };
   find({wanted => \&$wanted, no_chdir => 1}, $pdfkeyworddir);
-  @keywords = sort @keywords;
-  return "" unless @keywords > 0;
-
-  # build tree of keywords
-  for (my $i = 0; $i < @keywords; ++$i) {
-    my $parent = 0;
-    for (my $j = $i + 1; $j < @keywords; ++$j) {
-      $parent = 1 if $keywords[$j] =~ s/$keywords[$i]\s+/   /;
-    }
-    $keywords[$i] .= ":" if $parent;
-  }
+  return "" unless scalar(%keywords) > 0;
 
   # format keyword display string
-  my $str = join("\n", @keywords);
-  while (1) {
-    my $old = $str;
-    $str =~ s/^( +)([^\n]*)\n\1([^\n]*)$/$1$2, $3/msg;
-    last if $str eq $old;
+  my $str = "%% Currently defined keywords:\n";
+  foreach my $kws (sort { $a cmp $b } keys(%keywords)) {
+    my @lastkws = keys(%{$keywords{$kws}});
+    @lastkws = grep { $_ ne "" } @lastkws;
+    @lastkws = sort { $a cmp $b } @lastkws;
+    my $lastkws = join(', ', @lastkws);
+    if ($lastkws eq "") {
+      $str .= "%%   $kws\n";
+    } else {
+      $str .= "%%   $kws:\n";
+      my $prefix = "%%     ";
+      $str .= wrap($prefix, $prefix, $lastkws) . "\n";
+    }
   }
-  my @lines = split /\n/, $str;
-  foreach (@lines) {
-    $_ =~ /^( *)/;
-    my $prefix = "%   $1";
-    $_ =~ s/^ +//;
-    $_ = wrap($prefix, $prefix, $_)
-  }
-  $str = sprintf("%% Currently defined keywords:\n%s\n", join("\n", @lines));
 
   return $str;
 }
