@@ -217,6 +217,7 @@ sub remove_tex_markup {
       s/{\s*\\(\w)\s*}/$1/g;
       s/\\(\w)\s+/$1/g;
       s/\\\w+//g;
+      s/\\_/_/g;
       s/\\.//g;
       s/[{}]//g;
       s/\$//g;
