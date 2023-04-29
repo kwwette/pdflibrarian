@@ -32,7 +32,7 @@ use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys read_bib_from_pd
 use pdflibrarian::config;
 use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
 use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
-use pdflibrarian::util qw(find_pdf_files run_async kill_async);
+use pdflibrarian::util qw(get_file_list find_pdf_files run_async kill_async);
 
 =pod
 
@@ -46,9 +46,11 @@ B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
 B<pdf-lbr-import-pdf> [B<--no-pdf-bib>] I<files>|I<directories> ...
 
+... I<files>|I<directories> ... B<|> B<pdf-lbr-import-pdf> ...
+
 =head1 DESCRIPTION
 
-B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library. If B<--no-pdf-bib> is specified, any BibTeX metadata embedded in the PDF files will be ignored.
+B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library. If B<--no-pdf-bib> is specified, any BibTeX metadata embedded in the PDF files will be ignored. If I<files>|I<directories> are not given on the command line, they are read from standard input, one per line.
 
 The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s).
 
@@ -73,7 +75,7 @@ if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
-my @pdffiles = find_pdf_files(@ARGV);
+my @pdffiles = find_pdf_files(get_file_list());
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
 
 # pass PDF files through ghostscript to fix any issues

@@ -30,7 +30,7 @@ use Pod::Usage;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf generate_bib_keys format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
 use pdflibrarian::library qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::util qw(unique_list find_pdf_files);
+use pdflibrarian::util qw(unique_list get_file_list find_pdf_files);
 
 =pod
 
@@ -44,9 +44,11 @@ B<pdf-lbr-edit-bib> B<--help>|B<-h>
 
 B<pdf-lbr-edit-bib> I<links>|I<link-directories> ...
 
+... I<links>|I<link-directories> ... B<|> B<pdf-lbr-edit-bib> ...
+
 =head1 DESCRIPTION
 
-B<pdf-lbr-edit-bib> reads BibTeX bibliographic metadata embedded in PDF files given by I<links> and/or within I<link-directories> in the PDF links directory.
+B<pdf-lbr-edit-bib> reads BibTeX bibliographic metadata embedded in PDF files given by I<links> and/or within I<link-directories> in the PDF links directory. If I<links>|I<link-directories> are not given on the command line, they are read from standard input, one per line.
 
 The BibTeX metadata is written to a temporary file, which is then opened in an editing program, given either by the B<$VISUAL> or B<$EDITOR> environment variables, or else the program B<@fallback_editor@>.
 
@@ -68,7 +70,7 @@ if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
-my @pdffiles = find_pdf_files(@ARGV);
+my @pdffiles = find_pdf_files(get_file_list());
 croak "$Script: no PDF files to edit" unless @pdffiles > 0;
 foreach my $pdffile (@pdffiles) {
   croak "$Script: '$pdffile' is not in the PDF library" unless pdf_is_in_library($pdffile);

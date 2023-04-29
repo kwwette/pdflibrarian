@@ -29,7 +29,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::util qw(find_pdf_files);
+use pdflibrarian::util qw(get_file_list find_pdf_files);
 
 =pod
 
@@ -43,9 +43,11 @@ B<pdf-lbr-output-key> B<--help>|B<-h>
 
 B<pdf-lbr-output-key> [ B<--clipboard>|B<-c> ] I<files>|I<directories> ...
 
+... I<files>|I<directories> ... B<|> B<pdf-lbr-output-key> ...
+
 =head1 DESCRIPTION
 
-B<pdf-lbr-output-key> reads BibTeX bibliographic keys for PDF I<files> and/or any PDF files in I<directories>.
+B<pdf-lbr-output-key> reads BibTeX bibliographic keys for PDF I<files> and/or any PDF files in I<directories>. If I<files>|I<directories> are not given on the command line, they are read from standard input, one per line.
 
 The BibTeX keys are then printed to standard output, separated by commas; if B<--clipboard> is given, they are instead copied to the clipboard.
 
@@ -64,7 +66,7 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 # iterate over arguments to preserve order
 my %keys;
 my $keycount = 0;
-foreach my $arg (@ARGV) {
+foreach my $arg (get_file_list()) {
 
   # get list of PDF files
   my @pdffiles = find_pdf_files($arg);

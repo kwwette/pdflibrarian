@@ -34,7 +34,7 @@ use Text::Wrap;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
+our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
 
 1;
 
@@ -66,6 +66,18 @@ sub is_in_dir {
   }
 
   return 1;
+}
+
+sub get_file_list {
+
+  # get list of files either from command line or from standard input
+  if (@ARGV > 0) {
+    return @ARGV;
+  } else {
+    chomp(my @stdin = <STDIN>);
+    return @stdin;
+  }
+
 }
 
 sub find_pdf_files {

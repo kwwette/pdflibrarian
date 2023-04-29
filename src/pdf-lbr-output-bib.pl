@@ -31,7 +31,7 @@ use Pod::Usage;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib write_bib_to_fh);
 use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
-use pdflibrarian::util qw(find_pdf_files);
+use pdflibrarian::util qw(get_file_list find_pdf_files);
 
 =pod
 
@@ -45,9 +45,11 @@ B<pdf-lbr-output-bib> B<--help>|B<-h>
 
 B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
 
+... I<files>|I<directories> ... B<|> B<pdf-lbr-output-bib> ...
+
 =head1 DESCRIPTION
 
-B<pdf-lbr-output-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>.
+B<pdf-lbr-output-bib> reads BibTeX bibliographic metadata embedded in PDF I<files> and/or any PDF files in I<directories>. If I<files>|I<directories> are not given on the command line, they are read from standard input, one per line.
 
 The BibTeX metadata is then printed to standard output; if B<--clipboard> is given, it is instead copied to the clipboard.
 
@@ -242,7 +244,7 @@ foreach my $field (sort { $filterbibtype{$a} cmp $filterbibtype{$b} || $filterbi
 }
 
 # get list of PDF files
-my @pdffiles = find_pdf_files(@ARGV);
+my @pdffiles = find_pdf_files(get_file_list());
 croak "$Script: no PDF files to read from" unless @pdffiles > 0;
 
 # read BibTeX entries from PDF metadata
