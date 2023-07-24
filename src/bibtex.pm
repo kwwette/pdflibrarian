@@ -328,14 +328,15 @@ sub format_bib {
       $bibentry->set('month', $month);
     }
 
-    # double-quote BibTeX 'title' fields
+    # quote capital letters and remove trailing periods in BibTeX 'title' fields
     foreach my $bibfield ($bibentry->fieldlist()) {
       if ($bibfield =~ /title$/) {
         my $title = $bibentry->get($bibfield);
-        while ($title =~ s{^\{(.*?(\{(?:(?>[^{}]+)|(?2))*\}.*?)*)\}$}{$1}) {
-          next;
-        }
-        $bibentry->set($bibfield, "{$title}");
+        $title =~ s/[{}]//g;
+        $title =~ s/^(\$[A-Z]\$)/\{$1\}/;
+        $title =~ s/([^\$])((?:\\.)?[A-Z]+)/$1\{$2\}/g;
+        $title =~ s/\.+$//;
+        $bibentry->set($bibfield, $title);
       }
     }
 
