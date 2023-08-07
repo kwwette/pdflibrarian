@@ -332,10 +332,14 @@ sub format_bib {
     foreach my $bibfield ($bibentry->fieldlist()) {
       if ($bibfield =~ /title$/) {
         my $title = $bibentry->get($bibfield);
-        $title =~ s/[{}]//g;
-        $title =~ s/^(\$[A-Z]\$)/\{$1\}/;
-        $title =~ s/([^\$])((?:\\.)?[A-Z]+)/$1\{$2\}/g;
         $title =~ s/\.+$//;
+        my @words = split /\s+/, $title;
+        foreach my $word (@words) {
+          $word =~ s/[{}]//g;
+          $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
+          $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
+        }
+        $title = join(" ", @words);
         $bibentry->set($bibfield, $title);
       }
     }
