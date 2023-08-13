@@ -261,7 +261,7 @@ my @bibentries = read_bib_from_pdf(@pdffiles);
 
 # apply field filters
 foreach my $bibentry (@bibentries) {
-  foreach my $field (keys %filter) {
+  foreach my $field (sort { $a cmp $b } keys %filter) {
     my $bibtype = $filterbibtype{$field};
     my $bibfield = $filterbibfield{$field};
 
