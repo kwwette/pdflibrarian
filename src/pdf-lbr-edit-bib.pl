@@ -50,7 +50,7 @@ B<pdf-lbr-edit-bib> I<links>|I<link-directories> ...
 
 B<pdf-lbr-edit-bib> reads BibTeX bibliographic metadata embedded in PDF files given by I<links> and/or within I<link-directories> in the PDF links directory. If I<links>|I<link-directories> are not given on the command line, they are read from standard input, one per line.
 
-The BibTeX metadata is written to a temporary file, which is then opened in an editing program, given either by the B<$VISUAL> or B<$EDITOR> environment variables, or else the program B<@fallback_editor@>.
+The BibTeX metadata is written to a temporary file, which is then opened in an editing program, given either by the B<$VISUAL> or B<$EDITOR> environment variables, or else the program B<@fallback_editor@>. The B<macros> section of the configuration file is parsed for custom BibTeX macros to define.
 
 Any modifications are then written back to the PDF files given by the I<file> field in each BibTeX entry, and the PDF library links rebuilt as needed.
 

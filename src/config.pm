@@ -27,6 +27,7 @@ use File::BaseDir;
 use File::Path;
 use File::Spec;
 use FindBin qw($Script);
+use Text::BibTeX;
 
 our @EXPORT;
 
@@ -69,6 +70,9 @@ our %query_databases;
 
 push @EXPORT, '%default_filter';
 our %default_filter;
+
+push @EXPORT, '%bibtex_macros';
+our %bibtex_macros;
 
 1;
 
@@ -134,6 +138,13 @@ INIT {
   foreach my $arg (split /\s+/, $config{'general.default_filter'}) {
     my ($bibfield, $spec) = split(/\s*=\s*/, $arg, 2);
     $default_filter{$bibfield} = $spec;
+  }
+
+  # read in BibTeX macros to define by default
+  my $bibmacros = $cfg->param(-block => 'macros');
+  while (my ($key, $value) = each %{$bibmacros}) {
+    my $macro = lc($key);
+    $bibtex_macros{$macro} = $value;
   }
 
 }

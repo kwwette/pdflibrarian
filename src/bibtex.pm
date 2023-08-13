@@ -29,7 +29,7 @@ use File::Temp;
 use FindBin qw($Script);
 use List::Util qw(max);
 use Scalar::Util qw(blessed);
-use Text::BibTeX qw(:nameparts :joinmethods);
+use Text::BibTeX qw(:nameparts :joinmethods :macrosubs);
 use Text::BibTeX::Bib;
 use Text::BibTeX::NameFormat;
 use Text::Unidecode;
@@ -118,6 +118,11 @@ sub read_bib_from_file {
     }
     $fh->close();
     return if $nonempty;
+  }
+
+  # define BibTeX macros
+  foreach my $macro (keys %bibtex_macros) {
+    add_macro_text($macro, $bibtex_macros{$macro});
   }
 
   # parse the BibTeX file, capturing any error messages
@@ -586,6 +591,12 @@ $PACKAGE_NAME has extracted the following BibTeX records for editing. Any change
 
 To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
+      }
+      if (%bibtex_macros > 0) {
+        print $fh "%\n% Available BibTeX macros:\n";
+        foreach my $macro (keys %bibtex_macros) {
+          print $fh "% $macro: $bibtex_macros{$macro}\n";
+        }
       }
       print $fh "\n";
 
