@@ -122,6 +122,7 @@ sub read_bib_from_file {
 
   # define BibTeX macros
   foreach my $macro (keys %bibtex_macros) {
+    delete_macro($macro);
     add_macro_text($macro, $bibtex_macros{$macro});
   }
 
