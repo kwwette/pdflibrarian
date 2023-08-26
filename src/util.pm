@@ -262,6 +262,9 @@ sub run_async {
   croak "$Script: could not fork: $!" unless defined($pid);
   if ($pid == 0) {
     setpgrp;
+    open STDIN, "/dev/null" or croak "$Script: could not open STDIN: $!";
+    open STDOUT, ">/dev/null" or croak "$Script: could not open STDOUT: $!";
+    open STDERR, ">/dev/null" or croak "$Script: could not open STDERR: $!";
     exec(@_);
     exit 1;
   }
