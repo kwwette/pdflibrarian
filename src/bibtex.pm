@@ -345,6 +345,7 @@ sub format_bib {
           $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
         }
         $title = join(" ", @words);
+        $title =~ s/^\{([A-Z])\}/$1/;
         $bibentry->set($bibfield, $title);
       }
     }
