@@ -377,6 +377,15 @@ sub format_bib {
       }
     }
 
+    # set BibTeX 'misc' entry 'howpublished' field
+    if ($bibentry->type eq 'misc') {
+      if ($bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
+        my $archiveprefix = $bibentry->get('archiveprefix');
+        my $eprint = $bibentry->get('eprint');
+        $bibentry->set('howpublished', "$archiveprefix:$eprint");
+      }
+    }
+
     # escape special characters
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = $bibentry->get($bibfield);
