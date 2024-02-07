@@ -267,7 +267,9 @@ sub make_pdf_links {
     } else {
 
       # make links to everything else
-      push @links, ["Misc", "$pdflinkby{Author}"];
+      foreach my $by (qw(Author Title Year)) {
+        push @links, ["Misc", "${by}s", "$pdflinkby{$by}"];
+      }
 
     }
 
