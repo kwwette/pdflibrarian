@@ -220,14 +220,12 @@ sub make_pdf_links {
 
     if (grep { $bibentry->type eq $_ } qw(article)) {
 
-      # make links to articles by journal and/or pre-print server
+      # make links to articles by journal
       my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
       my $archiveprefix = $bibentry->get('archiveprefix') // "";
-      if ($journal ne $archiveprefix) {
-        my $volume = $bibentry->get("volume") // "NO-VOLUME";
-        my $pages = $bibentry->get("pages") // "NO-PAGES";
-        push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkby{Author}"];
-      }
+      my $volume = $bibentry->get("volume") // "NO-VOLUME";
+      my $pages = $bibentry->get("pages") // "NO-PAGES";
+      push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkby{Author}"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
