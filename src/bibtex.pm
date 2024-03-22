@@ -332,19 +332,12 @@ sub format_bib {
       $bibentry->set('month', $month);
     }
 
-    # quote capital letters and remove trailing periods in BibTeX 'title' fields
+    # remove braces and trailing periods in BibTeX 'title' fields
     foreach my $bibfield ($bibentry->fieldlist()) {
       if ($bibfield =~ /title$/) {
         my $title = $bibentry->get($bibfield);
+        $title =~ s/[{}]//g;
         $title =~ s/\.+$//;
-        my @words = split /\s+/, $title;
-        foreach my $word (@words) {
-          $word =~ s/[{}]//g;
-          $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
-          $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
-        }
-        $title = join(" ", @words);
-        $title =~ s/^\{([A-Z])\}/$1/;
         $bibentry->set($bibfield, $title);
       }
     }

@@ -307,8 +307,26 @@ foreach my $bibentry (@bibentries) {
 my @dupkeys = find_dup_bib_keys(@bibentries);
 croak "$Script: BibTeX entries contain duplicate keys: @dupkeys" if @dupkeys > 0;
 
-# abbreviate journal/series titles
+# format BibTeX entries for output
 foreach my $bibentry (@bibentries) {
+
+  # quote capital letters in BibTeX 'title' fields
+  foreach my $bibfield ($bibentry->fieldlist()) {
+    if ($bibfield =~ /title$/) {
+      my $title = $bibentry->get($bibfield);
+      my @words = split /\s+/, $title;
+      foreach my $word (@words) {
+        $word =~ s/[{}]//g;
+        $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
+        $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
+      }
+      $title = join(" ", @words);
+      $title =~ s/^\{([A-Z])\}/$1/;
+      $bibentry->set($bibfield, $title);
+    }
+  }
+
+  # abbreviate journal/series titles
   foreach my $titlefield (qw(journal series)) {
 
     # skip missing fields
