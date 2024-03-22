@@ -1,3 +1,9 @@
+pdflibrarian (4.3.12-1) stable; urgency=low
+
+  * 4.3.12 release
+
+ -- Karl Wette <karl.wette@gmail.com>  Fri, 22 Mar 2024 19:14:02 +1100
+
 pdflibrarian (4.3.11-1) stable; urgency=low
 
   * 4.3.11 release
