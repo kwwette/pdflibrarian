@@ -359,6 +359,15 @@ sub format_bib {
       }
     }
 
+    # set missing BibTeX 'doi' field from hyphenated ISBN-13
+    if (!$bibentry->exists('doi') && $bibentry->exists('isbn')) {
+      my $isbn = $bibentry->get('isbn');
+      if ($isbn =~ /^(97[89])-(\d+)-(\d+)-(\d+)-(\d+)/) {
+        my $doi = "10.$1.$2$3/$4$5";
+        $bibentry->set('doi', $doi);
+      }
+    }
+
     # set BibTeX 'url' field
     if ($bibentry->exists('doi')) {
       my $doi = $bibentry->get('doi');
