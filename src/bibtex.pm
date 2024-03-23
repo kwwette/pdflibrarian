@@ -349,18 +349,21 @@ sub format_bib {
       $bibentry->set('doi', $doi);
     }
 
+    # set missing BibTeX 'doi' field from arXiv e-print
+    if (!$bibentry->exists('doi') && $bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
+      my $archiveprefix = $bibentry->get('archiveprefix');
+      my $eprint = $bibentry->get('eprint');
+      if ($archiveprefix =~ /arxiv/i) {
+        my $doi = "10.48550/arXiv.$eprint";
+        $bibentry->set('doi', $doi);
+      }
+    }
+
     # set BibTeX 'url' field
     if ($bibentry->exists('doi')) {
       my $doi = $bibentry->get('doi');
       my $url = "https://doi.org/$doi";
       $bibentry->set('url', $url);
-    } elsif ($bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
-      my $archiveprefix = $bibentry->get('archiveprefix');
-      my $eprint = $bibentry->get('eprint');
-      if ($archiveprefix =~ /arxiv/i) {
-        my $url = "https://arxiv.org/abs/$eprint";
-        $bibentry->set('url', $url);
-      }
     } else {
       my @urlbibfields = grep { $_ =~ /.url$/ } $bibentry->fieldlist();
       if (@urlbibfields == 1) {
