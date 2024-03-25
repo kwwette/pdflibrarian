@@ -29,3 +29,6 @@ git tag -m "${version} release" "v${version}"
 ./configure --prefix=/tmp/pdflibrarian
 make install
 make dist
+
+git push origin master
+git push origin "v${version}"
