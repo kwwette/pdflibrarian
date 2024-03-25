@@ -5,6 +5,7 @@
 /config.log
 /config.status
 /configure
+/configure~
 /debian/control
 /pdflibrarian-*.tar.gz
 /pre-inst
