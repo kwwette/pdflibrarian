@@ -333,11 +333,19 @@ sub format_bib {
     }
 
     # remove braces and trailing periods in BibTeX 'title' fields
+    # - except where required for LaTeX commands
     foreach my $bibfield ($bibentry->fieldlist()) {
       if ($bibfield =~ /title$/) {
         my $title = $bibentry->get($bibfield);
-        $title =~ s/[{}]//g;
         $title =~ s/\.+$//;
+        my @words = split /\s+/, $title;
+        foreach my $word (@words) {
+          $word =~ s/[{}]//g;
+          $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
+          $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
+          $word =~ s/^\{([A-Z])\}/$1/
+        }
+        $title = join(" ", @words);
         $bibentry->set($bibfield, $title);
       }
     }
