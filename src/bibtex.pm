@@ -48,6 +48,7 @@ my $structure = new Text::BibTeX::Structure('Bib');
 foreach my $type ($structure->types()) {
   $structure->add_fields($type, [qw(keyword title year file)], [qw(collaboration)]);
 }
+$structure->add_fields("mastersthesis", [qw(type)]);
 
 # BibTeX field order
 my @fieldorder = qw (
