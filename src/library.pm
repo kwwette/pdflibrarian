@@ -124,6 +124,7 @@ sub make_pdf_links {
       my $authorstr = "@collaborations";
       $authorstr = "@authors" unless length($authorstr) > 0;
       $authorstr = "@editors ed" unless length($authorstr) > 0;
+      $authorstr = "NO-AUTHOR" unless length($authorstr) > 0;
 
       # title, plus volume number (if any) for books and proceedings
       my $titlestr = $title;
