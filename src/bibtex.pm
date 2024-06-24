@@ -49,6 +49,7 @@ foreach my $type ($structure->types()) {
   $structure->add_fields($type, [qw(keyword title year file)], [qw(collaboration)]);
 }
 $structure->add_fields("mastersthesis", [qw(type)]);
+$structure->add_fields("misc", [qw(howpublished)]);
 
 # BibTeX field order
 my @fieldorder = qw (
@@ -391,10 +392,9 @@ sub format_bib {
 
     # set BibTeX 'misc' entry 'howpublished' field
     if ($bibentry->type eq 'misc') {
-      if ($bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
+      if ($bibentry->exists('archiveprefix')) {
         my $archiveprefix = $bibentry->get('archiveprefix');
-        my $eprint = $bibentry->get('eprint');
-        $bibentry->set('howpublished', "$archiveprefix:$eprint");
+        $bibentry->set('howpublished', $archiveprefix);
       }
     }
 

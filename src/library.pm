@@ -264,11 +264,19 @@ sub make_pdf_links {
       # make links to theses
       push @links, ["Theses", "$pdflinkby{Author}"];
 
+    } elsif (grep { $bibentry->type eq $_ } qw(misc)) {
+
+      # make links to miscellaneous documents
+      my $howpublished = $bibentry->get("howpublished");
+      foreach my $by (qw(Author Title Year)) {
+        push @links, ["Misc", $howpublished, "${by}s", "$pdflinkby{$by}"];
+      }
+
     } else {
 
       # make links to everything else
       foreach my $by (qw(Author Title Year)) {
-        push @links, ["Misc", "${by}s", "$pdflinkby{$by}"];
+        push @links, ["Other", ucfirst($bibentry->type), "${by}s", "$pdflinkby{$by}"];
       }
 
     }
