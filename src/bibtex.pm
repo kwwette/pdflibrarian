@@ -48,6 +48,9 @@ my $structure = new Text::BibTeX::Structure('Bib');
 foreach my $type ($structure->types()) {
   $structure->add_fields($type, [qw(keyword title year file)], [qw(collaboration)]);
 }
+foreach my $type (qw(booklet manual misc)) {
+  $structure->add_fields($type, [qw(author)]);
+}
 $structure->add_fields("mastersthesis", [qw(type)]);
 $structure->add_fields("misc", [qw(howpublished)]);
 
