@@ -277,8 +277,9 @@ sub make_pdf_links {
     } else {
 
       # make links to everything else
+      my $type = ucfirst($bibentry->type);
       foreach my $by (qw(Author Title Year)) {
-        push @links, ["Other", ucfirst($bibentry->type), "${by}s", "$pdflinkby{$by}"];
+        push @links, ["Other", "${type}s", "${by}s", "$pdflinkby{$by}"];
       }
 
     }
