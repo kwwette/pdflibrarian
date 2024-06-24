@@ -44,7 +44,7 @@ B<pdf-lbr-import-pdf> - Import PDF files into the PDF library.
 
 B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
-B<pdf-lbr-import-pdf> [B<--no-pdf-bib>] I<files>|I<directories> ...
+B<pdf-lbr-import-pdf> [ B<--no-pdf-bib> ] [ B<--manual-entry>|B<-e> I<type> B<--manual-field>|B<-f> I<field>=I<value> ... ] I<files>|I<directories> ...
 
 ... I<files>|I<directories> ... B<|> B<pdf-lbr-import-pdf> ...
 
@@ -52,11 +52,9 @@ B<pdf-lbr-import-pdf> [B<--no-pdf-bib>] I<files>|I<directories> ...
 
 B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library. If B<--no-pdf-bib> is specified, any BibTeX metadata embedded in the PDF files will be ignored. If I<files>|I<directories> are not given on the command line, they are read from standard input, one per line.
 
-The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s).
+The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s). By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper(s) for use in the query. If the query is successful, the user will have an opportunity to edit the BibTeX record(s) before the PDF I<files> are added to the library.
 
-By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper(s) for use in the query.
-
-If the query is successful, the user will have an opportunity to edit the BibTeX record(s) before the PDF I<files> are added to the library.
+The user may also enter the BibTeX record manually. The I<type> of the manual BibTeX entry defaults to I<article>, unless the B<--manual-entry> option specifies a different I<type>. Additional manual BibTeX I<field>s may be set using the B<--manual-field> option.
 
 =head1 PART OF
 
@@ -65,11 +63,13 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $no_pdf_bib);
+my ($version, $help, $no_pdf_bib, $manual_entry, %manual_field);
 GetOptions(
            "version|v" => \$version,
            "help|h" => \$help,
            "no-pdf-bib" => \$no_pdf_bib,
+           "manual-entry|e=s" => \$manual_entry,
+           "manual-field|f=s" => \%manual_field,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
@@ -118,8 +118,8 @@ foreach my $pdffile (@pdffiles) {
 
 }
 
-# add PDF files with existing BibTeX entries to library (unless --no-pdf-bib was specified)
-if (!$no_pdf_bib) {
+# add PDF files with existing BibTeX entries to library (unless --no-pdf-bib or --manual-entry was specified)
+if (!$no_pdf_bib && !defined($manual_entry)) {
 
   # read BibTeX entries (if any) from PDF metadata
   my @allbibentries = read_bib_from_pdf(@pdffiles);
@@ -184,9 +184,13 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
   my $error_message = '';
   do {
 
-    # ask user for query database and query text
+    # ask user for query database and query text (unless --manual-entry was specified)
     my $query_action = '';
-    ($query_action, $query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
+    if (defined($manual_entry)) {
+      $query_action = 'manual';
+    } else {
+      ($query_action, $query_db_name, $query_value) = do_query_dialog($pdffile, $query_db_name, $query_value, \@query_values, $error_message);
+    }
 
     # take action
     if ($query_action eq 'exit') {
@@ -205,13 +209,19 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
 
     } elsif ($query_action eq 'manual') {
 
-      # try to read existing BibTeX entry from PDF metadata, or else return a blank entry
-      $bibstr = '@article{key,}';
-      eval {
-        my @bibentries = read_bib_from_pdf($pdffile);
-        $bibstr = $bibentries[0]->print_s();
-      };
-      $error_message = '';
+      # assume article BibTeX entry by default
+      if (!defined($manual_entry)) {
+        $manual_entry = 'article';
+      }
+      $bibstr = "\@${manual_entry}{key,\n";
+
+      # add fields
+      foreach my $bibfield (keys %manual_field) {
+        $bibstr .= "$bibfield = {$manual_field{$bibfield}},\n";
+      }
+
+      # end BibTeX entry
+      $bibstr .= "}\n";
 
     } elsif ($query_action eq 'query') {
 
@@ -255,8 +265,8 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     # set name of PDF file
     $bibentry->set('file', $pdffile);
 
-    # generate initial key for BibTeX entry
-    generate_bib_keys(($bibentry));
+    # set dummy key for BibTeX entry
+    $bibentry->set_key(":");
 
     # coerse entry into BibTeX database structure
     $bibentry->silently_coerce();
