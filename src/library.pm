@@ -269,6 +269,7 @@ sub make_pdf_links {
 
       # make links by publication method
       my $howpublished = $bibentry->get("howpublished");
+      $howpublished = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $howpublished)));
       foreach my $by (qw(Author Title Year)) {
         push @links, ["How Published", $howpublished, "${by}s", "$pdflinkby{$by}"];
       }
