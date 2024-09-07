@@ -169,7 +169,9 @@ my @pids;
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
 my $havebibstr = 0;
+my $npdffile = 0;
 PDFFILE: foreach my $pdffile (@pdffiles) {
+  ++$npdffile;
 
   # open PDF file in external viewer
   my $pid = run_async $external_pdf_viewer, $pdffile;
@@ -265,8 +267,8 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     # set name of PDF file
     $bibentry->set('file', $pdffile);
 
-    # set dummy key for BibTeX entry
-    $bibentry->set_key(":");
+    # set unique dummy key for BibTeX entry
+    $bibentry->set_key(":$npdffile");
 
     # coerse entry into BibTeX database structure
     $bibentry->silently_coerce();
