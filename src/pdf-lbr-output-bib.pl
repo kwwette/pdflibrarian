@@ -43,7 +43,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--output-format>|B<-o> I<format> | B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--output-text-format>|B<-o> I<type>=<format> ... | B<--output-text>|B<-O> | B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
 
 ... I<files>|I<directories> ... B<|> B<pdf-lbr-output-bib> ...
 
@@ -111,13 +111,17 @@ Same as I<iso4> but separate words with tildes instead of spaces.
 
 =back
 
-=item B<--output-format>|B<-o> I<format>
-
-Instead of outputting a BibTeX entry, output a string following I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>.
-
 =item B<--pdf-file-comment>|B<-P>
 
 If true, output the PDF filename as a comment before each BibTeX entry. Default is false. (The PDF filename is never included in the BibTeX entry itself.)
+
+=item B<--output-text-format>|B<-o> I<type>=<format>
+
+Instead of outputting a BibTeX entry, output plain text, formatting entries of type I<type> with format I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>.
+
+=item B<--output-text>|B<-O>
+
+Instead of outputting a BibTeX entry, output plain text, formatting entries with formats given in the configuration file.
 
 =back
 
@@ -128,7 +132,7 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_default_filter, @abbreviate_schemes, $output_format, $pdf_file_comment);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_default_filter, @abbreviate_schemes, $pdf_file_comment, %output_text_format, $output_text);
 $max_authors = 0;
 $pdf_file_comment = 0;
 GetOptions(
@@ -140,8 +144,9 @@ GetOptions(
            "filter|F=s" => \%filter,
            "no-default-filter|N" => \$no_default_filter,
            "abbreviate|a=s" => \@abbreviate_schemes,
-           "output-format|o=s" => \$output_format,
            "pdf-file-comment|P" => \$pdf_file_comment,
+           "output-text-format|o=s" => \%output_text_format,
+           "output-text|O" => \$output_text,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
@@ -370,11 +375,29 @@ foreach my $bibentry (@bibentries) {
   }
 }
 
+# use default output text formats if requested
+if ($output_text) {
+  foreach my $type (keys %default_output_text_format) {
+    if (!defined($output_text_format{$type})) {
+      $output_text_format{$type} = $default_output_text_format{$type};
+    }
+  }
+}
+foreach my $bibtype (keys %output_text_format) {
+  $output_text = 1;
+  if (defined($default_output_text_format{$bibtype})) {
+    printf STDERR "$Script: using output format for '$bibtype' entries from configuration file\n";
+  } else {
+    printf STDERR "$Script: using output format for '$bibtype' entries from command line\n";
+  }
+}
+
 # write BibTeX entries to string
 my $bibstring = "";
-if (defined($output_format)) {
+if ($output_text) {
   foreach my $bibentry (@bibentries) {
-    my $bibstr = $output_format;
+    my $bibtype = $bibentry->type;
+    my $bibstr = $output_text_format{$bibtype} or croak "$Script: no output format defined for '$bibtype' entries";
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = remove_tex_markup($bibentry->get($bibfield));
       my $bibfieldvalue_with_period = $bibfieldvalue;

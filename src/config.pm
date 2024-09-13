@@ -74,6 +74,9 @@ our %default_filter;
 push @EXPORT, '%bibtex_macros';
 our %bibtex_macros;
 
+push @EXPORT, '%default_output_text_format';
+our %default_output_text_format;
+
 1;
 
 INIT {
@@ -107,6 +110,7 @@ INIT {
        'query-ads doi.cmd' => 'pdf-lbr-query-ads --query doi:%s',
        'query-ads arxiv.name' => 'Astrophysics Data System using arXiv Article Identifier',
        'query-ads arxiv.cmd' => 'pdf-lbr-query-ads --query arxiv:%s',
+       'output-text-format.article' => '%author, %title, %journal %volume, %pages (%year).',
       );
     while (my ($section_key, $value) = each %default_config) {
       my ($section, $key) = split /[.]/, $section_key;
@@ -149,6 +153,12 @@ INIT {
   foreach my $key ($cfg->Parameters('macros')) {
     my $macro = lc($key);
     $bibtex_macros{$macro} = $cfg->val('macros', $key);
+  }
+
+  # create default formats for plain text output
+  foreach my $key ($cfg->Parameters('output-text-format')) {
+    my $bibtype = lc($key);
+    $default_output_text_format{$bibtype} = $cfg->val('output-text-format', $key);
   }
 
 }
