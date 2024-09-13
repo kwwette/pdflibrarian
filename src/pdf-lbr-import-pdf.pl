@@ -77,9 +77,10 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 # get list of PDF files
 my @pdffiles = find_pdf_files(get_file_list());
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
+my $npdffile;
 
 # pass PDF files through ghostscript to fix any issues
-my $npdffile = 0;
+$npdffile = 0;
 foreach my $pdffile (@pdffiles) {
   printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", $npdffile++, scalar(@pdffiles);
   flush STDERR;
@@ -169,7 +170,7 @@ my @pids;
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
 binmode($fh, ":encoding(iso-8859-1)");
 my $havebibstr = 0;
-my $npdffile = 0;
+$npdffile = 0;
 PDFFILE: foreach my $pdffile (@pdffiles) {
   ++$npdffile;
 
