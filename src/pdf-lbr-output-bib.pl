@@ -31,7 +31,7 @@ use Pod::Usage;
 use pdflibrarian::config;
 use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib write_bib_to_fh);
 use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
-use pdflibrarian::util qw(get_file_list find_pdf_files);
+use pdflibrarian::util qw(get_file_list find_pdf_files remove_tex_markup);
 
 =pod
 
@@ -43,7 +43,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
-B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
+B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--output-format>|B<-o> I<format> | B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
 
 ... I<files>|I<directories> ... B<|> B<pdf-lbr-output-bib> ...
 
@@ -111,6 +111,10 @@ Same as I<iso4> but separate words with tildes instead of spaces.
 
 =back
 
+=item B<--output-format>|B<-o> I<format>
+
+Instead of outputting a BibTeX entry, output a string following I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>.
+
 =item B<--pdf-file-comment>|B<-P>
 
 If true, output the PDF filename as a comment before each BibTeX entry. Default is false. (The PDF filename is never included in the BibTeX entry itself.)
@@ -124,7 +128,7 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_default_filter, @abbreviate_schemes, $pdf_file_comment);
+my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_default_filter, @abbreviate_schemes, $output_format, $pdf_file_comment);
 $max_authors = 0;
 $pdf_file_comment = 0;
 GetOptions(
@@ -136,6 +140,7 @@ GetOptions(
            "filter|F=s" => \%filter,
            "no-default-filter|N" => \$no_default_filter,
            "abbreviate|a=s" => \@abbreviate_schemes,
+           "output-format|o=s" => \$output_format,
            "pdf-file-comment|P" => \$pdf_file_comment,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
@@ -367,7 +372,19 @@ foreach my $bibentry (@bibentries) {
 
 # write BibTeX entries to string
 my $bibstring = "";
-{
+if (defined($output_format)) {
+  foreach my $bibentry (@bibentries) {
+    my $bibstr = $output_format;
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      my $bibfieldvalue = remove_tex_markup($bibentry->get($bibfield));
+      my $bibfieldvalue_with_period = $bibfieldvalue;
+      $bibfieldvalue_with_period =~ s/\.*$/./;
+      $bibstr =~ s/%${bibfield}\./${bibfieldvalue_with_period}/g;
+      $bibstr =~ s/%${bibfield}/${bibfieldvalue}/g;
+    }
+    $bibstring .= "\n$bibstr\n";
+  }
+} else {
   open(my $fh, "+<", \$bibstring);
   write_bib_to_fh({
                    fh => $fh,
