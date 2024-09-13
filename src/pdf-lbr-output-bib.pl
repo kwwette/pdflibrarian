@@ -395,9 +395,16 @@ foreach my $bibtype (keys %output_text_format) {
 # write BibTeX entries to string
 my $bibstring = "";
 if ($output_text) {
+
+  # write plain text
   foreach my $bibentry (@bibentries) {
+
+    # get plain text format
     my $bibtype = $bibentry->type;
     my $bibstr = $output_text_format{$bibtype} or croak "$Script: no output format defined for '$bibtype' entries";
+
+    # replace fields in format
+    # - ensure that field replacements do not introduce duplicate periods
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = remove_tex_markup($bibentry->get($bibfield));
       my $bibfieldvalue_with_period = $bibfieldvalue;
@@ -405,10 +412,18 @@ if ($output_text) {
       $bibstr =~ s/%${bibfield}\./${bibfieldvalue_with_period}/g;
       $bibstr =~ s/%${bibfield}/${bibfieldvalue}/g;
     }
+
+    # remove unused fields within curly braces
     $bibstr =~ s/{[^{}]*%[^{}]*}//g;
+
+    # add to output string
     $bibstring .= "\n$bibstr\n";
+
   }
+
 } else {
+
+  # write BibTeX entries
   open(my $fh, "+<", \$bibstring);
   write_bib_to_fh({
                    fh => $fh,
@@ -416,6 +431,7 @@ if ($output_text) {
                   },
                   @bibentries);
   close($fh);
+
 }
 
 # output BibTeX entries
