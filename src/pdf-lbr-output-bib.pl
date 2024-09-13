@@ -405,6 +405,7 @@ if ($output_text) {
       $bibstr =~ s/%${bibfield}\./${bibfieldvalue_with_period}/g;
       $bibstr =~ s/%${bibfield}/${bibfieldvalue}/g;
     }
+    $bibstr =~ s/{[^{}]*%[^{}]*}//g;
     $bibstring .= "\n$bibstr\n";
   }
 } else {
