@@ -22,7 +22,7 @@ package pdflibrarian::config;
 use Exporter 'import';
 
 use Carp;
-use Config::Simple;
+use Config::IniFiles;
 use File::BaseDir;
 use File::Path;
 use File::Spec;
@@ -90,61 +90,65 @@ INIT {
 
   # read configuration file
   my $cfgfile = File::Spec->catfile($cfgdir, "$PACKAGE.ini");
-  my $cfg = new Config::Simple(syntax => 'ini');
+  my $cfg = Config::IniFiles->new();
   if (-f $cfgfile) {
-    $cfg->read($cfgfile);
+    $cfg->SetFileName($cfgfile);
+    $cfg->ReadConfig();
   }
 
   # ensure default configuration values are set
-  my %config = (
-                'general.pdflibrarydir' => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
-                'general.prefquery' => 'Astrophysics Data System using Digital Object Identifier',
-                'general.default_filter' => 'keyword=d abstract=d',
-                'query-ads-doi.name' => 'Astrophysics Data System using Digital Object Identifier',
-                'query-ads-doi.cmd' => "pdf-lbr-query-ads --query doi:%s",
-                'query-ads-arxiv.name' => 'Astrophysics Data System using arXiv Article Identifier',
-                'query-ads-arxiv.cmd' => "pdf-lbr-query-ads --query arxiv:%s",
-                );
-  while (my ($key, $value) = each %config) {
-    $cfg->param($key, $value) unless defined($cfg->param($key)) && length($cfg->param($key)) > 0;
-  }
-
-  # ensure configuration file exists
-  $cfg->save($cfgfile);
-
-  # import configuration
-  %config = $cfg->vars();
-
-  # set PDF library directory
-  $pdflibrarydir = $config{'general.pdflibrarydir'};
-  File::Path::make_path($pdflibrarydir);
-
-  # set query database
-  $pref_query_database = $config{'general.prefquery'};
-  foreach (keys %config) {
-    if (/^(query-[^.]+)\.name/) {
-      my $block = $1;
-      my $name = $config{"$block.name"};
-      my $cmd = $config{"$block.cmd"};
-      if ($cmd =~ /^[^%]+[%]s[^%]*$/) {
-        $query_databases{$name} = $cmd;
+  {
+    my %default_config =
+      (
+       'general.pdflibrarydir' => File::Spec->catdir($ENV{HOME}, 'PDFLibrary'),
+       'general.prefquery' => 'Astrophysics Data System using Digital Object Identifier',
+       'general.default_filter' => 'keyword=d abstract=d',
+       'query-ads doi.name' => 'Astrophysics Data System using Digital Object Identifier',
+       'query-ads doi.cmd' => 'pdf-lbr-query-ads --query doi:%s',
+       'query-ads arxiv.name' => 'Astrophysics Data System using arXiv Article Identifier',
+       'query-ads arxiv.cmd' => 'pdf-lbr-query-ads --query arxiv:%s',
+      );
+    while (my ($section_key, $value) = each %default_config) {
+      my ($section, $key) = split /[.]/, $section_key;
+      if ($cfg->exists($section, $key)) {
+        if (length($cfg->val($section, $key)) == 0) {
+          $cfg->setval($section, $key, $value);
+        }
       } else {
-        croak "$Script: invalid query command '$cmd' for database '$name'";
+        $cfg->newval($section, $key, $value);
       }
     }
   }
 
+  # ensure configuration file exists
+  $cfg->RewriteConfig();
+
+  # set PDF library directory
+  $pdflibrarydir = $cfg->val('general', 'pdflibrarydir');
+  File::Path::make_path($pdflibrarydir);
+
+  # set query database
+  $pref_query_database = $cfg->val('general', 'prefquery');
+  foreach my $section ($cfg->GroupMembers('query-ads')) {
+    my $name = $cfg->val($section, 'name');
+    my $cmd = $cfg->val($section, 'cmd');
+    if ($cmd =~ /^[^%]+[%]s[^%]*$/) {
+      $query_databases{$name} = $cmd;
+    } else {
+      croak "$Script: invalid query command '$cmd' for database '$name'";
+    }
+  }
+
   # create default field filter for printed BibTeX output
-  foreach my $arg (split /\s+/, $config{'general.default_filter'}) {
+  foreach my $arg (split /\s+/, $cfg->val('general', 'default_filter')) {
     my ($bibfield, $spec) = split(/\s*=\s*/, $arg, 2);
     $default_filter{$bibfield} = $spec;
   }
 
   # read in BibTeX macros to define by default
-  my $bibmacros = $cfg->param(-block => 'macros');
-  while (my ($key, $value) = each %{$bibmacros}) {
+  foreach my $key ($cfg->Parameters('macros')) {
     my $macro = lc($key);
-    $bibtex_macros{$macro} = $value;
+    $bibtex_macros{$macro} = $cfg->val('macros', $key);
   }
 
 }
