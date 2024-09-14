@@ -125,7 +125,7 @@ INIT {
   }
 
   # ensure configuration file exists
-  $cfg->RewriteConfig();
+  $cfg->WriteConfig($cfgfile);
 
   # set PDF library directory
   $pdflibrarydir = $cfg->val('general', 'pdflibrarydir');

@@ -105,7 +105,7 @@ if (-f $cfgfile) {
 # set ADS API token
 if ($api_token) {
   $cfg->newval('ads', 'api_token', $api_token);
-  $cfg->RewriteConfig();
+  $cfg->WriteConfig($cfgfile);
 }
 
 # return if no query
