@@ -96,22 +96,23 @@ pod2usage(-verbose => 2, -exitval => 1) if ($help);
 my $cfgfile = File::Spec->catfile($cfgdir, 'ads.ini');
 
 # read configuration file
-my $cfg = new Config::Simple(syntax => 'ini');
+my $cfg = Config::IniFiles->new();
 if (-f $cfgfile) {
-  $cfg->read($cfgfile);
+  $cfg->SetFileName($cfgfile);
+  $cfg->ReadConfig();
 }
 
 # set ADS API token
 if ($api_token) {
-  $cfg->param('api_token', $api_token);
-  $cfg->save($cfgfile);
+  $cfg->newval('ads', 'api_token', $api_token);
+  $cfg->RewriteConfig();
 }
 
 # return if no query
 exit 0 unless defined($query);
 
 # get ADS API token
-$api_token = $cfg->param('api_token');
+$api_token = $cfg->val('ads', 'api_token');
 croak "$Script: missing personal ADS API token" unless defined($api_token);
 
 # user agent for web queries
