@@ -397,7 +397,7 @@ my $bibstring = "";
 if ($output_text) {
 
   # write plain text
-  foreach my $bibentry (@bibentries) {
+  foreach my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
 
     # get plain text format
     my $bibtype = $bibentry->type;
