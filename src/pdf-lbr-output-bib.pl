@@ -29,7 +29,7 @@ use Pod::Usage;
 
 @perl_use_lib@;
 use pdflibrarian::config;
-use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib write_bib_to_fh);
+use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib format_bib_authors write_bib_to_fh);
 use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
 use pdflibrarian::util qw(get_file_list find_pdf_files remove_tex_markup);
 
@@ -117,7 +117,11 @@ If true, output the PDF filename as a comment before each BibTeX entry. Default 
 
 =item B<--output-text-format>|B<-o> I<type>=<format>
 
-Instead of outputting a BibTeX entry, output plain text, formatting entries of type I<type> with format I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>. Format text surrounded by curly braces is removed if it contains a I<%> from an unexpanded I<field>. Curly braces may be nested to define alternatives for missing fields, e.g. I<{DOI:%doi{URL:%url}}> provides a URL only if the DOI field is missing.
+Instead of outputting a BibTeX entry, output plain text, formatting entries of type I<type> with format I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>.
+
+The I<author> and I<editor> fields must include one of the suffixes I<:fvlj> or I<:vljf> to indicate the citation style: I<author:fvlj> cites authors with initials then last name; I<author:vljf> cites authors with last name then initials.
+
+Format text surrounded by curly braces is removed if it contains a I<%> from an unexpanded I<field>. Curly braces may be nested to define alternatives for missing fields, e.g. I<{DOI:%doi{URL:%url}}> provides a URL only if the DOI field is missing.
 
 =item B<--output-text>|B<-O>
 
@@ -403,10 +407,36 @@ if ($output_text) {
     my $bibtype = $bibentry->type;
     my $bibstr = $output_text_format{$bibtype} or croak "$Script: no output format defined for '$bibtype' entries";
 
+    # get BibTeX fields
+    my %bibfields;
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      if ($bibfield eq "author" or $bibfield eq "editor") {
+
+        # format authors/editors
+        foreach my $authorformat (qw(fvlj vljf)) {
+          my @names = format_bib_authors($authorformat, $max_authors, "et al.", $bibentry->names($bibfield));
+          my $joined_names = join(", ", @names);
+          $joined_names =~ s/, et al/ et al/;
+          $bibfields{"${bibfield}:${authorformat}"} = $joined_names;
+        }
+
+      } elsif ($bibfield eq "collaboration") {
+
+        # format collaborations
+        my @names = format_bib_authors("l", $max_authors, "et al.", $bibentry->names($bibfield));
+        my $joined_names = join(", ", @names);
+        $joined_names =~ s/, et al/ et al/;
+        $bibfields{$bibfield} = $joined_names;
+
+      } else {
+        $bibfields{$bibfield} = remove_tex_markup($bibentry->get($bibfield));
+      }
+    }
+
     # replace fields in format
     # - ensure that field replacements do not introduce duplicate periods
-    foreach my $bibfield ($bibentry->fieldlist()) {
-      my $bibfieldvalue = remove_tex_markup($bibentry->get($bibfield));
+    foreach my $bibfield (keys %bibfields) {
+      my $bibfieldvalue = $bibfields{$bibfield};
       my $bibfieldvalue_with_period = $bibfieldvalue;
       $bibfieldvalue_with_period =~ s/\.*$/./;
       $bibstr =~ s/%${bibfield}\./${bibfieldvalue_with_period}/g;
@@ -414,7 +444,7 @@ if ($output_text) {
     }
 
     # remove unused fields within curly braces
-    $bibstr =~ s/{[^{}]*%[^{}]*({[^{%}]*})?}/$1/g;
+    $bibstr =~ s/{[^{}]*%[^{}]*((?:{[^{%}]*})?)}/$1/g;
     $bibstr =~ s/[{}]//g;
 
     # add to output string

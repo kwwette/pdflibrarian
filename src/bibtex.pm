@@ -772,7 +772,9 @@ sub format_bib_authors {
   if (@authors > 0) {
 
     # limit number of authors to '$maxathors'
-    @authors = ($authors[0], $etal) if defined($maxauthors) && @authors > $maxauthors;
+    if (defined($maxauthors) && $maxauthors > 0 && @authors > $maxauthors) {
+      @authors = ($authors[0], $etal);
+    }
 
     # replace 'others' with preferred form of 'et al.'
     $authors[-1] = $etal if $authors[-1] eq "others";

@@ -110,7 +110,7 @@ INIT {
        'query-ads doi.cmd' => 'pdf-lbr-query-ads --query doi:%s',
        'query-ads arxiv.name' => 'Astrophysics Data System using arXiv Article Identifier',
        'query-ads arxiv.cmd' => 'pdf-lbr-query-ads --query arxiv:%s',
-       'output-text-format.article' => '%author, %title, %journal %volume, %pages (%year).',
+       'output-text-format.article' => '%author:fvlj, %title, %journal %volume, %pages (%year).',
       );
     while (my ($section_key, $value) = each %default_config) {
       my ($section, $key) = split /[.]/, $section_key;
