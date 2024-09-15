@@ -117,7 +117,7 @@ If true, output the PDF filename as a comment before each BibTeX entry. Default 
 
 =item B<--output-text-format>|B<-o> I<type>=<format>
 
-Instead of outputting a BibTeX entry, output plain text, formatting entries of type I<type> with format I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>.
+Instead of outputting a BibTeX entry, output plain text, formatting entries of type I<type> with format I<format>. BibTeX I<field>s may be substituted into I<format> with the syntax I<%field>. Format text surrounded by curly braces is removed if it contains a I<%> from an unexpanded I<field>. Curly braces may be nested to define alternatives for missing fields, e.g. I<{DOI:%doi{URL:%url}}> provides a URL only if the DOI field is missing.
 
 =item B<--output-text>|B<-O>
 
