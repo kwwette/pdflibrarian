@@ -414,7 +414,7 @@ if ($output_text) {
     }
 
     # remove unused fields within curly braces
-    $bibstr =~ s/{[^{}]*%[^{}]*}//g;
+    $bibstr =~ s/{[^{}]*%[^{}]*({[^{%}]*})?}/$1/g;
     $bibstr =~ s/[{}]//g;
 
     # add to output string
