@@ -400,8 +400,15 @@ foreach my $bibtype (keys %output_text_format) {
 my $bibstring = "";
 if ($output_text) {
 
+  # preserve input order of files in output plain text entries
+  my %pdffileorder;
+  my $order = 0;
+  foreach my $pdffile (@pdffiles) {
+    $pdffileorder{$pdffile} = ++$order;
+  }
+
   # write plain text
-  foreach my $bibentry (sort { $a->key cmp $b->key } @bibentries) {
+  foreach my $bibentry (sort { $pdffileorder{$a->get("file")} <=> $pdffileorder{$b->get("file")} } @bibentries) {
 
     # get plain text format
     my $bibtype = $bibentry->type;

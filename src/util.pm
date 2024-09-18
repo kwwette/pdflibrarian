@@ -83,13 +83,14 @@ sub get_file_list {
 sub find_pdf_files {
 
   # return unique found PDF files
-  my %pdffiles;
+  my %pdffileorder;
+  my $order = 0;
   my $wanted = sub {
     if (-l $_) {
       $_ = readlink($_) or croak "$Script: could not resolve '$_': %!";
     }
     return unless -f && mimetype($_) eq 'application/pdf';
-    $pdffiles{File::Spec->rel2abs($_)} = 1;
+    $pdffileorder{File::Spec->rel2abs($_)} = ++$order;
   };
 
   # find PDF files in the given list of search paths
@@ -107,7 +108,7 @@ sub find_pdf_files {
     }
   }
 
-  return keys %pdffiles;
+  return sort { $pdffileorder{$a} <=> $pdffileorder{$b} } keys %pdffileorder;
 }
 
 sub keyword_display_str {
