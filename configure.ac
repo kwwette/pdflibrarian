@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([PDFLibrarian],[5.1.1])
+AC_INIT([PDFLibrarian],[5.1.2])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.14 foreign])
