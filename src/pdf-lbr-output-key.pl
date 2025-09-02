@@ -74,9 +74,12 @@ foreach my $arg (get_file_list()) {
   foreach my $pdffile (@pdffiles) {
 
     # get key from PDF filename
-    my ($vol, $dir, $file) = File::Spec->splitpath($pdffile);
-    my $key = $file;
-    $key =~ s/\.pdf$//;
+    my $key;
+    {
+      my ($vol, $dir, $file) = File::Spec->splitpath($pdffile);
+      $key = $file;
+      $key =~ s/\.pdf$//;
+    }
 
     # store key, pruning duplicates
     $keys{$key} = $keycount++ unless defined($keys{$key});
