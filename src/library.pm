@@ -107,8 +107,16 @@ sub make_pdf_links {
     # get name of PDF file
     my $pdffile = $bibentry->get('file');
 
+    # get key from PDF filename
+    my $key;
+    {
+      my ($vol, $dir, $file) = File::Spec->splitpath($pdffile);
+      $key = $file;
+      $key =~ s/\.pdf$//;
+    }
+
     # format and abbreviate title
-    my $title = remove_tex_markup($bibentry->get("title") // "NO-TITLE");
+    my $title = remove_tex_markup($bibentry->get("title") // "!NO-TITLE!");
     $title = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $title)));
 
     # make PDF link names; should be unique within library
@@ -124,7 +132,7 @@ sub make_pdf_links {
       my $authorstr = "@collaborations";
       $authorstr = "@authors" unless length($authorstr) > 0;
       $authorstr = "@editors ed" unless length($authorstr) > 0;
-      $authorstr = "NO-AUTHOR" unless length($authorstr) > 0;
+      $authorstr = "!NO-AUTHOR!" unless length($authorstr) > 0;
 
       # title, plus volume number (if any) for books and proceedings
       my $titlestr = $title;
@@ -184,7 +192,7 @@ sub make_pdf_links {
 
     # make links by year
     foreach my $by (qw(Author Title)) {
-      my $year = $bibentry->get("year") // "NO-YEAR";
+      my $year = $bibentry->get("year") // "!NO-YEAR!";
       push @links, ["Years", $year, "${by}s", "$pdflinkby{$by}"];
     }
 
@@ -195,7 +203,7 @@ sub make_pdf_links {
       $keywords{$_} = 1;
     }
     if (keys %keywords == 0) {
-      $keywords{"NO-KEYWORDS"} = 1;
+      $keywords{"!NO-KEYWORDS!"} = 1;
     }
     foreach my $keyword (keys %keywords) {
       my @subkeywords = split /:|(?: - )/, $keyword;
@@ -208,7 +216,7 @@ sub make_pdf_links {
     # make links by pre-print server
     if ($bibentry->exists('archiveprefix')) {
       my $archiveprefix = $bibentry->get('archiveprefix');
-      my $eprint = "NO-EPRINT";
+      my $eprint = "!NO-EPRINT!";
       my $eprintprefix = $eprint;
       if ($bibentry->exists('eprint')) {
         $eprint = $bibentry->get('eprint');
@@ -222,32 +230,32 @@ sub make_pdf_links {
     if (grep { $bibentry->type eq $_ } qw(article)) {
 
       # make links to articles by journal
-      my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
+      my $journal = remove_tex_markup($bibentry->get("journal")) // "!NO-JOURNAL!";
       my $archiveprefix = $bibentry->get('archiveprefix') // "";
       my ($volume, $pages);
       if ( $journal eq $archiveprefix ) {
 
         # extract volume/pages from pre-print number
-        my $eprint = $bibentry->get('eprint') // "NO-EPRINT";
+        my $eprint = $bibentry->get('eprint') // "!NO-EPRINT!";
         if ($eprint =~ /^(\d+)[.](.*)$/ || $eprint =~ /^(.{2})(.*)$/) {
           $volume = $1;
           $pages = $2;
         } else {
-          $volume = "NO-VOLUME";
-          $pages = "NO-PAGES";
+          $volume = "!NO-VOLUME!";
+          $pages = "!NO-PAGES!";
         }
 
       } else {
-        $volume = $bibentry->get("volume") // "NO-VOLUME";
-        $pages = $bibentry->get("pages") // "NO-PAGES";
+        $volume = $bibentry->get("volume") // "!NO-VOLUME!";
+        $pages = $bibentry->get("pages") // "!NO-PAGES!";
       }
       push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkby{Author}"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
       # make links to technical reports by institution
-      my $institution = remove_tex_markup($bibentry->get("institution")) // "NO-INSTITUTION";
-      my $number = "NO-NUMBER";
+      my $institution = remove_tex_markup($bibentry->get("institution")) // "!NO-INSTITUTION!";
+      my $number = "!NO-NUMBER!";
       my $numberprefix = $number;
       if ($bibentry->exists('number')) {
         $number = $bibentry->get('number');
@@ -265,13 +273,13 @@ sub make_pdf_links {
     } elsif (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
 
       # make links to articles in collections and proceedings
-      my $booktitle = remove_tex_markup($bibentry->get("booktitle")) // "NO-BOOKTITLE";
-      my $pages = $bibentry->get("pages") // "NO-PAGES";
+      my $booktitle = remove_tex_markup($bibentry->get("booktitle")) // "!NO-BOOKTITLE!";
+      my $pages = $bibentry->get("pages") // "!NO-PAGES!";
       $booktitle = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $booktitle)));
       push @links, ["In", $booktitle, "p$pages $pdflinkby{Author}"];
       if ($bibentry->exists("series")) {
         my $series = remove_tex_markup($bibentry->get("series"));
-        my $volume = $bibentry->get("volume") // "NO-VOLUME";
+        my $volume = $bibentry->get("volume") // "!NO-VOLUME!";
         push @links, ["In", "$series", "v$volume", "p$pages $pdflinkby{Author}"];
       }
 
@@ -299,6 +307,19 @@ sub make_pdf_links {
 
     }
 
+    # make links to entries with missing information
+    my @errorlinks;
+    foreach (@links) {
+      my @linkpath = @{$_};
+      foreach (@linkpath) {
+        if (/!(NO-[A-Z]*)!/) {
+          my $errorcode = $1;
+          push @errorlinks, ["Errors", "$errorcode", "$key"];
+        }
+      }
+    }
+    push @links, @errorlinks;
+
     # mark old links for removal
     foreach my $oldlink (keys %{$existinglinks{$pdffile}}) {
       $existinglinks{$pdffile}->{$oldlink} = 0;
@@ -312,7 +333,7 @@ sub make_pdf_links {
       foreach (@linkpath) {
         die unless defined($_) && $_ ne "";
         $_ = unidecode($_);
-        s/[`'"]//g;
+        s/[`'"!]//g;
         s/[^-+.A-Za-z0-9]/_/g;
         s/[-_][-_]+/_/g;
         s/^_+//;
