@@ -1,3 +1,9 @@
+pdflibrarian (5.1.0-1) stable; urgency=low
+
+  * 5.1.0 release
+
+ -- Karl Wette <karl.wette@gmail.com>  Tue, 02 Sep 2025 16:20:32 +1000
+
 pdflibrarian (5.0.5-1) stable; urgency=low
 
   * 5.0.5 release
