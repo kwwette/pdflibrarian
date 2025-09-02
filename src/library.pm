@@ -224,8 +224,23 @@ sub make_pdf_links {
       # make links to articles by journal
       my $journal = remove_tex_markup($bibentry->get("journal")) // "NO-JOURNAL";
       my $archiveprefix = $bibentry->get('archiveprefix') // "";
-      my $volume = $bibentry->get("volume") // "NO-VOLUME";
-      my $pages = $bibentry->get("pages") // "NO-PAGES";
+      my ($volume, $pages);
+      if ( $journal eq $archiveprefix ) {
+
+        # extract volume/pages from pre-print number
+        my $eprint = $bibentry->get('eprint') // "NO-EPRINT";
+        if ($eprint =~ /^(\d+)[.](.*)$/ || $eprint =~ /^(.{2})(.*)$/) {
+          $volume = $1;
+          $pages = $2;
+        } else {
+          $volume = "NO-VOLUME";
+          $pages = "NO-PAGES";
+        }
+
+      } else {
+        $volume = $bibentry->get("volume") // "NO-VOLUME";
+        $pages = $bibentry->get("pages") // "NO-PAGES";
+      }
       push @links, ["Journals", "$journal", "v$volume", "p$pages $pdflinkby{Author}"];
 
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
