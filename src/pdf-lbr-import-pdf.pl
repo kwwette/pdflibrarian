@@ -56,6 +56,8 @@ The user will be asked to select an online query database and supply a query val
 
 The user may also enter the BibTeX record manually. The I<type> of the manual BibTeX entry defaults to I<article>, unless the B<--manual-entry> option specifies a different I<type>. Additional manual BibTeX I<field>s may be set using the B<--manual-field> option.
 
+Note that the editor will open the BibTeX entries of all PDF files passed to the command line, even if they are already in the library. In this way, the user may call up relevant existing BibTeX entries as a guide to filling out a new BibTeX entry; for example: entries of the same type (e.g. book, techreport), entries that appear in the same journal/conference series, etc.
+
 =head1 PART OF
 
 PDF Librarian version @VERSION@
@@ -120,13 +122,13 @@ foreach my $pdffile (@pdffiles) {
 }
 
 # add PDF files with existing BibTeX entries to library (unless --no-pdf-bib or --manual-entry was specified)
+my @bibentries;
 if (!$no_pdf_bib && !defined($manual_entry)) {
 
   # read BibTeX entries (if any) from PDF metadata
   my @allbibentries = read_bib_from_pdf(@pdffiles);
 
   # separate valid BibTeX entries, save PDF files without valid BibTeX entries
-  my @bibentries;
   @pdffiles = ();
   foreach my $bibentry (@allbibentries) {
     if ($bibentry->key ne ":") {
@@ -297,8 +299,16 @@ if (!$havebibstr) {
   exit 0;
 }
 
+# write existing BibTeX entries, useful to compare against new entry
+foreach my $bibentry (@bibentries) {
+
+    # write formatted BibTeX entry
+    write_bib_to_fh({ fh => $fh }, format_bib({}, $bibentry));
+
+}
+
 # edit BibTeX records
-my @bibentries = edit_bib_in_fh($fh, ());
+@bibentries = edit_bib_in_fh($fh, ());
 
 # regenerate keys for BibTeX entry
 generate_bib_keys(@bibentries);
