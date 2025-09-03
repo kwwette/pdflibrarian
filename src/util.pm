@@ -34,7 +34,7 @@ use Text::Wrap;
 
 use pdflibrarian::config;
 
-our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_short_words run_async kill_async);
+our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_tex_markup_undef remove_short_words run_async kill_async);
 
 1;
 
@@ -238,6 +238,14 @@ sub remove_tex_markup {
   }
 
   return wantarray ? @words : "@words";
+}
+
+sub remove_tex_markup_undef {
+  my $words = remove_tex_markup(@_);
+
+  # return undef if $words is empty, for use with // operator
+  return $words ne "" ? $words : undef;
+
 }
 
 sub remove_short_words {
