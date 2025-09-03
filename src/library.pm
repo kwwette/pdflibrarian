@@ -32,7 +32,7 @@ use Text::Unidecode;
 
 use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
 use pdflibrarian::config;
-use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_short_words);
+use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_tex_markup_undef remove_short_words);
 
 our @EXPORT_OK = qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
 
@@ -116,7 +116,7 @@ sub make_pdf_links {
     }
 
     # format and abbreviate title
-    my $title = remove_tex_markup($bibentry->get("title") // "!NO-TITLE!");
+    my $title = remove_tex_markup_undef($bibentry->get("title")) // "!NO-TITLE!";
     $title = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $title)));
 
     # make PDF link names; should be unique within library
@@ -230,7 +230,7 @@ sub make_pdf_links {
     if (grep { $bibentry->type eq $_ } qw(article)) {
 
       # make links to articles by journal
-      my $journal = remove_tex_markup($bibentry->get("journal") // "!NO-JOURNAL!");
+      my $journal = remove_tex_markup_undef($bibentry->get("journal")) // "!NO-JOURNAL!";
       my $archiveprefix = $bibentry->get('archiveprefix') // "";
       my ($volume, $pages);
       if ( $journal eq $archiveprefix ) {
@@ -254,7 +254,7 @@ sub make_pdf_links {
     } elsif (grep { $bibentry->type eq $_ } qw(techreport)) {
 
       # make links to technical reports by institution
-      my $institution = remove_tex_markup($bibentry->get("institution") // "!NO-INSTITUTION!");
+      my $institution = remove_tex_markup_undef($bibentry->get("institution")) // "!NO-INSTITUTION!";
       my $number = "!NO-NUMBER!";
       my $numberprefix = $number;
       if ($bibentry->exists('number')) {
@@ -273,7 +273,7 @@ sub make_pdf_links {
     } elsif (grep { $bibentry->type eq $_ } qw(conference incollection inproceedings)) {
 
       # make links to articles in collections and proceedings
-      my $booktitle = remove_tex_markup($bibentry->get("booktitle") // "!NO-BOOKTITLE!");
+      my $booktitle = remove_tex_markup_undef($bibentry->get("booktitle")) // "!NO-BOOKTITLE!";
       my $pages = $bibentry->get("pages") // "!NO-PAGES!";
       $booktitle = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $booktitle)));
       push @links, ["In", $booktitle, "p$pages $pdflinkby{Author}"];
