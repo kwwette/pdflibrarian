@@ -330,8 +330,8 @@ sub format_bib {
     }
 
     # regularise BibTeX 'month' field
-    my $month = $bibentry->get('month');
-    if (defined($month)) {
+    if ($bibentry->exists('month')) {
+      my $month = $bibentry->get('month');
       $month =~ s/\s//g;
       $month =~ s/^jan.*$/January/i;
       $month =~ s/^feb.*$/February/i;
@@ -346,6 +346,39 @@ sub format_bib {
       $month =~ s/^nov.*$/November/i;
       $month =~ s/^dec.*$/December/i;
       $bibentry->set('month', $month);
+    }
+
+    # regularise BibTeX 'volume', 'number', 'issue', 'numpages' fields
+    # - remove redundant prefixes e.g. 'vol.', 'p.'
+    # - use single hyphen for ranges
+    foreach my $bibfield (qw(chapter volume number issue pages numpages)) {
+      if ($bibentry->exists($bibfield)) {
+        my $field = $bibentry->get($bibfield);
+        $field =~ s/^[a-z]+\.//;
+        $field =~ s/--+/-/g;
+        $field =~ s/\s*-\s*/-/g;
+        $bibentry->set($bibfield, $field);
+      }
+    }
+
+    # regularise BibTeX 'edition' field
+    # - if a number, add appropriate ordinal suffix
+    foreach my $bibfield (qw(edition)) {
+      if ($bibentry->exists($bibfield)) {
+        my $field = $bibentry->get($bibfield);
+        if ($field =~ /^\s*[0-9]/) {
+          $field =~ s/[^0-9]//g;
+          my $last_digit = $field % 10;
+          if ($last_digit == 2 && $field != 12) {
+            $field .= 'nd';
+          } elsif ($last_digit == 3 && $field != 13) {
+            $field .= 'rd';
+          } else {
+            $field .= 'th';
+          }
+        }
+        $bibentry->set('edition', $field);
+      }
     }
 
     # remove braces and trailing periods in BibTeX 'title' fields
