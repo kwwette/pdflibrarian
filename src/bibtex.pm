@@ -318,6 +318,17 @@ sub format_bib {
       }
     }
 
+    # handle e-print journals
+    if ($bibentry->exists('journal') && $bibentry->exists('archiveprefix') && $bibentry->exists('eprint')) {
+      my $journal = $bibentry->get('journal');
+      my $archiveprefix = $bibentry->get('archiveprefix');
+      my $eprint = $bibentry->get('eprint');
+      if ($journal eq $archiveprefix) {
+        $bibentry->set('pages', $eprint);
+        $bibentry->set('eid', $eprint);
+      }
+    }
+
     # regularise BibTeX 'month' field
     my $month = $bibentry->get('month');
     if (defined($month)) {
