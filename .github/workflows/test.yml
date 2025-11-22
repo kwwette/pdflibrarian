@@ -1,24 +1,37 @@
-name: CI
-on: [push]
+name: Test package
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Install build dependencies
+
+      - name: Install dependencies
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 5
           max_attempts: 3
           retry_wait_seconds: 30
           command: |
-            sudo apt-get update -y || exit 1
-            sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base || exit 1
-            sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'` || exit 1
+            set -e
+            sudo apt-get update -y
+            sudo apt-get install -y autoconf sed ghostscript poppler-utils perl-base
+            sudo apt-get install -y `autoconf --trace 'PDFLBR_CHECK_PERL_MODULE:$2' | sed 's/,//g'`
+
       - name: Show Perl configuration
         run: |
           perl '-V:.*'
+
       - name: Configure
         run: |
           ./bootstrap
@@ -26,6 +39,7 @@ jobs:
             cat ./config.log
             exit 1
           fi
+
       - name: Build
         run: |
           make
