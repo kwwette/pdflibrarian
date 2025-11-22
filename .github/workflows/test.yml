@@ -43,3 +43,13 @@ jobs:
       - name: Build
         run: |
           make
+
+  all-done:
+    runs-on: ubuntu-latest
+
+    needs: test
+
+    steps:
+      - name: All done
+        run: |
+          echo All done
