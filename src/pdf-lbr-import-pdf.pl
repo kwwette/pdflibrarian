@@ -84,7 +84,7 @@ my $npdffile;
 # pass PDF files through ghostscript to fix any issues
 $npdffile = 0;
 foreach my $pdffile (@pdffiles) {
-  printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", $npdffile++, scalar(@pdffiles);
+  printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", ++$npdffile, scalar(@pdffiles);
   flush STDERR;
 
   # save XMP metadata
