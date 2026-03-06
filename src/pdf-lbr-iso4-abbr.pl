@@ -64,12 +64,11 @@ PDF Librarian version @VERSION@
 =cut
 
 # handle help options
-my ($version, $help, $clipboard, $separator);
+my ($version, $help, $separator);
 $separator = " ";
 GetOptions(
            "version|v" => \$version,
            "help|h" => \$help,
-           "clipboard|c" => \$clipboard,
            "separator|s=s" => \$separator,
           ) or croak "$Script: could not parse options";
 if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
