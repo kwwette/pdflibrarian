@@ -124,6 +124,7 @@ AC_CONFIG_FILES([
   pre-inst/config.pm:src/config.pm
   pre-inst/pdf-lbr-edit-bib:src/pdf-lbr-edit-bib.pl
   pre-inst/pdf-lbr-import-pdf:src/pdf-lbr-import-pdf.pl
+  pre-inst/pdf-lbr-iso4-abbr:src/pdf-lbr-iso4-abbr.pl
   pre-inst/pdf-lbr-output-bib:src/pdf-lbr-output-bib.pl
   pre-inst/pdf-lbr-output-key:src/pdf-lbr-output-key.pl
   pre-inst/pdf-lbr-query-ads:src/pdf-lbr-query-ads.pl

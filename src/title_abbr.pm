@@ -131,7 +131,8 @@ sub get_aas_macros {
 }
 
 sub abbr_iso4_title {
-  my ($separator, $title) = @_;
+  my ($separator, $title, $cache) = @_;
+  $cache = 1 if !defined($cache);
 
   # return cached abbreviated titles
   return $iso4_title_abbr_cache{$title} if defined($iso4_title_abbr_cache{$title});
@@ -214,9 +215,11 @@ sub abbr_iso4_title {
   }
 
   # add to cache
-  $iso4_title_abbr_cache{$title} = $abbr_title;
-  ++$iso4_title_abbr_cache_new;
-  printf STDERR "$Script: ISO4 title abbreviation for '$title': '$abbr_title'\n";
+  if ($cache) {
+    $iso4_title_abbr_cache{$title} = $abbr_title;
+    ++$iso4_title_abbr_cache_new;
+    printf STDERR "$Script: ISO4 title abbreviation for '$title': '$abbr_title'\n";
+  }
 
   return $abbr_title;
 
