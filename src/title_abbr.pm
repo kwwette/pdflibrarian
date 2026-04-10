@@ -104,8 +104,9 @@ INIT {
       chomp;
       s/^\s+//;
       s/\s+$//;
-      my ($title, $abbr_title) = split(/\s*=\s*/);
-      $iso4_title_abbr_cache{$title} = $abbr_title;
+      my ($title, $words) = split(/\s*=\s*/);
+      my @abbr_words = split(/\s+/, $words);
+      $iso4_title_abbr_cache{$title} = \@abbr_words;
     }
     close($fh);
   }
@@ -114,10 +115,10 @@ INIT {
 
 END {
 
-  # load ISO4 title abbreviation cache
+  # save ISO4 title abbreviation cache
   open(my $fh, '>:encoding(utf-8)', $iso4_title_abbr_cachefile) or croak "$Script: could not open file '$iso4_title_abbr_cachefile': $!";
   foreach my $title (sort(keys(%iso4_title_abbr_cache))) {
-    print $fh "$title = $iso4_title_abbr_cache{$title}\n";
+    print $fh "$title = " . join(" ", @{$iso4_title_abbr_cache{$title}}) . "\n";
   }
   close($fh);
   if ($iso4_title_abbr_cache_new > 0) {
@@ -134,93 +135,97 @@ sub abbr_iso4_title {
   my ($separator, $title, $cache) = @_;
   $cache = 1 if !defined($cache);
 
-  # return cached abbreviated titles
-  return $iso4_title_abbr_cache{$title} if defined($iso4_title_abbr_cache{$title});
+  my @abbr_words;
 
-  my $abbr_title;
+  if (defined($iso4_title_abbr_cache{$title})) {
 
-  # split title
-  my @words = split(/\s+/, $title);
-  if (@words == 1) {
-    $abbr_title = $title;
+    # return cached abbreviated titles
+    @abbr_words = @{$iso4_title_abbr_cache{$title}};
+
   } else {
 
-  # abbreviate words
-    my @abbr_words;
-    while (@words) {
-      my $word = shift @words;
+    # split title
+    my @words = split(/\s+/, $title);
+    if (@words == 1) {
+      @abbr_words = @words;
+    } else {
 
-      # delete lowercase words
-      next if $word =~ /^\p{Ll}/;
+      # abbreviate words
+      while (@words) {
+        my $word = shift @words;
 
-      # delete non-alphabetic words
-      next if $word =~ /^\W+$/;
+        # delete lowercase words
+        next if $word =~ /^\p{Ll}/;
 
-      # keep single uppercase letters as last word
-      if ($word =~ /^\p{Lu}$/ && @words == 0) {
+        # delete non-alphabetic words
+        next if $word =~ /^\W+$/;
+
+        # keep single uppercase letters as last word
+        if ($word =~ /^\p{Lu}$/ && @words == 0) {
+          push @abbr_words, $word;
+          next;
+        }
+
+        # loop over abbreviations (sorted from longest to shortest)
+        foreach my $entry (@iso4_word_abbr) {
+          my ($patt, $abbr) = @{$entry};
+
+          # skip patterns without an abbreviation
+          next if $abbr eq 'n.a.';
+
+          # apply suffix patterns
+          if ($patt =~ /^-(.*)$/) {
+            my $regex = '^.*' . $1 . '$';
+            last if $word =~ s/$regex/$abbr/;
+          }
+
+          # apply prefix patterns
+          if ($patt =~ /^(.)(.*)-$/) {
+            my $p1 = $1;
+            my $pr = $2;
+            my $regex = '^' . $p1 . $pr . '.*$';
+            last if $word =~ s/$regex/$abbr/;
+            if ($word =~ /^\p{Lu}/) {
+              my $regex_uc = '^' . uc($p1) . $pr . '.*$';
+              my $abbr_uc = $abbr;
+              $abbr_uc =~ s{^(.)}{ uc($1) }e;
+              last if $word =~ s/$regex_uc/$abbr_uc/;
+            }
+          }
+
+          # apply whole word patterns
+          if ($patt =~ /^([^-])(.*[^-])$/) {
+            my $p1 = $1;
+            my $pr = $2;
+            my $regex = '^' . $p1 . $pr . '$';
+            last if $word =~ s/$regex/$abbr/;
+            if ($word =~ /^\p{Lu}/) {
+              my $regex_uc = '^' . uc($p1) . $pr . '$';
+              my $abbr_uc = $abbr;
+              $abbr_uc =~ s{^(.)}{ uc($1) }e;
+              last if $word =~ s/$regex_uc/$abbr_uc/;
+            }
+          }
+
+        }
+
         push @abbr_words, $word;
-        next;
-      }
-
-      # loop over abbreviations (sorted from longest to shortest)
-      foreach my $entry (@iso4_word_abbr) {
-        my ($patt, $abbr) = @{$entry};
-
-        # skip patterns without an abbreviation
-        next if $abbr eq 'n.a.';
-
-        # apply suffix patterns
-        if ($patt =~ /^-(.*)$/) {
-          my $regex = '^.*' . $1 . '$';
-          last if $word =~ s/$regex/$abbr/;
-        }
-
-        # apply prefix patterns
-        if ($patt =~ /^(.)(.*)-$/) {
-          my $p1 = $1;
-          my $pr = $2;
-          my $regex = '^' . $p1 . $pr . '.*$';
-          last if $word =~ s/$regex/$abbr/;
-          if ($word =~ /^\p{Lu}/) {
-            my $regex_uc = '^' . uc($p1) . $pr . '.*$';
-            my $abbr_uc = $abbr;
-            $abbr_uc =~ s{^(.)}{ uc($1) }e;
-            last if $word =~ s/$regex_uc/$abbr_uc/;
-          }
-        }
-
-        # apply whole word patterns
-        if ($patt =~ /^([^-])(.*[^-])$/) {
-          my $p1 = $1;
-          my $pr = $2;
-          my $regex = '^' . $p1 . $pr . '$';
-          last if $word =~ s/$regex/$abbr/;
-          if ($word =~ /^\p{Lu}/) {
-            my $regex_uc = '^' . uc($p1) . $pr . '$';
-            my $abbr_uc = $abbr;
-            $abbr_uc =~ s{^(.)}{ uc($1) }e;
-            last if $word =~ s/$regex_uc/$abbr_uc/;
-          }
-        }
 
       }
-
-      push @abbr_words, $word;
 
     }
 
-    # rejoin words
-    $abbr_title = join($separator, @abbr_words);
+    # add to cache
+    if ($cache) {
+      $iso4_title_abbr_cache{$title} = \@abbr_words;
+      ++$iso4_title_abbr_cache_new;
+      printf STDERR "$Script: ISO4 title abbreviation for '$title': '" . join(" ", @abbr_words) . "'\n";
+    }
 
   }
 
-  # add to cache
-  if ($cache) {
-    $iso4_title_abbr_cache{$title} = $abbr_title;
-    ++$iso4_title_abbr_cache_new;
-    printf STDERR "$Script: ISO4 title abbreviation for '$title': '$abbr_title'\n";
-  }
-
+  # rejoin words
+  my $abbr_title = join($separator, @abbr_words);
   return $abbr_title;
 
 }
