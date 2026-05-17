@@ -1,25 +1,27 @@
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
-package pdflibrarian::config;
-use Exporter 'import';
+package App::PDFLibrarian;
+# ABSTRACT: Manage a library of academic papers in PDF format with embedded BibTeX metadata
+
+use parent 'Exporter';
 
 use Carp;
 use Config::IniFiles;
@@ -29,53 +31,15 @@ use File::Spec;
 use FindBin qw($Script);
 use Text::BibTeX;
 
-our @EXPORT;
-
-push @EXPORT, '$PACKAGE';
-our $PACKAGE = "@PACKAGE@";
-push @EXPORT, '$PACKAGE_NAME';
-our $PACKAGE_NAME = "@PACKAGE_NAME@";
-push @EXPORT, '$VERSION';
-our $VERSION = "@VERSION@";
-
-my $prefix = "@prefix@";
-my $exec_prefix = "@exec_prefix@";
-my $datarootdir = "@datarootdir@";
-
-push @EXPORT, '$bindir';
-our $bindir = "@bindir@";
-push @EXPORT, '$datadir';
-our $datadir = "@datadir@";
-push @EXPORT, '$pkgdatadir';
-our $pkgdatadir = "@pkgdatadir@";
-
-push @EXPORT, '$fallback_editor';
-our $fallback_editor = "@fallback_editor@";
-push @EXPORT, '$external_pdf_viewer';
-our $external_pdf_viewer = "@external_pdf_viewer@";
-push @EXPORT, '$ghostscript';
-our $ghostscript = "@ghostscript@";
-push @EXPORT, '$pdftotext';
-our $pdftotext = "@pdftotext@";
-
-push @EXPORT, '$cfgdir';
 our $cfgdir;
-push @EXPORT, '$pdflibrarydir';
 our $pdflibrarydir;
-
-push @EXPORT, '$pref_query_database';
 our $pref_query_database;
-push @EXPORT, '%query_databases';
+our %bibtex_macros;
+our %default_filter;
+our %default_output_text_format;
 our %query_databases;
 
-push @EXPORT, '%default_filter';
-our %default_filter;
-
-push @EXPORT, '%bibtex_macros';
-our %bibtex_macros;
-
-push @EXPORT, '%default_output_text_format';
-our %default_output_text_format;
+our @EXPORT_OK = qw($cfgdir $pdflibrarydir $pref_query_database %bibtex_macros %default_filter %default_output_text_format %query_databases);
 
 1;
 
@@ -88,11 +52,11 @@ INIT {
   croak "$Script: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};
 
   # create configuration directory
-  $cfgdir = File::BaseDir->config_home("$PACKAGE");
+  $cfgdir = File::BaseDir->config_home("pdflibrarian");
   File::Path::make_path($cfgdir);
 
   # read configuration file
-  my $cfgfile = File::Spec->catfile($cfgdir, "$PACKAGE.ini");
+  my $cfgfile = File::Spec->catfile($cfgdir, "pdflibrarian.ini");
   my $cfg = Config::IniFiles->new();
   if (-f $cfgfile) {
     $cfg->SetFileName($cfgfile);

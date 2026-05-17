@@ -1,33 +1,35 @@
-# Copyright (C) 2022 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
-package pdflibrarian::title_abbr;
-use Exporter 'import';
+package App::PDFLibrarian::TitleAbbr;
 
-use Carp;
+use parent 'Exporter';
+
 use Carp::Assert;
+use Carp;
+use File::ShareDir qw(dist_file);
 use File::Spec;
 use FindBin qw($Script);
 use Text::CSV::Encoded;
 
-use pdflibrarian::config;
+use App::PDFLibrarian qw($cfgdir);
 
 our @EXPORT_OK = qw(get_aas_macros abbr_iso4_title);
 
@@ -43,7 +45,7 @@ my $iso4_title_abbr_cache_new = 0;
 INIT {
 
   # get location of AAS macro/journal title data
-  my $aasdata = File::Spec->catfile($pkgdatadir, 'title_abbr_aas.csv');
+  my $aasdata = dist_file('App-PDFLibrarian', 'title_abbr_aas.csv');
   croak "$Script: missing AAS data '$aasdata'" unless -f $aasdata;
 
   # load AAS macro/journal title data
@@ -68,7 +70,7 @@ INIT {
 INIT {
 
   # get location of ISO4 word abbreviation data
-  my $iso4data = File::Spec->catfile($pkgdatadir, 'title_abbr_iso4.csv');
+  my $iso4data = dist_file('App-PDFLibrarian', 'title_abbr_iso4.csv');
   croak "$Script: missing ISO4 data '$iso4data'" unless -f $iso4data;
 
   # load ISO4 word abbreviation data

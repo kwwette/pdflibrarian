@@ -1,38 +1,38 @@
-#!@PERL@
+#!/usr/bin/env perl
 
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
-use v@PERLVERSION@;
 use strict;
 use warnings;
 
 use Capture::Tiny;
 use Carp;
-use FindBin qw($Script);
+use FindBin qw($Bin $Script);
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
-@perl_use_lib@;
-use pdflibrarian::bibtex qw(read_bib_from_str generate_bib_keys read_bib_from_pdf format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
-use pdflibrarian::config;
-use pdflibrarian::library qw(update_pdf_lib make_pdf_links cleanup_links);
-use pdflibrarian::query_dialog qw(extract_query_values_from_pdf do_query_dialog);
-use pdflibrarian::util qw(get_file_list find_pdf_files run_async kill_async);
+FindBin::again();
+
+use App::PDFLibrarian qw($pref_query_database %query_databases);
+use App::PDFLibrarian::BibTeX qw(read_bib_from_str generate_bib_keys read_bib_from_pdf format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
+use App::PDFLibrarian::Library qw(update_pdf_lib make_pdf_links cleanup_links);
+use App::PDFLibrarian::QueryDialog qw(extract_query_values_from_pdf do_query_dialog);
+use App::PDFLibrarian::Util qw(get_file_list find_pdf_files run_async kill_async);
 
 =pod
 
@@ -42,6 +42,7 @@ B<pdf-lbr-import-pdf> - Import PDF files into the PDF library.
 
 =head1 SYNOPSIS
 
+B<pdf-lbr-import-pdf> B<--version>
 B<pdf-lbr-import-pdf> B<--help>|B<-h>
 
 B<pdf-lbr-import-pdf> [ B<--no-pdf-bib> ] [ B<--manual-entry>|B<-e> I<type> B<--manual-field>|B<-f> I<field>=I<value> ... ] I<files>|I<directories> ...
@@ -52,7 +53,7 @@ B<pdf-lbr-import-pdf> [ B<--no-pdf-bib> ] [ B<--manual-entry>|B<-e> I<type> B<--
 
 B<pdf-lbr-import-pdf> imports PDF I<files> and/or any PDF files in I<directories> into the PDF library. If B<--no-pdf-bib> is specified, any BibTeX metadata embedded in the PDF files will be ignored. If I<files>|I<directories> are not given on the command line, they are read from standard input, one per line.
 
-The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for PDF Librarian to retrieve a BibTeX record for the paper(s). By default PDF Librarian tries to extract a Digital Object Identifier from the PDF paper(s) for use in the query. If the query is successful, the user will have an opportunity to edit the BibTeX record(s) before the PDF I<files> are added to the library.
+The user will be asked to select an online query database and supply a query value which uniquely identifies the paper(s), in order for App::PDFLibrarian to retrieve a BibTeX record for the paper(s). By default App::PDFLibrarian tries to extract a Digital Object Identifier from the PDF paper(s) for use in the query. If the query is successful, the user will have an opportunity to edit the BibTeX record(s) before the PDF I<files> are added to the library.
 
 The user may also enter the BibTeX record manually. The I<type> of the manual BibTeX entry defaults to I<article>, unless the B<--manual-entry> option specifies a different I<type>. Additional manual BibTeX I<field>s may be set using the B<--manual-field> option.
 
@@ -60,20 +61,22 @@ Note that the editor will open the BibTeX entries of all PDF files passed to the
 
 =head1 PART OF
 
-PDF Librarian version @VERSION@
+App::PDFLibrarian
+
+Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut
 
 # handle help options
 my ($version, $help, $no_pdf_bib, $manual_entry, %manual_field);
 GetOptions(
-           "version|v" => \$version,
+           "version" => \$version,
            "help|h" => \$help,
            "no-pdf-bib" => \$no_pdf_bib,
            "manual-entry|e=s" => \$manual_entry,
            "manual-field|f=s" => \%manual_field,
           ) or croak "$Script: could not parse options";
-if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
+if ($version) { print "App::PDFLibrarian version $App::PDFLibrarian::VERSION\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get list of PDF files
@@ -96,7 +99,7 @@ foreach my $pdffile (@pdffiles) {
 
   # try to run ghostscript conversion on PDF file
   my $fh = File::Temp->new(SUFFIX => '.pdf', EXLOCK => 0) or croak "$Script: could not create temporary file";
-  my $cmd = "'$ghostscript' -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
+  my $cmd = "gs -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o '@{[$fh->filename]}' '$pdffile' >/dev/null 2>&1";
   printf STDERR "$Script: running $cmd ...\n";
   flush STDERR;
   system($cmd) == 0 or croak "$Script: could not run $cmd";
@@ -177,7 +180,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
   ++$npdffile;
 
   # open PDF file in external viewer
-  my $pid = run_async $external_pdf_viewer, $pdffile;
+  my $pid = run_async 'xdg-open', $pdffile;
 
   # extract a DOI from PDF file, use for default query text
   my @query_values = extract_query_values_from_pdf($pdffile);
@@ -234,7 +237,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
       my $query_cmd = $query_databases{$query_db_name};
       $query_cmd =~ s/\s+/' '/g;
       $query_cmd = sprintf($query_cmd, $query_value);
-      $query_cmd = "'" . File::Spec->catfile($bindir, $query_cmd) . "'";
+      $query_cmd = "'" . File::Spec->catfile($Bin, $query_cmd) . "'";
       my $exit_status;
       ($bibstr, $error_message, $exit_status) = Capture::Tiny::capture {
         system($query_cmd);

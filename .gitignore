@@ -1,11 +1,2 @@
-/Makefile
-/Makefile.in
-/aclocal.m4
-/autom4te.cache/
-/config.log
-/config.status
-/configure
-/configure~
-/debian/control
-/pdflibrarian-*.tar.gz
-/pre-inst
+/.build/
+/App-PDFLibrarian-*

@@ -1,23 +1,22 @@
-#!@PERL@
+#!/usr/bin/env perl
 
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
-use v@PERLVERSION@;
 use strict;
 use warnings;
 
@@ -27,9 +26,10 @@ use FindBin qw($Script);
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
-@perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::util qw(get_file_list find_pdf_files);
+FindBin::again();
+
+use App::PDFLibrarian;
+use App::PDFLibrarian::Util qw(get_file_list find_pdf_files);
 
 =pod
 
@@ -39,6 +39,7 @@ B<pdf-lbr-output-key> - Output BibTeX bibliographic keys from PDF files.
 
 =head1 SYNOPSIS
 
+B<pdf-lbr-output-key> B<--version>
 B<pdf-lbr-output-key> B<--help>|B<-h>
 
 B<pdf-lbr-output-key> [ B<--clipboard>|B<-c> ] I<files>|I<directories> ...
@@ -51,16 +52,22 @@ B<pdf-lbr-output-key> reads BibTeX bibliographic keys for PDF I<files> and/or an
 
 The BibTeX keys are then printed to standard output, separated by commas; if B<--clipboard> is given, they are instead copied to the clipboard.
 
+=head1 PART OF
+
+App::PDFLibrarian
+
+Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
+
 =cut
 
 # handle help options
 my ($version, $help, $clipboard);
 GetOptions(
-           "version|v" => \$version,
+           "version" => \$version,
            "help|h" => \$help,
            "clipboard|c" => \$clipboard,
           ) or croak "$Script: could not parse options";
-if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
+if ($version) { print "App::PDFLibrarian version $App::PDFLibrarian::VERSION\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # iterate over arguments to preserve order

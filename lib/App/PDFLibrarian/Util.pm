@@ -1,25 +1,26 @@
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
-package pdflibrarian::util;
-use Exporter 'import';
+package App::PDFLibrarian::Util;
+
+use parent 'Exporter';
 
 use Carp;
 use Cwd;
@@ -29,10 +30,10 @@ use File::Spec;
 use FindBin qw($Script);
 use PDF::API2;
 use Parallel::Iterator;
-use Sys::CPU;
+use System::Info qw(sysinfo_hash);
 use Text::Wrap;
 
-use pdflibrarian::config;
+use App::PDFLibrarian qw($pdflibrarydir);
 
 our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_tex_markup_undef remove_short_words run_async kill_async);
 
@@ -178,9 +179,12 @@ sub parallel_loop {
   # return if '@$inarray' is empty
   return () unless @$inarray > 0;
 
+  # get number of CPUs
+  my $sysinfo = sysinfo_hash();
+  my $ncpus = $sysinfo->{"cpu_cores"};
+
   # run code '$body' over all elements of '@$inarray', return the results
   # in '@outarray', and print occasional progress messages using '$progfmt'
-  my $ncpus = Sys::CPU::cpu_count();
   my $total = scalar(@$inarray);
   my $worker = sub {
     my ($id, $in) = @_;

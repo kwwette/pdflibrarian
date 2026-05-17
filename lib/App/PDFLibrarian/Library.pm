@@ -1,25 +1,26 @@
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
-package pdflibrarian::library;
-use Exporter 'import';
+package App::PDFLibrarian::Library;
+
+use parent 'Exporter';
 
 use Carp;
 use File::Copy;
@@ -30,9 +31,9 @@ use File::stat;
 use FindBin qw($Script);
 use Text::Unidecode;
 
-use pdflibrarian::bibtex qw(bib_checksum format_bib_authors);
-use pdflibrarian::config;
-use pdflibrarian::util qw(is_in_dir remove_tex_markup remove_tex_markup_undef remove_short_words);
+use App::PDFLibrarian qw($pdflibrarydir);
+use App::PDFLibrarian::BibTeX qw(bib_checksum format_bib_authors);
+use App::PDFLibrarian::Util qw(is_in_dir remove_tex_markup remove_tex_markup_undef remove_short_words);
 
 our @EXPORT_OK = qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
 

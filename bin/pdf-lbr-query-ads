@@ -1,23 +1,22 @@
-#!@PERL@
+#!/usr/bin/env perl
 
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
-use v@PERLVERSION@;
 use strict;
 use warnings;
 
@@ -31,9 +30,10 @@ use Pod::Usage;
 use Text::Unidecode;
 use URI;
 
-@perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::title_abbr qw(get_aas_macros);
+FindBin::again();
+
+use App::PDFLibrarian;
+use App::PDFLibrarian::TitleAbbr qw(get_aas_macros);
 
 =pod
 
@@ -43,6 +43,7 @@ B<pdf-lbr-query-ads> - Query the NASA Astrophysics Data System for BibTeX biblio
 
 =head1 SYNOPSIS
 
+B<pdf-lbr-query-ads> B<--version>
 B<pdf-lbr-query-ads> B<--help>|B<-h>
 
 B<pdf-lbr-query-ads> B<--query>|B<-q> I<query>
@@ -77,19 +78,21 @@ Finally you must run B<pdf-lbr-query-ads> with this option to store the API toke
 
 =head1 PART OF
 
-PDF Librarian version @VERSION@
+App::PDFLibrarian
+
+Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut
 
 # handle help options
 my ($version, $help, $query, $api_token);
 GetOptions(
-           "version|v" => \$version,
+           "version" => \$version,
            "help|h" => \$help,
            "query|q=s" => \$query,
            "set-api-token|s=s" => \$api_token,
           ) or croak "$Script: could not parse options";
-if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
+if ($version) { print "App::PDFLibrarian version $App::PDFLibrarian::VERSION\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 
 # get location of configuration file
@@ -117,7 +120,7 @@ croak "$Script: missing personal ADS API token" unless defined($api_token);
 
 # user agent for web queries
 my $useragent = LWP::UserAgent->new;
-$useragent->agent("$PACKAGE/$VERSION");
+$useragent->agent("pdflibrarian/$VERSION");
 
 # escape any colons and parentheses in query value
 $query =~ s{^([^:]*):(.*)$}{ my $k = $1; my $v = $2; $v =~ s|:|\\:|g; "$k:$v" }e;

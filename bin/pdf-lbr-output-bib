@@ -1,23 +1,22 @@
-#!@PERL@
+#!/usr/bin/env perl
 
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
-use v@PERLVERSION@;
 use strict;
 use warnings;
 
@@ -27,11 +26,12 @@ use FindBin qw($Script);
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
-@perl_use_lib@;
-use pdflibrarian::config;
-use pdflibrarian::bibtex qw(read_bib_from_pdf find_dup_bib_keys format_bib format_bib_authors write_bib_to_fh);
-use pdflibrarian::title_abbr qw(get_aas_macros abbr_iso4_title);
-use pdflibrarian::util qw(get_file_list find_pdf_files remove_tex_markup);
+FindBin::again();
+
+use App::PDFLibrarian qw(%default_filter %default_output_text_format);
+use App::PDFLibrarian::BibTeX qw(read_bib_from_pdf find_dup_bib_keys format_bib format_bib_authors write_bib_to_fh);
+use App::PDFLibrarian::TitleAbbr qw(get_aas_macros abbr_iso4_title);
+use App::PDFLibrarian::Util qw(get_file_list find_pdf_files remove_tex_markup);
 
 =pod
 
@@ -41,6 +41,7 @@ B<pdf-lbr-output-bib> - Output BibTeX bibliographic metadata from PDF files.
 
 =head1 SYNOPSIS
 
+B<pdf-lbr-output-bib> B<--version>
 B<pdf-lbr-output-bib> B<--help>|B<-h>
 
 B<pdf-lbr-output-bib> [ B<--clipboard>|B<-c> ] [ B<--max-authors>|B<-m> I<count> [ B<--only-first-author>|B<-f> ] ] [ B<--filter>|B<-F> [I<type>B<:>]I<field>[B<?>I<iffield>|B<!>I<ifnotfield>...]B<=>I<spec> ... ] [ B<--no-default-filter>|B<-N> ] [ B<--abbreviate>|B<-a> I<scheme> ... ] [ B<--output-text-format>|B<-o> I<type>=<format> ... | B<--output-text>|B<-O> | B<--pdf-file-comment>|B<-P> ] I<files>|I<directories> ...
@@ -131,7 +132,9 @@ Instead of outputting a BibTeX entry, output plain text, formatting entries with
 
 =head1 PART OF
 
-PDF Librarian version @VERSION@
+App::PDFLibrarian
+
+Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut
 
@@ -140,7 +143,7 @@ my ($version, $help, $clipboard, $max_authors, $only_first_author, %filter, $no_
 $max_authors = 0;
 $pdf_file_comment = 0;
 GetOptions(
-           "version|v" => \$version,
+           "version" => \$version,
            "help|h" => \$help,
            "clipboard|c" => \$clipboard,
            "max-authors|m=i" => \$max_authors,
@@ -152,7 +155,7 @@ GetOptions(
            "output-text-format|o=s" => \%output_text_format,
            "output-text|O" => \$output_text,
           ) or croak "$Script: could not parse options";
-if ($version) { print "PDF Librarian version @VERSION@\n"; exit 1; }
+if ($version) { print "App::PDFLibrarian version $App::PDFLibrarian::VERSION\n"; exit 1; }
 pod2usage(-verbose => 2, -exitval => 1) if ($help);
 croak "$Script: --max-authors must be positive" if $max_authors < 0;
 

@@ -1,30 +1,32 @@
-# Copyright (C) 2016--2023 Karl Wette
+# Copyright (C) 2016--2026 Karl Wette
 #
-# This file is part of PDF Librarian.
+# This file is part of App::PDFLibrarian.
 #
-# PDF Librarian is free software: you can redistribute it and/or modify
+# App::PDFLibrarian is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or (at
 # your option) any later version.
 #
-# PDF Librarian is distributed in the hope that it will be useful, but
+# App::PDFLibrarian is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PDF Librarian. If not, see <http://www.gnu.org/licenses/>.
+# along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
 use warnings;
 
-package pdflibrarian::bibtex;
-use Exporter 'import';
+package App::PDFLibrarian::BibTeX;
+
+use parent 'Exporter';
 
 use Capture::Tiny;
 use Carp;
 use Digest::SHA;
 use Encode;
+use File::ShareDir qw(dist_file);
 use File::Temp;
 use FindBin qw($Script);
 use List::Util qw(max);
@@ -38,8 +40,8 @@ use URI::Encode qw(uri_encode uri_decode);
 use XML::LibXML;
 use XML::LibXSLT;
 
-use pdflibrarian::config;
-use pdflibrarian::util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words);
+use App::PDFLibrarian qw(%bibtex_macros);
+use App::PDFLibrarian::Util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf format_bib write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -171,7 +173,7 @@ sub read_bib_from_pdf {
   my (@pdffiles) = @_;
 
   # get location of BibTeX XSLT style file
-  my $xsltbibtex = File::Spec->catfile($pkgdatadir, 'bibtex.xsl');
+  my $xsltbibtex = dist_file('App-PDFLibrarian', 'bibtex.xsl');
   croak "$Script: missing XSLT style file '$xsltbibtex'" unless -f $xsltbibtex;
 
   # read BibTeX entries from PDF files
@@ -521,7 +523,7 @@ sub write_bib_to_pdf {
   my (@bibentries) = @_;
 
   # get location of DublinCore XSLT style file
-  my $xsltdublincore = File::Spec->catfile($pkgdatadir, 'dublincore.xsl');
+  my $xsltdublincore = dist_file('App-PDFLibrarian', 'dublincore.xsl');
   croak "$Script: missing XSLT style file '$xsltdublincore'" unless -f $xsltdublincore;
 
   # filter out unmodified BibTeX entries
@@ -649,7 +651,7 @@ sub edit_bib_in_fh {
       # write header message
       if (@errors > 0) {
         print $fh wrap("% ", "% ", <<"EOF");
-$PACKAGE_NAME has encountered several errors in parsing the following BibTeX records. These errors are indicated with comments next to the line where the errors occurred.
+PDFLibrarian has encountered several errors in parsing the following BibTeX records. These errors are indicated with comments next to the line where the errors occurred.
 
 All errors MUST be corrected before the BibTeX records can be written back to the PDF file given by the 'file' field in each record.
 
@@ -657,7 +659,7 @@ To ABORT ANY CHANGES from being written, simply delete the relevant records, or 
 EOF
       } else {
         print $fh wrap("% ", "% ", <<"EOF");
-$PACKAGE_NAME has extracted the following BibTeX records for editing. Any changes to the records will be written back to the PDF file given by the 'file' field in each record.
+PDFLibrarian has extracted the following BibTeX records for editing. Any changes to the records will be written back to the PDF file given by the 'file' field in each record.
 
 To ABORT ANY CHANGES from being written, simply delete the relevant records, or the entire contents of this file.
 EOF
@@ -723,7 +725,7 @@ EOF
       $oldfh = $fh;
 
       # edit BibTeX entries
-      my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // $fallback_editor;
+      my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // 'editor';
       printf STDERR "$Script: opening %i BibTeX entries in editing program '$editor' ...\n", scalar(@bibentries);
       system($editor, $fh->filename) == 0 or croak "$Script: could not edit file '$fh->filename' with editing program '$editor'";
 
