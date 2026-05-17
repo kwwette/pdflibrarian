@@ -16,26 +16,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Initialise project
+      - name: Install system packages
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 5
-          max_attempts: 3
+          timeout_minutes: 10
+          max_attempts: 1
           retry_wait_seconds: 30
           command: |
             sudo apt-get update -y
             sudo apt-get install -y cpanminus ghostscript libwx-perl perl-base poppler-utils xdg-utils
-            cpanm Dist::Zilla
-            dzil authordeps --missing | cpanm
 
       - name: Show Perl configuration
         run: |
           perl '-V:.*'
 
+      - name: Install CPAN packages
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 1
+          retry_wait_seconds: 30
+          command: |
+            cpanm Dist::Zilla
+
+      - name: Install Dist::Zilla dependencies
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 1
+          retry_wait_seconds: 30
+          command: |
+            dzil authordeps --missing | cpanm
+
       - name: Build project
         run: |
           dzil build
-          cpamn App-PDFLibrarian-*.tar.*
+
+      - name: Install project
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 1
+          retry_wait_seconds: 30
+          command: |
+            cpamn App-PDFLibrarian-*.tar.*
 
   all-done:
     runs-on: ubuntu-latest
