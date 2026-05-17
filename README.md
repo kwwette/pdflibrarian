@@ -6,10 +6,9 @@ App::PDFLibrarian manages a library of academic papers in PDF format with embedd
 Installation
 ------------
 
-Requires the `Wx` library:
-```
-apt install libwx-perl          # Debian, Ubuntu
-```
+Requires the following packages:
+
+* Debian, Ubuntu: `apt install cpanminus ghostscript libwx-perl perl-base poppler-utils xdg-utils`
 
 Then install from CPAN:
 ```
