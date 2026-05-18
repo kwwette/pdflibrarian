@@ -59,6 +59,7 @@ jobs:
       - name: Build project
         run: |
           dzil build
+          tar tf App-PDFLibrarian-*.tar.*
 
       - name: Install project
         uses: nick-fields/retry@v4
