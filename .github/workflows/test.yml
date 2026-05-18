@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Install system packages
-        uses: nick-fields/retry@v2
+      - name: Install system dependencies
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 1
@@ -26,7 +26,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y cpanminus ghostscript libwx-perl libxml2-dev libxslt1-dev perl-base poppler-utils xdg-utils zlib1g-dev
 
-      - name: Setup Perl local lib
+      - name: Setup Perl for local install
         run: |
           echo "PERL_LOCAL_LIB_ROOT=$HOME/perl5" >> $GITHUB_ENV
           echo "$HOME/perl5/bin" >> $GITHUB_PATH
@@ -38,8 +38,8 @@ jobs:
         run: |
           perl "-V:.*"
 
-      - name: Install CPAN packages
-        uses: nick-fields/retry@v2
+      - name: Install Dist::Zilla
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 20
           max_attempts: 1
@@ -47,8 +47,8 @@ jobs:
           command: |
             cpanm Dist::Zilla
 
-      - name: Install Dist::Zilla dependencies
-        uses: nick-fields/retry@v2
+      - name: Install project dependencies
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 1
@@ -61,7 +61,7 @@ jobs:
           dzil build
 
       - name: Install project
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 20
           max_attempts: 1
