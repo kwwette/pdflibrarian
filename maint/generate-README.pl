@@ -34,7 +34,7 @@ Requires the following packages:
 
 * Debian, Ubuntu:
   ```
-  apt install cpanminus ghostscript libwx-perl libxml2-dev libxslt1-dev perl-base poppler-utils xdg-utils zlib1g-dev
+  apt install cpanminus ghostscript libwx-perl libxml2-dev libxslt1-dev perl-base poppler-utils xclip xdg-utils zlib1g-dev
   ```
 
 Then install from CPAN:
