@@ -60,6 +60,8 @@ PDF files for any BibTeX entries removing during editing are moved to the direct
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut

@@ -31,6 +31,56 @@ use File::Spec;
 use FindBin qw($Script);
 use Text::BibTeX;
 
+=pod
+
+=head1 NAME
+
+B<App::PDFLibrarian> - Manage a library of academic papers in PDF format with embedded BibTeX metadata.
+
+=head1 INSTALLATION
+
+Requires the following packages:
+
+=over 4
+
+=item * Debian, Ubuntu:
+
+    apt install cpanminus ghostscript libwx-perl libxml2-dev libxslt1-dev perl-base poppler-utils xdg-utils zlib1g-dev
+
+=back
+
+Then install from CPAN:
+
+    cpanm App::PDFLibrarian
+
+=head1 APPLICATIONS
+
+=over 4
+
+=item * B<pdf-lbr-import-pdf>
+
+=item * B<pdf-lbr-edit-bib>
+
+=item * B<pdf-lbr-output-bib>
+
+=item * B<pdf-lbr-output-key>
+
+=item * B<pdf-lbr-replace-pdf>
+
+=item * B<pdf-lbr-remove-pdf>
+
+=item * B<pdf-lbr-rebuild-links>
+
+=item * B<pdf-lbr-iso4-abbr>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
+
+=cut
+
 our $cfgdir;
 our $pdflibrarydir;
 our $pref_query_database;

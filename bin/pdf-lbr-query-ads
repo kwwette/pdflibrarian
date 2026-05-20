@@ -80,6 +80,8 @@ Finally you must run B<pdf-lbr-query-ads> with this option to store the API toke
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut

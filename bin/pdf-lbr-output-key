@@ -56,6 +56,8 @@ The BibTeX keys are then printed to standard output, separated by commas; if B<-
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut

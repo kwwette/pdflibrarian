@@ -56,6 +56,8 @@ The PDF file is moved to the directory I<output-directory>, or else to the user'
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut

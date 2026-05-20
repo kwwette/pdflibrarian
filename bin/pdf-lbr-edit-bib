@@ -59,6 +59,8 @@ Any modifications are then written back to the PDF files given by the I<file> fi
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut

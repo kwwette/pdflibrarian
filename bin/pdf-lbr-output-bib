@@ -134,6 +134,8 @@ Instead of outputting a BibTeX entry, output plain text, formatting entries with
 
 App::PDFLibrarian
 
+=head1 COPYRIGHT AND LICENSE
+
 Copyright (C) 2016--2026 Karl Wette. Licensed under the GNU General Public License, version 3 or later.
 
 =cut
