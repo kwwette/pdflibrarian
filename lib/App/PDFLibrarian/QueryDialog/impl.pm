@@ -26,11 +26,13 @@ use Wx::Event qw(EVT_BUTTON EVT_TEXT EVT_TEXT_ENTER);
 
 use base qw(Wx::Dialog);
 
-use App::PDFLibrarian;
+use App::PDFLibrarian qw(%query_databases);
 
 our $query_db_name_combo;
 our $query_value_combo;
 our $buttonok;
+
+1;
 
 sub new {
   my ($class, $pdffile, $query_db_name, $query_value, $query_values, $error_message) = @_;
