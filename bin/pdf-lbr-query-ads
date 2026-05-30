@@ -32,7 +32,7 @@ use URI;
 
 FindBin::again();
 
-use App::PDFLibrarian;
+use App::PDFLibrarian qw($cfgdir);
 use App::PDFLibrarian::TitleAbbr qw(get_aas_macros);
 
 =pod
