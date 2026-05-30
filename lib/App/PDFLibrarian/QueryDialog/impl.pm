@@ -28,9 +28,9 @@ use base qw(Wx::Dialog);
 
 use App::PDFLibrarian qw(%query_databases);
 
-our $query_db_name_combo;
-our $query_value_combo;
-our $buttonok;
+my $query_db_name_combo;
+my $query_value_combo;
+my $buttonok;
 
 1;
 
