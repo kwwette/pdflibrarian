@@ -85,11 +85,6 @@ sub update_pdf_lib {
 
 }
 
-sub format_by {
-  my ($by) = @_;
-  return "0-by-" . lc(${by}) . "s";
-}
-
 sub make_pdf_links {
   my (@bibentries) = @_;
   return unless @bibentries > 0;
@@ -179,11 +174,11 @@ sub make_pdf_links {
       foreach my $by (qw(year title)) {
         foreach my $author (@collaborations, @authors) {
           next if $author eq "";
-          push @links, ["Authors", $author, format_by($by), "$pdflinkby{$by}"];
+          push @links, ["Authors", $author, "by_${by}s", "$pdflinkby{$by}"];
         }
         foreach my $editor (@editors) {
           next if $editor eq "";
-          push @links, ["Authors", "$editor ed", format_by($by), "$pdflinkby{$by}"];
+          push @links, ["Authors", "$editor ed", "by_${by}s", "$pdflinkby{$by}"];
         }
       }
 
@@ -193,13 +188,13 @@ sub make_pdf_links {
     my $firstword = ucfirst($title);
     $firstword =~ s/\s.*$//;
     foreach my $by (qw(author year)) {
-      push @links, ["Titles", $firstword, format_by($by), "$pdflinkby{$by}"];
+      push @links, ["Titles", $firstword, "by_${by}s", "$pdflinkby{$by}"];
     }
 
     # make links by year
     foreach my $by (qw(author title)) {
       my $year = $bibentry->get("year") // "!NO-YEAR!";
-      push @links, ["Years", $year, format_by($by), "$pdflinkby{$by}"];
+      push @links, ["Years", $year, "by_${by}s", "$pdflinkby{$by}"];
     }
 
     # make links by keyword(s)
@@ -213,9 +208,12 @@ sub make_pdf_links {
     }
     foreach my $keyword (keys %keywords) {
       my @subkeywords = split /:|(?: - )/, $keyword;
-      s/\b(\w)/\U$1\E/g for @subkeywords;
+      foreach my $subkeyword (@subkeywords) {
+        $subkeyword =~ s/\b(\w)/\U$1\E/g;
+        $subkeyword = "kw_" . $subkeyword;
+      }
       foreach my $by (qw(author title year)) {
-        push @links, ["Keywords", @subkeywords, format_by($by), "$pdflinkby{$by}"];
+        push @links, ["Keywords", @subkeywords, "by_${by}s", "$pdflinkby{$by}"];
       }
     }
 
@@ -300,7 +298,7 @@ sub make_pdf_links {
       my $howpublished = $bibentry->get("howpublished");
       $howpublished = join(' ', map { ucfirst($_) } remove_short_words(split(/\s+/, $howpublished)));
       foreach my $by (qw(author title year)) {
-        push @links, ["How Published", $howpublished, format_by($by), "$pdflinkby{$by}"];
+        push @links, ["How Published", $howpublished, "by_${by}s", "$pdflinkby{$by}"];
       }
 
     } else {
@@ -308,7 +306,7 @@ sub make_pdf_links {
       # make links to everything else
       my $type = ucfirst($bibentry->type);
       foreach my $by (qw(author title year)) {
-        push @links, ["Other", "${type}s", format_by($by), "$pdflinkby{$by}"];
+        push @links, ["Other", "${type}s", "by_${by}s", "$pdflinkby{$by}"];
       }
 
     }
