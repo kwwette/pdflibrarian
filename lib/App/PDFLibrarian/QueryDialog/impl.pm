@@ -38,7 +38,7 @@ sub new {
   my ($class, $pdffile, $query_db_name, $query_value, $query_values, $error_message) = @_;
 
   # create dialog
-  my $self = $class->SUPER::new(undef, -1, "Import $pdffile - App::PDFLibrarian", &Wx::wxDefaultPosition, &Wx::wxDefaultSize, wxDIALOG_NO_PARENT | wxDEFAULT_DIALOG_STYLE);
+  my $self = $class->SUPER::new(undef, -1, "Import - PDFLibrarian", &Wx::wxDefaultPosition, &Wx::wxDefaultSize, wxDIALOG_NO_PARENT | wxDEFAULT_DIALOG_STYLE);
 
   # set dialog icon
   my $icon = Wx::ArtProvider::GetIcon(Wx::ArtProvider::wxART_QUESTION, Wx::ArtProvider::wxART_CMN_DIALOG);
