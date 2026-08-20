@@ -203,6 +203,7 @@ PDFFILE: foreach my $pdffile (@pdffiles) {
     }
 
     # take action
+    $error_message = '';
     if ($query_action eq 'exit') {
 
       # cancel all imports and exit
