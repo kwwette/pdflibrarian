@@ -54,9 +54,9 @@ sub new {
   if ($error_message ne '') {
     $message = <<"EOM";
 App::PDFLibrarian has queries online database '$query_db_name' with the query value '$query_value'. Unfortunately the query returned the following errors:
-
+---
 $error_message
-
+---
 Please correct the query value and/or select a different online database, and try again.
 
 EOM
