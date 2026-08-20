@@ -130,10 +130,11 @@ sub keyword_display_str {
     pop @kw;
 
     # remove any "by author/title/year" directories
-    pop @kw if grep { $kw[-1] =~ $_ } qw(Authors Titles Years);
+    pop @kw if $kw[-1] =~ /^by_/;
 
     # format keywords
     foreach (@kw) {
+      s/^kw_//;
       s/_/ /g;
     }
 
