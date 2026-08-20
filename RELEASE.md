@@ -20,3 +20,8 @@ To upload a new release:
 ```
 dzil release
 ```
+
+To manually override the release version e.g. for a major/minor version bump:
+```
+V=X.Y.0 dzil release
+```
