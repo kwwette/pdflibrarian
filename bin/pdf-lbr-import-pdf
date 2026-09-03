@@ -30,7 +30,7 @@ FindBin::again();
 
 use App::PDFLibrarian qw($pref_query_database %query_databases);
 use App::PDFLibrarian::BibTeX qw(read_bib_from_str generate_bib_keys read_bib_from_pdf format_bib write_bib_to_fh edit_bib_in_fh write_bib_to_pdf);
-use App::PDFLibrarian::Library qw(update_pdf_lib make_pdf_links cleanup_links);
+use App::PDFLibrarian::Library qw(pdf_is_in_library update_pdf_lib make_pdf_links cleanup_links);
 use App::PDFLibrarian::QueryDialog qw(extract_query_values_from_pdf do_query_dialog);
 use App::PDFLibrarian::Util qw(get_file_list find_pdf_files run_async kill_async);
 
@@ -86,10 +86,11 @@ my @pdffiles = find_pdf_files(get_file_list());
 croak "$Script: no PDF files to import" unless @pdffiles > 0;
 my $npdffile;
 
-# pass PDF files through ghostscript to fix any issues
+# pass PDF files not already in library through ghostscript to fix any issues
+my @newpdffiles = grep { ! pdf_is_in_library($_) } @pdffiles;
 $npdffile = 0;
-foreach my $pdffile (@pdffiles) {
-  printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", ++$npdffile, scalar(@pdffiles);
+foreach my $pdffile (@newpdffiles) {
+  printf STDERR "$Script: passing %i/%i PDF files through ghostscript\n", ++$npdffile, scalar(@newpdffiles);
   flush STDERR;
 
   # save XMP metadata
