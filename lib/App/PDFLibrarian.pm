@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
+use v5.18;
 use strict;
 use warnings;
+use utf8;
+use open qw(:std :encoding(UTF-8));
 
 package App::PDFLibrarian;
 # ABSTRACT: Manage a library of academic papers in PDF format with embedded BibTeX metadata
@@ -94,9 +97,6 @@ our @EXPORT_OK = qw($cfgdir $pdflibrarydir $pref_query_database %bibtex_macros %
 1;
 
 INIT {
-
-  # allow printing of UTF-8 characters
-  binmode(STDOUT, "encoding(utf-8)");
 
   # check for user home directory
   croak "$Script: could not determine user home directory" unless defined($ENV{HOME}) && -d $ENV{HOME};

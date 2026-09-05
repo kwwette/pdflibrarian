@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
+use v5.18;
 use strict;
 use warnings;
+use utf8;
+use open qw(:std :encoding(UTF-8));
 
 package App::PDFLibrarian::Util;
 
@@ -28,7 +31,6 @@ use File::Find;
 use File::MimeInfo::Magic;
 use File::Spec;
 use FindBin qw($Script);
-use PDF::API2;
 use Parallel::Iterator;
 use System::Info qw(sysinfo_hash);
 use Text::Wrap;

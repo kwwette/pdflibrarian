@@ -17,8 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with App::PDFLibrarian. If not, see <http://www.gnu.org/licenses/>.
 
+use v5.18;
 use strict;
 use warnings;
+use utf8;
+use open qw(:std :encoding(UTF-8));
 
 use Carp;
 use File::Copy;
@@ -89,7 +92,6 @@ my @bibentries = read_bib_from_pdf(@pdffiles);
 
 # write formatted BibTeX entries to a temporary file for editing
 my $fh = File::Temp->new(SUFFIX => '.bib', EXLOCK => 0) or croak "$Script: could not create temporary file";
-binmode($fh, ":encoding(iso-8859-1)");
 write_bib_to_fh({ fh => $fh }, format_bib({}, @bibentries));
 
 # edit BibTeX entries in PDF files
