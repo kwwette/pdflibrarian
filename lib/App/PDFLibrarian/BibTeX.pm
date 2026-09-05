@@ -270,6 +270,15 @@ sub format_bib {
       }
     }
 
+    # remove wrapping braces
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      my $bibfieldvalue = $bibentry->get($bibfield);
+      while ($bibfieldvalue =~ /^(\{(?:[^{}]++|(?1))*\})$/) {
+        $bibfieldvalue = substr($1, 1, -1);
+      };
+      $bibentry->set($bibfield, $bibfieldvalue);
+    }
+
     # replace accented characters with LaTeX accents
     foreach my $bibfield ($bibentry->fieldlist()) {
       my $bibfieldvalue = $bibentry->get($bibfield);
