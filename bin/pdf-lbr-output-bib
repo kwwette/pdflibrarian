@@ -338,9 +338,9 @@ foreach my $bibentry (@bibentries) {
       my $title = $bibentry->get($bibfield);
       my @words = split /\s+/, $title;
       foreach my $word (@words) {
-        $word =~ s/[{}]//g;
         $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
         $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
+        $word =~ s/^\{([A-Z])\}/$1/
       }
       $title = join(" ", @words);
       $title =~ s/^\{([A-Z])\}/$1/;

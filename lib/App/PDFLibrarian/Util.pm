@@ -27,6 +27,7 @@ use parent 'Exporter';
 
 use Carp;
 use Cwd;
+use Encode;
 use File::Find;
 use File::MimeInfo::Magic;
 use File::Spec;
@@ -34,10 +35,11 @@ use FindBin qw($Script);
 use Parallel::Iterator;
 use System::Info qw(sysinfo_hash);
 use Text::Wrap;
+use Unicode::Normalize;
 
 use App::PDFLibrarian qw($pdflibrarydir);
 
-our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_tex_markup_undef remove_short_words run_async kill_async);
+our @EXPORT_OK = qw(unique_list is_in_dir get_file_list find_pdf_files keyword_display_str parallel_loop remove_tex_markup remove_tex_markup_undef remove_short_words replace_accents_with_latex run_async kill_async);
 
 1;
 
@@ -269,6 +271,44 @@ sub remove_short_words {
   @words = grep { my $word = $_; ! scalar grep { $word =~ /^$_$/i } @short_words } @words;
 
   return wantarray ? @words : "@words";
+}
+
+sub replace_accents_with_latex {
+  my ($text) = @_;
+
+  my %latex_accents = (
+                       "\x{0300}" => '`',  # Combining grave accent
+                       "\x{0301}" => "'",  # Combining acute accent
+                       "\x{0302}" => '^',  # Combining circumflex
+                       "\x{0308}" => '"',  # Combining diaeresis / umlaut
+                       "\x{0303}" => '~',  # Combining tilde
+                       "\x{0307}" => '.',  # Combining dot above
+                       "\x{030B}" => 'H',  # Combining double acute
+                      );
+
+  # decompose into base character + combining marks
+  my $decomp = Unicode::Normalize::NFKD($text);
+
+  # replace pattern: base character followed by combining marks
+  $decomp =~ s{([[:alpha:]])([\p{NonspacingMark}]+)}{
+    my ($base, $marks) = ($1, $2);
+    my $res = $base;
+    # wrap the base with accumulated LaTeX accent commands
+    map {
+      my $cmd = $latex_accents{$_};
+      if (defined($cmd)) {
+        $res = "\\${cmd}{$res}";
+      } else {
+        $res .= $_;
+      }
+    } split //, $marks;
+    $res;
+  }ge;
+
+  # re-compose any remaining accented characters
+  my $newtext = Unicode::Normalize::NFC($decomp);
+
+  return $newtext;
 }
 
 sub run_async {

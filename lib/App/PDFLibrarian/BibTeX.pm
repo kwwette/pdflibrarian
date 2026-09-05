@@ -47,7 +47,7 @@ use XML::LibXSLT;
 require Encode::Detect;
 
 use App::PDFLibrarian qw(%bibtex_macros);
-use App::PDFLibrarian::Util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words);
+use App::PDFLibrarian::Util qw(unique_list keyword_display_str parallel_loop remove_tex_markup remove_short_words replace_accents_with_latex);
 
 our @EXPORT_OK = qw(bib_checksum read_bib_from_str read_bib_from_file read_bib_from_pdf format_bib write_bib_to_fh write_bib_to_pdf edit_bib_in_fh find_dup_bib_keys format_bib_authors generate_bib_keys);
 
@@ -270,6 +270,13 @@ sub format_bib {
       }
     }
 
+    # replace accented characters with LaTeX accents
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      my $bibfieldvalue = $bibentry->get($bibfield);
+      $bibfieldvalue = replace_accents_with_latex($bibfieldvalue);
+      $bibentry->set($bibfield, $bibfieldvalue);
+    }
+
     # uniformly format authors, editors, and collaborations
     foreach my $bibfield (qw(author editor collaboration)) {
       if ($bibentry->exists($bibfield)) {
@@ -291,7 +298,7 @@ sub format_bib {
         foreach my $author (@authors) {
 
           # sanitise author string
-          $author =~ s/~/ /g;
+          $author =~ s/([^\\])~/$1 /g;
           $author =~ s/\.\s-/.-/g;
           $author =~ s/\bet\sal\.?/others/;
 
@@ -330,6 +337,15 @@ sub format_bib {
         # set BibTeX field to concatenated authors
         $bibentry->set($bibfield, join(" and ", @authors));
 
+      }
+    }
+
+    # remove trailing periods from title fields
+    foreach my $bibfield ($bibentry->fieldlist()) {
+      if ($bibfield =~ /title$/) {
+        my $bibfieldvalue = $bibentry->get($bibfield);
+        $bibfieldvalue =~ s/\.+$//;
+        $bibentry->set($bibfield, $bibfieldvalue);
       }
     }
 
@@ -393,24 +409,6 @@ sub format_bib {
           }
         }
         $bibentry->set('edition', $field);
-      }
-    }
-
-    # remove braces and trailing periods in BibTeX 'title' fields
-    # - except where required for LaTeX commands
-    foreach my $bibfield ($bibentry->fieldlist()) {
-      if ($bibfield =~ /title$/) {
-        my $title = $bibentry->get($bibfield);
-        $title =~ s/\.+$//;
-        my @words = split /\s+/, $title;
-        foreach my $word (@words) {
-          $word =~ s/[{}]//g;
-          $word =~ s/((?:\\.)?[A-Z]+)/\{$1\}/g;
-          $word =~ s/\$\{([A-Z]+)\}\$/{\$$1\$}/g;
-          $word =~ s/^\{([A-Z])\}/$1/
-        }
-        $title = join(" ", @words);
-        $bibentry->set($bibfield, $title);
       }
     }
 
